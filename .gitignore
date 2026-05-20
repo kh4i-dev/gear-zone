@@ -39,5 +39,30 @@ prisma/*.db-journal
 # IDE
 .idea/
 .vscode/
+.windsurf/
 *.swp
 *.swo
+
+# Database
+*.db
+*.db-journal
+
+# Uploads
+public/uploads/
+
+# Documents / Reports
+*.pdf
+*.docx
+~$*
+
+# Scratch / Temp
+scratch/
+
+# Scripts (local helpers)
+scripts/
+
+# Agent lock
+skills-lock.json
+
+# Agent skills
+.agents/

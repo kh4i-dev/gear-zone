@@ -1,0 +1,389 @@
+<svg width="100%" viewBox="-40 -40 1620 1400" role="img" style="background-color:#ffffff" xmlns="http://www.w3.org/2000/svg">
+  <title>Sơ đồ lớp UML GearZone</title>
+  <desc>Sơ đồ lớp hướng đối tượng (OOD Class Diagram) chuẩn UML cho hệ thống GearZone, phong cách đơn sắc tối giản độ tương phản cao</desc>
+  <defs>
+    <style>
+      .class-rect {
+        fill: #ffffff;
+        stroke: #111827;
+        stroke-width: 1.5px;
+      }
+      .class-title {
+        fill: #111827;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        text-anchor: middle;
+      }
+      .class-title-abstract {
+        fill: #111827;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        font-style: italic;
+        text-anchor: middle;
+      }
+      .class-stereotype {
+        fill: #4b5563;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 10px;
+        font-style: italic;
+        text-anchor: middle;
+      }
+      .class-divider {
+        stroke: #111827;
+        stroke-width: 1px;
+      }
+      .class-text {
+        fill: #111827;
+        font-family: "Fira Code", "Courier New", Courier, monospace;
+        font-size: 11px;
+        font-weight: 500;
+      }
+      .relationship-line {
+        fill: none;
+        stroke: #111827;
+        stroke-width: 1.2px;
+      }
+      .relationship-text {
+        fill: #111827;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        dominant-baseline: central;
+      }
+      .multiplicity-text {
+        fill: #4b5563;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 10px;
+        font-weight: 500;
+        dominant-baseline: central;
+      }
+      .text-halo {
+        stroke: #ffffff;
+        stroke-width: 3px;
+        paint-order: stroke;
+      }
+    </style>
+    
+    <!-- Markers for associations and inheritance -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="#111827" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    
+    <marker id="diamond" viewBox="0 0 16 10" refX="16" refY="5" markerWidth="8" markerHeight="5" orient="auto-start-reverse">
+      <polygon points="0,5 8,1 16,5 8,9" fill="#111827" stroke="#111827" stroke-width="1"/>
+    </marker>
+    
+    <marker id="generalization" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon points="0,1 10,5 0,9" fill="#ffffff" stroke="#111827" stroke-width="1.5"/>
+    </marker>
+  </defs>
+
+  <!-- Solid white background canvas with huge margins to prevent screenshot clipping -->
+  <rect id="canvas-bg" x="-100" y="-100" width="1740" height="1540" fill="#ffffff" stroke="none"/>
+
+  <!-- ========================================== -->
+  <!--               CLASS BOXES                  -->
+  <!-- ========================================== -->
+
+  <!-- 1. TaiKhoan (Abstract, Level 0) -->
+  <g id="class-TaiKhoan" cursor="pointer">
+    <rect x="640" y="50" width="260" height="240" rx="0" class="class-rect"/>
+    <text x="770" y="70" class="class-stereotype">&lt;&lt;abstract&gt;&gt;</text>
+    <text x="770" y="88" class="class-title-abstract">TaiKhoan</text>
+    <line x1="640" y1="98" x2="900" y2="98" class="class-divider"/>
+    <text x="652" y="115" class="class-text">+ maTK: int</text>
+    <text x="652" y="133" class="class-text">+ hoTen: String</text>
+    <text x="652" y="151" class="class-text">+ email: String</text>
+    <text x="652" y="169" class="class-text">- matKhau: String</text>
+    <line x1="640" y1="179" x2="900" y2="179" class="class-divider"/>
+    <text x="652" y="196" class="class-text">+ dangNhap(email, mk): bool</text>
+    <text x="652" y="214" class="class-text">+ dangXuat(): void</text>
+    <text x="652" y="232" class="class-text">+ capNhatThongTin(): void</text>
+  </g>
+
+  <!-- 2. Admin (Level 1, Left) -->
+  <g id="class-Admin" cursor="pointer">
+    <rect x="50" y="350" width="220" height="145" rx="0" class="class-rect"/>
+    <text x="160" y="375" class="class-title">Admin</text>
+    <line x1="50" y1="385" x2="270" y2="385" class="class-divider"/>
+    <!-- No attributes -->
+    <line x1="50" y1="395" x2="270" y2="395" class="class-divider"/>
+    <text x="62" y="412" class="class-text">+ quanLyNguoiDung(): void</text>
+    <text x="62" y="430" class="class-text">+ quanLySanPham(): void</text>
+    <text x="62" y="448" class="class-text">+ quanLyDonHang(): void</text>
+    <text x="62" y="466" class="class-text">+ xemBaoCao(): void</text>
+    <text x="62" y="484" class="class-text">+ cauHinhHeThong(): void</text>
+  </g>
+
+  <!-- 3. KhachHang (Level 1, Center) -->
+  <g id="class-KhachHang" cursor="pointer">
+    <rect x="650" y="350" width="240" height="110" rx="0" class="class-rect"/>
+    <text x="770" y="375" class="class-title">KhachHang</text>
+    <line x1="650" y1="385" x2="890" y2="385" class="class-divider"/>
+    <text x="662" y="402" class="class-text">+ soDienThoai: String</text>
+    <text x="662" y="420" class="class-text">+ diaChi: String</text>
+    <line x1="650" y1="430" x2="890" y2="430" class="class-divider"/>
+    <text x="662" y="447" class="class-text">+ xemDonHang(): List</text>
+  </g>
+
+  <!-- 4. NhanVienKho (Level 1, Right) -->
+  <g id="class-NhanVienKho" cursor="pointer">
+    <rect x="980" y="350" width="220" height="110" rx="0" class="class-rect"/>
+    <text x="1090" y="375" class="class-title">NhanVienKho</text>
+    <line x1="980" y1="385" x2="1200" y2="385" class="class-divider"/>
+    <!-- No attributes -->
+    <line x1="980" y1="395" x2="1200" y2="395" class="class-divider"/>
+    <text x="992" y="412" class="class-text">+ xuatKho(maDH): void</text>
+    <text x="992" y="430" class="class-text">+ capNhatKho(maSP, sl): void</text>
+    <text x="992" y="448" class="class-text">+ xemDonHang(): List</text>
+  </g>
+
+  <!-- 5. SanPham (Level 2, Column 1) -->
+  <g id="class-SanPham" cursor="pointer">
+    <rect x="50" y="530" width="220" height="195" rx="0" class="class-rect"/>
+    <text x="160" y="555" class="class-title">SanPham</text>
+    <line x1="50" y1="565" x2="270" y2="565" class="class-divider"/>
+    <text x="62" y="582" class="class-text">+ maSP: int</text>
+    <text x="62" y="600" class="class-text">+ tenSP: String</text>
+    <text x="62" y="618" class="class-text">+ thuongHieu: String</text>
+    <text x="62" y="636" class="class-text">+ giaBan: double</text>
+    <text x="62" y="654" class="class-text">+ soLuongTon: int</text>
+    <text x="62" y="672" class="class-text">+ moTa: String</text>
+    <line x1="50" y1="682" x2="270" y2="682" class="class-divider"/>
+    <text x="62" y="699" class="class-text">+ timKiem(tuKhoa): List</text>
+    <text x="62" y="717" class="class-text">+ xemChiTiet(): SanPham</text>
+  </g>
+
+  <!-- 6. GioHang (Level 2, Column 3) -->
+  <g id="class-GioHang" cursor="pointer">
+    <rect x="650" y="530" width="240" height="175" rx="0" class="class-rect"/>
+    <text x="770" y="555" class="class-title">GioHang</text>
+    <line x1="650" y1="565" x2="890" y2="565" class="class-divider"/>
+    <text x="662" y="582" class="class-text">+ maGH: int</text>
+    <text x="662" y="600" class="class-text">+ ngayTao: Date</text>
+    <line x1="650" y1="610" x2="890" y2="610" class="class-divider"/>
+    <text x="662" y="627" class="class-text">+ themSP(maSP, sl): void</text>
+    <text x="662" y="645" class="class-text">+ xoaSP(maSP): void</text>
+    <text x="662" y="663" class="class-text">+ capNhatSoLuong(maSP,sl): void</text>
+    <text x="662" y="681" class="class-text">+ tinhTongTien(): double</text>
+    <text x="662" y="699" class="class-text">+ lamMoi(): void</text>
+  </g>
+
+  <!-- 7. DonHang (Level 2, Column 4) -->
+  <g id="class-DonHang" cursor="pointer">
+    <rect x="980" y="530" width="240" height="230" rx="0" class="class-rect"/>
+    <text x="1100" y="555" class="class-title">DonHang</text>
+    <line x1="980" y1="565" x2="1220" y2="565" class="class-divider"/>
+    <text x="992" y="582" class="class-text">+ maDH: int</text>
+    <text x="992" y="600" class="class-text">+ ngayDat: Date</text>
+    <text x="992" y="618" class="class-text">+ trangThai: String</text>
+    <text x="992" y="636" class="class-text">+ tongTien: double</text>
+    <text x="992" y="654" class="class-text">+ tienGiam: double</text>
+    <text x="992" y="672" class="class-text">+ diaChiGiao: String</text>
+    <text x="992" y="690" class="class-text">+ phuongThucTT: String</text>
+    <line x1="980" y1="700" x2="1220" y2="700" class="class-divider"/>
+    <text x="992" y="717" class="class-text">+ taoMoi(): bool</text>
+    <text x="992" y="735" class="class-text">+ huy(): bool</text>
+    <text x="992" y="753" class="class-text">+ capNhatTrangThai(tt): void</text>
+  </g>
+
+  <!-- 8. MaGiamGia (Level 2, Column 5) -->
+  <g id="class-MaGiamGia" cursor="pointer">
+    <rect x="1300" y="530" width="220" height="210" rx="0" class="class-rect"/>
+    <text x="1410" y="555" class="class-title">MaGiamGia</text>
+    <line x1="1300" y1="565" x2="1520" y2="565" class="class-divider"/>
+    <text x="1312" y="582" class="class-text">+ maMGG: int</text>
+    <text x="1312" y="600" class="class-text">+ code: String</text>
+    <text x="1312" y="618" class="class-text">+ phanTram: double</text>
+    <text x="1312" y="636" class="class-text">+ ngayBatDau: Date</text>
+    <text x="1312" y="654" class="class-text">+ ngayKetThuc: Date</text>
+    <text x="1312" y="672" class="class-text">+ soLuongToiDa: int</text>
+    <text x="1312" y="690" class="class-text">+ daSuDung: int</text>
+    <line x1="1300" y1="700" x2="1520" y2="700" class="class-divider"/>
+    <text x="1312" y="717" class="class-text">+ kiemTraHopLe(): bool</text>
+    <text x="1312" y="735" class="class-text">+ apDung(tongTien): double</text>
+  </g>
+
+  <!-- 9. DanhMuc (Level 3, Column 1) -->
+  <g id="class-DanhMuc" cursor="pointer">
+    <rect x="50" y="810" width="220" height="125" rx="0" class="class-rect"/>
+    <text x="160" y="835" class="class-title">DanhMuc</text>
+    <line x1="50" y1="845" x2="270" y2="845" class="class-divider"/>
+    <text x="62" y="862" class="class-text">+ maDM: int</text>
+    <text x="62" y="880" class="class-text">+ tenDM: String</text>
+    <text x="62" y="898" class="class-text">+ moTa: String</text>
+    <line x1="50" y1="908" x2="270" y2="908" class="class-divider"/>
+    <text x="62" y="925" class="class-text">+ layDanhSachSP(): List</text>
+  </g>
+
+  <!-- 10. DanhGia (Level 3, Column 2) -->
+  <g id="class-DanhGia" cursor="pointer">
+    <rect x="350" y="810" width="220" height="175" rx="0" class="class-rect"/>
+    <text x="460" y="835" class="class-title">DanhGia</text>
+    <line x1="350" y1="845" x2="570" y2="845" class="class-divider"/>
+    <text x="362" y="862" class="class-text">+ maDG: int</text>
+    <text x="362" y="880" class="class-text">+ soSao: int</text>
+    <text x="362" y="898" class="class-text">+ noiDung: String</text>
+    <text x="362" y="916" class="class-text">+ ngayDang: Date</text>
+    <line x1="350" y1="926" x2="570" y2="926" class="class-divider"/>
+    <text x="362" y="943" class="class-text">+ gui(): void</text>
+    <text x="362" y="961" class="class-text">+ sua(): void</text>
+    <text x="362" y="979" class="class-text">+ xoa(): void</text>
+  </g>
+
+  <!-- 11. ChiTietGioHang (Level 3, Column 3) -->
+  <g id="class-ChiTietGioHang" cursor="pointer">
+    <rect x="650" y="810" width="240" height="110" rx="0" class="class-rect"/>
+    <text x="770" y="835" class="class-title">ChiTietGioHang</text>
+    <line x1="650" y1="845" x2="890" y2="845" class="class-divider"/>
+    <text x="662" y="862" class="class-text">+ soLuong: int</text>
+    <text x="662" y="880" class="class-text">+ donGia: double</text>
+    <line x1="650" y1="890" x2="890" y2="890" class="class-divider"/>
+    <text x="662" y="907" class="class-text">+ tinhThanhTien(): double</text>
+  </g>
+
+  <!-- 12. ChiTietDonHang (Level 3, Column 4) -->
+  <g id="class-ChiTietDonHang" cursor="pointer">
+    <rect x="980" y="810" width="240" height="110" rx="0" class="class-rect"/>
+    <text x="1100" y="835" class="class-title">ChiTietDonHang</text>
+    <line x1="980" y1="845" x2="1220" y2="845" class="class-divider"/>
+    <text x="992" y="862" class="class-text">+ soLuong: int</text>
+    <text x="992" y="880" class="class-text">+ donGia: double</text>
+    <line x1="980" y1="890" x2="1220" y2="890" class="class-divider"/>
+    <text x="992" y="907" class="class-text">+ tinhThanhTien(): double</text>
+  </g>
+
+  <!-- 13. ThanhToan (Level 3, Column 5) -->
+  <g id="class-ThanhToan" cursor="pointer">
+    <rect x="1300" y="810" width="220" height="210" rx="0" class="class-rect"/>
+    <text x="1410" y="835" class="class-title">ThanhToan</text>
+    <line x1="1300" y1="845" x2="1520" y2="845" class="class-divider"/>
+    <text x="1312" y="862" class="class-text">+ maTT: int</text>
+    <text x="1312" y="880" class="class-text">+ phuongThuc: String</text>
+    <text x="1312" y="898" class="class-text">+ soTien: double</text>
+    <text x="1312" y="916" class="class-text">+ trangThai: String</text>
+    <text x="1312" y="934" class="class-text">+ maGiaoDich: String</text>
+    <text x="1312" y="952" class="class-text">+ thoiGian: Date</text>
+    <line x1="1300" y1="962" x2="1520" y2="962" class="class-divider"/>
+    <text x="1312" y="979" class="class-text">+ thucHien(): bool</text>
+    <text x="1312" y="997" class="class-text">+ xacNhan(): void</text>
+    <text x="1312" y="1015" class="class-text">+ hoanTien(): bool</text>
+  </g>
+
+  <!-- 14. HuyDon (Level 4, centered below DonHang) -->
+  <g id="class-HuyDon" cursor="pointer">
+    <rect x="980" y="1090" width="220" height="155" rx="0" class="class-rect"/>
+    <text x="1090" y="1115" class="class-title">HuyDon</text>
+    <line x1="980" y1="1125" x2="1200" y2="1125" class="class-divider"/>
+    <text x="992" y="1142" class="class-text">+ maHD: int</text>
+    <text x="992" y="1160" class="class-text">+ ngayHuy: Date</text>
+    <text x="992" y="1178" class="class-text">+ lyDo: String</text>
+    <line x1="980" y1="1188" x2="1200" y2="1188" class="class-divider"/>
+    <text x="992" y="1205" class="class-text">+ taoYeuCau(): bool</text>
+    <text x="992" y="1223" class="class-text">+ xacNhan(): void</text>
+  </g>
+
+  <!-- ========================================== -->
+  <!--             RELATIONSHIPS                  -->
+  <!-- ========================================== -->
+
+  <!-- Inheritance (Generalization Fork) -->
+  <!-- Superclass point: bottom-center of TaiKhoan (770, 290) -->
+  <path d="M 770 325 L 770 290" class="relationship-line" marker-end="url(#generalization)"/>
+  <path d="M 160 325 L 1090 325" class="relationship-line"/>
+  <path d="M 160 350 L 160 325" class="relationship-line"/>
+  <path d="M 770 350 L 770 325" class="relationship-line"/>
+  <path d="M 1090 350 L 1090 325" class="relationship-line"/>
+
+  <!-- Admin -> SanPham : quản lý -->
+  <path d="M 160 495 L 160 530" class="relationship-line" marker-end="url(#arrow)"/>
+  <text x="172" y="512" class="relationship-text text-halo">quản lý</text>
+
+  <!-- NhanVienKho -> DonHang : xử lý -->
+  <path d="M 1090 460 L 1090 530" class="relationship-line" marker-end="url(#arrow)"/>
+  <text x="1102" y="495" class="relationship-text text-halo">xử lý</text>
+
+  <!-- KhachHang -> GioHang : sở hữu -->
+  <path d="M 770 460 L 770 530" class="relationship-line" marker-end="url(#arrow)"/>
+  <text x="782" y="495" class="relationship-text text-halo">sở hữu</text>
+  <text x="778" y="475" class="multiplicity-text text-halo">1</text>
+  <text x="778" y="515" class="multiplicity-text text-halo">0..1</text>
+
+  <!-- KhachHang -> DonHang : đặt -->
+  <path d="M 850 460 L 850 490 L 1030 490 L 1030 530" class="relationship-line" marker-end="url(#arrow)"/>
+  <text x="940" y="482" class="relationship-text text-halo">đặt</text>
+  <text x="858" y="475" class="multiplicity-text text-halo">1</text>
+  <text x="1038" y="515" class="multiplicity-text text-halo">0..*</text>
+
+  <!-- KhachHang -> DanhGia : viết -->
+  <path d="M 690 460 L 690 480 L 530 480 L 530 810" class="relationship-line" marker-end="url(#arrow)"/>
+  <text x="542" y="470" class="relationship-text text-halo">viết</text>
+  <text x="698" y="475" class="multiplicity-text text-halo">1</text>
+  <text x="538" y="795" class="multiplicity-text text-halo">0..*</text>
+
+  <!-- GioHang * to ChiTietGioHang : chứa (Composition) -->
+  <path d="M 770 810 L 770 705" class="relationship-line" marker-end="url(#diamond)"/>
+  <text x="782" y="755" class="relationship-text text-halo">chứa</text>
+  <text x="782" y="722" class="multiplicity-text text-halo">1</text>
+  <text x="782" y="797" class="multiplicity-text text-halo">0..*</text>
+
+  <!-- DonHang * to ChiTietDonHang : gồm (Composition) -->
+  <path d="M 1100 810 L 1100 760" class="relationship-line" marker-end="url(#diamond)"/>
+  <text x="1112" y="785" class="relationship-text text-halo">gồm</text>
+  <text x="1112" y="768" class="multiplicity-text text-halo">1</text>
+  <text x="1112" y="800" class="multiplicity-text text-halo">1..*</text>
+
+  <!-- SanPham -> DanhMuc : thuộc -->
+  <path d="M 160 725 L 160 810" class="relationship-line" marker-end="url(#arrow)"/>
+  <text x="172" y="767" class="relationship-text text-halo">thuộc</text>
+  <text x="168" y="740" class="multiplicity-text text-halo">0..*</text>
+  <text x="168" y="795" class="multiplicity-text text-halo">1</text>
+
+  <!-- SanPham -> ChiTietGioHang : tham chiếu -->
+  <!-- Route 1: vertical at x=315 (gap between DanhMuc x<270 and DanhGia x>350) -->
+  <!-- Horizontal at y=1035 = below all level-3 boxes (ThanhToan bottom y=1020) -->
+  <!-- Turn up at x=615 = gap between DanhGia right(570) and ChiTietGioHang left(650) -->
+  <path d="M 270 640 L 315 640 L 315 1035 L 615 1035 L 615 865 L 650 865" class="relationship-line" marker-end="url(#arrow)"/>
+  <text x="400" y="1023" class="relationship-text text-halo">tham chiếu</text>
+  <text x="320" y="628" class="multiplicity-text text-halo">1</text>
+  <text x="638" y="853" class="multiplicity-text text-halo">0..*</text>
+
+  <!-- SanPham -> ChiTietDonHang : tham chiếu -->
+  <!-- Route 2: vertical at x=292, horizontal at y=1055, enters ChiTietDonHang from bottom -->
+  <path d="M 270 660 L 292 660 L 292 1055 L 1100 1055 L 1100 920" class="relationship-line" marker-end="url(#arrow)"/>
+  <text x="660" y="1043" class="relationship-text text-halo">tham chiếu</text>
+  <text x="296" y="672" class="multiplicity-text text-halo">1</text>
+  <text x="1108" y="935" class="multiplicity-text text-halo">0..*</text>
+
+  <!-- SanPham -> DanhGia : nhận -->
+  <path d="M 270 560 L 460 560 L 460 810" class="relationship-line" marker-end="url(#arrow)"/>
+  <text x="400" y="552" class="relationship-text text-halo">nhận</text>
+  <text x="280" y="550" class="multiplicity-text text-halo">1</text>
+  <text x="468" y="795" class="multiplicity-text text-halo">0..*</text>
+
+  <!-- DonHang -> MaGiamGia : áp dụng -->
+  <path d="M 1220 630 L 1300 630" class="relationship-line" marker-end="url(#arrow)"/>
+  <text x="1260" y="618" class="relationship-text text-halo">áp dụng</text>
+  <text x="1225" y="644" class="multiplicity-text text-halo">0..*</text>
+  <text x="1287" y="644" class="multiplicity-text text-halo">0..1</text>
+
+  <!-- DonHang -> ThanhToan : có -->
+  <path d="M 1220 690 L 1260 690 L 1260 915 L 1300 915" class="relationship-line" marker-end="url(#arrow)"/>
+  <text x="1272" y="800" class="relationship-text text-halo">có</text>
+  <text x="1228" y="680" class="multiplicity-text text-halo">1</text>
+  <text x="1272" y="928" class="multiplicity-text text-halo">0..1</text>
+
+  <!-- DonHang -> HuyDon : bị hủy -->
+  <!-- Tightly routed at x=955, just left of DonHang/ChiTietDonHang left edge (x=980) -->
+  <path d="M 980 700 L 955 700 L 955 1110 L 980 1110" class="relationship-line" marker-end="url(#arrow)"/>
+  <text x="910" y="908" class="relationship-text text-halo">bị hủy</text>
+  <text x="958" y="685" class="multiplicity-text text-halo">1</text>
+  <text x="958" y="1125" class="multiplicity-text text-halo">0..1</text>
+
+  <!-- HuyDon -> ThanhToan : kích hoạt hoàn tiền -->
+  <path d="M 1200 1152 L 1280 1152 L 1280 990 L 1300 990" class="relationship-line" marker-end="url(#arrow)"/>
+  <text x="1216" y="1140" class="relationship-text text-halo">kích hoạt hoàn tiền</text>
+
+</svg>

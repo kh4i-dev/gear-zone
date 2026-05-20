@@ -1,0 +1,232 @@
+<svg width="100%" viewBox="-40 -40 920 1040" role="img" style="background-color:#ffffff" xmlns="http://www.w3.org/2000/svg">
+<title>Activity Diagram — Quy trình mua hàng GearZone</title>
+<desc>Sơ đồ hoạt động mua hàng GearZone với 3 swimlane: Khách hàng, Hệ thống, Hệ thống thanh toán</desc>
+<style>
+  rect:not(#canvas-bg) {
+    fill: #ffffff !important;
+    stroke: #374151 !important;
+    stroke-width: 1px !important;
+  }
+  #canvas-bg {
+    fill: #ffffff !important;
+    stroke: none !important;
+  }
+  polygon {
+    fill: #ffffff !important;
+    stroke: #374151 !important;
+    stroke-width: 1px !important;
+  }
+  circle {
+    stroke: #374151 !important;
+  }
+  text {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    fill: #111827 !important;
+    stroke: none !important;
+  }
+  line, path {
+    stroke: #374151 !important;
+    stroke-width: 1px !important;
+    fill: none !important;
+  }
+  .lane-title {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .node-title {
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .node-sub {
+    font-size: 11px;
+    fill: #4b5563 !important;
+  }
+  .label-text {
+    font-size: 11px;
+    fill: #4b5563 !important;
+    font-weight: 500;
+  }
+</style>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 2L8 5L2 8" fill="none" stroke="#374151" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+
+<!-- Background -->
+<rect id="canvas-bg" x="-100" y="-100" width="1040" height="1160"/>
+
+<!-- ===== SWIMLANE HEADERS ===== -->
+<rect x="20" y="20" width="800" height="40" rx="0" stroke-width="1"/>
+<line x1="280" y1="20" x2="280" y2="60"/>
+<line x1="560" y1="20" x2="560" y2="60"/>
+
+<text x="150" y="40" text-anchor="middle" dominant-baseline="central" class="lane-title">Khách hàng</text>
+<text x="420" y="40" text-anchor="middle" dominant-baseline="central" class="lane-title">Hệ thống GearZone</text>
+<text x="690" y="40" text-anchor="middle" dominant-baseline="central" class="lane-title">Hệ thống thanh toán</text>
+
+<!-- Lane Separators (Vertical Dashed Lines) -->
+<line x1="280" y1="60" x2="280" y2="940" stroke-dasharray="4 4"/>
+<line x1="560" y1="60" x2="560" y2="940" stroke-dasharray="4 4"/>
+
+<!-- ===== FLOW ELEMENTS ===== -->
+
+<!-- Start Node (Khách hàng) -->
+<circle cx="150" cy="90" r="10" fill="#111827" stroke="none"/>
+<line x1="150" y1="100" x2="150" y2="120" marker-end="url(#arrow)"/>
+
+<!-- 1. Truy cập GearZone -->
+<g>
+  <rect x="70" y="120" width="160" height="36" rx="0"/>
+  <text x="150" y="138" text-anchor="middle" dominant-baseline="central" class="node-title">Truy cập GearZone</text>
+</g>
+<line x1="150" y1="156" x2="150" y2="188" marker-end="url(#arrow)"/>
+
+<!-- 2. Đã đăng nhập? (Decision Diamond) -->
+<polygon points="150,188 200,208 150,228 100,208"/>
+<text x="150" y="208" text-anchor="middle" dominant-baseline="central" class="node-sub">Chưa đăng nhập?</text>
+
+<!-- Diamond Branch Left: Chưa -> Đăng nhập -->
+<path d="M100 208 L40 208 L40 260 L70 260" marker-end="url(#arrow)"/>
+<text x="65" y="200" text-anchor="middle" class="label-text">Chưa</text>
+
+<!-- 3. Đăng nhập hoặc đăng ký -->
+<g>
+  <rect x="70" y="242" width="160" height="36" rx="0"/>
+  <text x="150" y="254" text-anchor="middle" dominant-baseline="central" class="node-title">Đăng nhập</text>
+  <text x="150" y="268" text-anchor="middle" dominant-baseline="central" class="node-sub">hoặc đăng ký</text>
+</g>
+<line x1="150" y1="278" x2="150" y2="340" marker-end="url(#arrow)"/>
+
+<!-- Diamond Branch Right: Rồi -> Tìm kiếm -->
+<path d="M200 208 L260 208 L260 320 L150 320 L150 340" marker-end="url(#arrow)"/>
+<text x="235" y="200" text-anchor="middle" class="label-text">Rồi</text>
+
+<!-- 4. Tìm kiếm / chọn danh mục -->
+<g>
+  <rect x="70" y="340" width="160" height="36" rx="0"/>
+  <text x="150" y="352" text-anchor="middle" dominant-baseline="central" class="node-title">Tìm kiếm / chọn</text>
+  <text x="150" y="366" text-anchor="middle" dominant-baseline="central" class="node-sub">danh mục</text>
+</g>
+<line x1="230" y1="358" x2="320" y2="358" marker-end="url(#arrow)"/>
+
+<!-- 5. Hiển thị danh sách sản phẩm (Hệ thống) -->
+<g>
+  <rect x="320" y="340" width="200" height="36" rx="0"/>
+  <text x="420" y="352" text-anchor="middle" dominant-baseline="central" class="node-title">Hiển thị danh sách</text>
+  <text x="420" y="366" text-anchor="middle" dominant-baseline="central" class="node-sub">sản phẩm</text>
+</g>
+<path d="M420 376 L420 400 L230 400" marker-end="url(#arrow)"/>
+
+<!-- 6. Xem chi tiết SP -->
+<g>
+  <rect x="70" y="382" width="160" height="36" rx="0"/>
+  <text x="150" y="400" text-anchor="middle" dominant-baseline="central" class="node-title">Xem chi tiết SP</text>
+</g>
+<line x1="150" y1="418" x2="150" y2="450" marker-end="url(#arrow)"/>
+
+<!-- 7. Muốn mua? (Decision Diamond) -->
+<polygon points="150,450 200,470 150,490 100,470"/>
+<text x="150" y="470" text-anchor="middle" dominant-baseline="central" class="node-sub">Muốn mua?</text>
+
+<!-- Diamond Branch Left: Không -> Quay lại Tìm kiếm -->
+<path d="M100 470 L40 470 L40 358 L70 358" marker-end="url(#arrow)"/>
+<text x="65" y="462" text-anchor="middle" class="label-text">Không</text>
+
+<!-- Diamond Branch Bottom: Có -> Thêm vào giỏ hàng -->
+<line x1="150" y1="490" x2="150" y2="520" marker-end="url(#arrow)"/>
+<text x="158" y="504" text-anchor="start" class="label-text">Có</text>
+
+<!-- 8. Thêm vào giỏ hàng -->
+<g>
+  <rect x="70" y="520" width="160" height="36" rx="0"/>
+  <text x="150" y="538" text-anchor="middle" dominant-baseline="central" class="node-title">Thêm vào giỏ hàng</text>
+</g>
+<line x1="150" y1="556" x2="150" y2="588" marker-end="url(#arrow)"/>
+
+<!-- 9. Tiếp tục mua? (Decision Diamond) -->
+<polygon points="150,588 200,608 150,628 100,608"/>
+<text x="150" y="608" text-anchor="middle" dominant-baseline="central" class="node-sub">Tiếp tục mua?</text>
+
+<!-- Diamond Branch Right: Có -> Quay lại Tìm kiếm (nối vào đường lên của Đã đăng nhập?) -->
+<path d="M200 608 L260 608 L260 320"/>
+<text x="235" y="600" text-anchor="middle" class="label-text">Có</text>
+
+<!-- Diamond Branch Left: Không -> Xem & xác nhận giỏ hàng -->
+<path d="M100 608 L40 608 L40 678 L70 678" marker-end="url(#arrow)"/>
+<text x="65" y="600" text-anchor="middle" class="label-text">Không</text>
+
+<!-- 10. Xem & xác nhận giỏ hàng -->
+<g>
+  <rect x="70" y="660" width="160" height="36" rx="0"/>
+  <text x="150" y="672" text-anchor="middle" dominant-baseline="central" class="node-title">Xem &amp; xác nhận</text>
+  <text x="150" y="686" text-anchor="middle" dominant-baseline="central" class="node-sub">giỏ hàng</text>
+</g>
+<line x1="230" y1="678" x2="320" y2="678" marker-end="url(#arrow)"/>
+
+<!-- 11. Kiểm tra tồn kho & tính phí (Hệ thống) -->
+<g>
+  <rect x="320" y="660" width="200" height="36" rx="0"/>
+  <text x="420" y="672" text-anchor="middle" dominant-baseline="central" class="node-title">Kiểm tra tồn kho</text>
+  <text x="420" y="686" text-anchor="middle" dominant-baseline="central" class="node-sub">&amp; tính phí</text>
+</g>
+<path d="M420 696 L420 720 L250 720" marker-end="url(#arrow)"/>
+
+<!-- 12. Nhập địa chỉ & chọn phương thức TT -->
+<g>
+  <rect x="50" y="730" width="200" height="36" rx="0"/>
+  <text x="150" y="742" text-anchor="middle" dominant-baseline="central" class="node-title">Nhập địa chỉ</text>
+  <text x="150" y="756" text-anchor="middle" dominant-baseline="central" class="node-sub">&amp; chọn phương thức TT</text>
+</g>
+<line x1="250" y1="748" x2="320" y2="748" marker-end="url(#arrow)"/>
+
+<!-- 13. Tạo đơn hàng & lưu DB (Hệ thống) -->
+<g>
+  <rect x="320" y="730" width="200" height="36" rx="0"/>
+  <text x="420" y="742" text-anchor="middle" dominant-baseline="central" class="node-title">Tạo đơn hàng</text>
+  <text x="420" y="756" text-anchor="middle" dominant-baseline="central" class="node-sub">&amp; lưu DB</text>
+</g>
+
+<!-- Tạo đơn hàng -> Xử lý thanh toán (Online) -->
+<line x1="520" y1="748" x2="590" y2="748" marker-end="url(#arrow)"/>
+<text x="555" y="740" text-anchor="middle" class="label-text">Online</text>
+
+<!-- 14. Xử lý thanh toán VNPay / MoMo (Hệ thống thanh toán) -->
+<g>
+  <rect x="590" y="730" width="200" height="36" rx="0"/>
+  <text x="690" y="742" text-anchor="middle" dominant-baseline="central" class="node-title">Xử lý thanh toán</text>
+  <text x="690" y="756" text-anchor="middle" dominant-baseline="central" class="node-sub">VNPay / MoMo</text>
+</g>
+
+<!-- Tạo đơn hàng -> Cập nhật trạng thái (COD) -->
+<line x1="420" y1="766" x2="420" y2="810" marker-end="url(#arrow)"/>
+<text x="428" y="788" text-anchor="start" class="label-text">COD</text>
+
+<!-- 15. Cập nhật trạng thái ĐH & gửi email xác nhận (Hệ thống) -->
+<g>
+  <rect x="300" y="810" width="240" height="36" rx="0"/>
+  <text x="420" y="822" text-anchor="middle" dominant-baseline="central" class="node-title">Cập nhật trạng thái ĐH</text>
+  <text x="420" y="836" text-anchor="middle" dominant-baseline="central" class="node-sub">&amp; gửi email xác nhận</text>
+</g>
+
+<!-- Xử lý thanh toán -> Cập nhật trạng thái (Kết quả TT) -->
+<path d="M690 766 L690 828 L540 828" marker-end="url(#arrow)"/>
+<text x="615" y="820" text-anchor="middle" class="label-text">Kết quả TT</text>
+
+<!-- Cập nhật trạng thái -> Theo dõi đơn hàng -->
+<line x1="300" y1="828" x2="230" y2="828" marker-end="url(#arrow)"/>
+
+<!-- 16. Theo dõi đơn hàng -->
+<g>
+  <rect x="70" y="810" width="160" height="36" rx="0"/>
+  <text x="150" y="828" text-anchor="middle" dominant-baseline="central" class="node-title">Theo dõi đơn hàng</text>
+</g>
+<line x1="150" y1="846" x2="150" y2="890" marker-end="url(#arrow)"/>
+
+<!-- End Node -->
+<g>
+  <circle cx="150" cy="900" r="10" fill="none" stroke="#374151" stroke-width="1.5"/>
+  <circle cx="150" cy="900" r="6" fill="#111827" stroke="none"/>
+</g>
+
+</svg>

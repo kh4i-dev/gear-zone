@@ -1,0 +1,202 @@
+<svg width="100%" viewBox="-40 -40 760 760" role="img" style="background-color:#ffffff" xmlns="http://www.w3.org/2000/svg">
+<title>Deployment Diagram GearZone v2</title>
+<desc>Sơ đồ triển khai hệ thống GearZone thể hiện các node vật lý, giao thức kết nối, và dịch vụ ngoài</desc>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 1L8 5L2 9" fill="none" stroke="#111827" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+<rect id="canvas-bg" x="-100" y="-100" width="880" height="880" fill="#ffffff" stroke="none"/>
+
+<!-- ===== TIER 1: CLIENT ===== -->
+<g>
+  <!-- 3D face: client -->
+  <polygon points="20,20 30,12 670,12 660,20" fill="#f3f4f6" stroke="#111827" stroke-width="1"/>
+  <polygon points="660,20 670,12 670,102 660,110" fill="#e5e7eb" stroke="#111827" stroke-width="1"/>
+  <rect x="20" y="20" width="640" height="90" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="36" y="42" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:bold;">«device» Thiết bị người dùng</text>
+</g>
+
+<!-- Browser (Customer) -->
+<g>
+  <rect x="50" y="50" width="180" height="44" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="140" y="64" text-anchor="middle" dominant-baseline="central" style="fill:#4b5563;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;">«client»</text>
+  <text x="140" y="80" text-anchor="middle" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:bold;">Trình duyệt (Khách)</text>
+</g>
+
+<!-- Browser (Admin) -->
+<g>
+  <rect x="260" y="50" width="180" height="44" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="350" y="64" text-anchor="middle" dominant-baseline="central" style="fill:#4b5563;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;">«client»</text>
+  <text x="350" y="80" text-anchor="middle" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:bold;">Trình duyệt (Admin)</text>
+</g>
+
+<!-- ===== TIER 2: WEB SERVER ===== -->
+<g>
+  <!-- 3D face: web-server -->
+  <polygon points="20,160 30,152 670,152 660,160" fill="#f3f4f6" stroke="#111827" stroke-width="1"/>
+  <polygon points="660,160 670,152 670,332 660,340" fill="#e5e7eb" stroke="#111827" stroke-width="1"/>
+  <rect x="20" y="160" width="640" height="180" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="36" y="182" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:bold;">«device» Máy chủ web (VPS / Cloud Server)</text>
+</g>
+
+<!-- Nginx -->
+<g>
+  <rect x="50" y="196" width="160" height="44" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="130" y="210" text-anchor="middle" dominant-baseline="central" style="fill:#4b5563;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;">«web server»</text>
+  <text x="130" y="226" text-anchor="middle" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:bold;">Nginx (Reverse Proxy)</text>
+</g>
+
+<!-- Next.js -->
+<g>
+  <rect x="290" y="196" width="180" height="44" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="380" y="210" text-anchor="middle" dominant-baseline="central" style="fill:#4b5563;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;">«app server»</text>
+  <text x="380" y="226" text-anchor="middle" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:bold;">Next.js Server</text>
+</g>
+
+<!-- Static assets -->
+<g>
+  <rect x="490" y="196" width="150" height="44" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="565" y="210" text-anchor="middle" dominant-baseline="central" style="fill:#4b5563;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;">«artifact»</text>
+  <text x="565" y="226" text-anchor="middle" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:bold;">Static Assets</text>
+</g>
+
+<!-- PM2 -->
+<g>
+  <rect x="50" y="268" width="160" height="44" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="130" y="282" text-anchor="middle" dominant-baseline="central" style="fill:#4b5563;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;">«process»</text>
+  <text x="130" y="298" text-anchor="middle" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:bold;">PM2 Process Manager</text>
+</g>
+
+<!-- Node.js runtime -->
+<g>
+  <rect x="290" y="268" width="180" height="44" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="380" y="282" text-anchor="middle" dominant-baseline="central" style="fill:#4b5563;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;">«execution env»</text>
+  <text x="380" y="298" text-anchor="middle" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:bold;">Node.js v18+ LTS</text>
+</g>
+
+<!-- ===== TIER 3: DATA ===== -->
+<g>
+  <!-- 3D face: data-server -->
+  <polygon points="20,392 30,384 670,384 660,392" fill="#f3f4f6" stroke="#111827" stroke-width="1"/>
+  <polygon points="660,392 670,384 670,484 660,492" fill="#e5e7eb" stroke="#111827" stroke-width="1"/>
+  <rect x="20" y="392" width="640" height="100" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="36" y="414" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:bold;">«device» Máy chủ dữ liệu</text>
+</g>
+
+<!-- MySQL / PostgreSQL -->
+<g>
+  <rect x="50" y="422" width="200" height="50" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="150" y="438" text-anchor="middle" dominant-baseline="central" style="fill:#4b5563;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;">«database»</text>
+  <text x="150" y="456" text-anchor="middle" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:bold;">MySQL / PostgreSQL</text>
+</g>
+
+<!-- Redis -->
+<g>
+  <rect x="280" y="422" width="180" height="50" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="370" y="438" text-anchor="middle" dominant-baseline="central" style="fill:#4b5563;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;">«cache»</text>
+  <text x="370" y="456" text-anchor="middle" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:bold;">Redis Cache</text>
+</g>
+
+<!-- Prisma ORM -->
+<g>
+  <rect x="490" y="422" width="150" height="50" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="565" y="438" text-anchor="middle" dominant-baseline="central" style="fill:#4b5563;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;">«data access»</text>
+  <text x="565" y="456" text-anchor="middle" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:bold;">Prisma ORM</text>
+</g>
+
+<!-- ===== EXTERNAL SERVICES ===== -->
+<!-- Payment Service Container -->
+<g>
+  <!-- 3D face: payment-service -->
+  <polygon points="20,548 30,540 330,540 320,548" fill="#f3f4f6" stroke="#111827" stroke-width="1"/>
+  <polygon points="320,548 330,540 330,620 320,628" fill="#e5e7eb" stroke="#111827" stroke-width="1"/>
+  <rect x="20" y="548" width="300" height="80" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="36" y="566" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;font-weight:bold;">«external system» Thanh toán</text>
+</g>
+
+<!-- VNPay API -->
+<g>
+  <rect x="40" y="576" width="110" height="40" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="95" y="588" text-anchor="middle" dominant-baseline="central" style="fill:#4b5563;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:bold;">«service»</text>
+  <text x="95" y="604" text-anchor="middle" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;">VNPay API</text>
+</g>
+
+<!-- MoMo API -->
+<g>
+  <rect x="170" y="576" width="110" height="40" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="225" y="588" text-anchor="middle" dominant-baseline="central" style="fill:#4b5563;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:bold;">«service»</text>
+  <text x="225" y="604" text-anchor="middle" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;">MoMo API</text>
+</g>
+
+<!-- Email Service Container -->
+<g>
+  <!-- 3D face: email-service -->
+  <polygon points="360,548 370,540 670,540 660,548" fill="#f3f4f6" stroke="#111827" stroke-width="1"/>
+  <polygon points="660,548 670,540 670,620 660,628" fill="#e5e7eb" stroke="#111827" stroke-width="1"/>
+  <rect x="360" y="548" width="300" height="80" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="376" y="566" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;font-weight:bold;">«external system» Email</text>
+</g>
+
+<!-- SMTP -->
+<g>
+  <rect x="380" y="576" width="260" height="40" rx="0" fill="#ffffff" stroke="#111827" stroke-width="1"/>
+  <text x="510" y="588" text-anchor="middle" dominant-baseline="central" style="fill:#4b5563;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:bold;">«service»</text>
+  <text x="510" y="604" text-anchor="middle" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;">SMTP (Gmail / SendGrid)</text>
+</g>
+
+<!-- ===== CONNECTIONS ===== -->
+<!-- Client → Nginx -->
+<line x1="140" y1="94" x2="140" y2="140" stroke="#111827" stroke-width="1" fill="none"/>
+<line x1="140" y1="140" x2="130" y2="140" stroke="#111827" stroke-width="1" fill="none"/>
+<line x1="130" y1="140" x2="130" y2="196" stroke="#111827" stroke-width="1" marker-end="url(#arrow)" fill="none"/>
+<text x="148" y="130" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;paint-order:stroke;stroke:#ffffff;stroke-width:4px;">HTTPS :443</text>
+
+<line x1="350" y1="94" x2="350" y2="140" stroke="#111827" stroke-width="1" fill="none"/>
+<line x1="350" y1="140" x2="130" y2="140" stroke="#111827" stroke-width="1" fill="none"/>
+
+<!-- Nginx → Next.js -->
+<line x1="210" y1="218" x2="290" y2="218" stroke="#111827" stroke-width="1" marker-end="url(#arrow)" fill="none"/>
+<text x="250" y="204" text-anchor="middle" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:bold;paint-order:stroke;stroke:#ffffff;stroke-width:4px;">proxy_pass</text>
+
+<!-- Nginx → Static -->
+<path d="M210 232 L238 232 L238 250 L565 250 L565 240" fill="none" stroke="#111827" stroke-width="1" marker-end="url(#arrow)"/>
+
+<!-- PM2 → Next.js (quản lý process) -->
+<line x1="210" y1="290" x2="290" y2="290" stroke="#4b5563" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)" fill="none"/>
+<text x="250" y="278" text-anchor="middle" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:bold;paint-order:stroke;stroke:#ffffff;stroke-width:4px;">quản lý</text>
+
+<!-- Next.js → MySQL -->
+<line x1="310" y1="312" x2="310" y2="370" stroke="#111827" stroke-width="1" fill="none"/>
+<line x1="310" y1="370" x2="150" y2="370" stroke="#111827" stroke-width="1" fill="none"/>
+<line x1="150" y1="370" x2="150" y2="422" stroke="#111827" stroke-width="1" marker-end="url(#arrow)" fill="none"/>
+<text x="214" y="360" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;paint-order:stroke;stroke:#ffffff;stroke-width:4px;">Prisma / TCP</text>
+
+<!-- Next.js → Redis -->
+<line x1="380" y1="312" x2="380" y2="422" stroke="#111827" stroke-width="1" marker-end="url(#arrow)" fill="none"/>
+<text x="392" y="360" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;paint-order:stroke;stroke:#ffffff;stroke-width:4px;">ioredis</text>
+
+<!-- Next.js → VNPay/MoMo -->
+<path d="M330 312 L330 530 L170 530" fill="none" stroke="#111827" stroke-width="1"/>
+<line x1="170" y1="530" x2="170" y2="548" stroke="#111827" stroke-width="1" marker-end="url(#arrow)" fill="none"/>
+<text x="210" y="518" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;paint-order:stroke;stroke:#ffffff;stroke-width:4px;">HTTPS POST</text>
+
+<!-- Next.js → Email -->
+<path d="M470 312 L470 530 L500 530" fill="none" stroke="#111827" stroke-width="1"/>
+<line x1="500" y1="530" x2="500" y2="548" stroke="#111827" stroke-width="1" marker-end="url(#arrow)" fill="none"/>
+<text x="480" y="518" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;paint-order:stroke;stroke:#ffffff;stroke-width:4px;">SMTP / API</text>
+
+<!-- ===== LEGEND ===== -->
+<g>
+  <!-- Divider -->
+  <line x1="20" y1="642" x2="660" y2="642" stroke="#e5e7eb" stroke-width="1"/>
+  
+  <!-- Solid line legend (Public network connection) -->
+  <line x1="140" y1="658" x2="164" y2="658" stroke="#111827" stroke-width="1" marker-end="url(#arrow)" fill="none"/>
+  <text x="174" y="658" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;">Kết nối mạng (Công cộng / Internet)</text>
+  
+  <!-- Dashed line legend (Internal private connection) -->
+  <line x1="410" y1="658" x2="434" y2="658" stroke="#4b5563" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)" fill="none"/>
+  <text x="444" y="658" dominant-baseline="central" style="fill:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;font-weight:bold;">Kết nối nội bộ (Mạng riêng)</text>
+</g>
+</svg>
