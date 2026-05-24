@@ -6,11 +6,12 @@ import { join } from 'path'
 import { existsSync } from 'fs'
 
 export async function POST(request: NextRequest) {
+  const user = await getCurrentUser(request)
+  if (!user || user.role !== 'ADMIN') {
+    return NextResponse.json(unauthorized(), { status: 401 })
+  }
+
   try {
-    const user = await getCurrentUser(request)
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json(unauthorized(), { status: 401 })
-    }
 
     const data = await request.formData()
     const file: File | null = data.get('file') as unknown as File

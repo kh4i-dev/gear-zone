@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 import { Button, Input } from '@/components/domain/ui'
 
 export default function UserLoginPage() {
-  const router = useRouter()
+  const { push, refresh } = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -33,8 +33,8 @@ export default function UserLoginPage() {
       }
 
       toast.success(`Chào mừng ${data.user.name}!`)
-      router.push('/')
-      router.refresh()
+      push('/')
+      refresh()
     } catch {
       toast.error('Lỗi kết nối')
     } finally {
@@ -46,10 +46,10 @@ export default function UserLoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-slate-950 py-12 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm mb-4">
-            <Gamepad2 className="h-6 w-6" />
+          <Link href="/" className="inline-flex size-12 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm mb-4">
+            <Gamepad2 className="size-6" />
           </Link>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">Chào mừng trở lại</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-white">Chào mừng trở lại</h1>
           <p className="mt-2 text-sm text-slate-400">Đăng nhập bằng tài khoản đã đăng ký</p>
         </div>
 

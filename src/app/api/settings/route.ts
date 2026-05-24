@@ -4,10 +4,8 @@ import { success, fail } from '@/lib/api'
 
 export async function GET() {
   try {
-    const settings = await prisma.setting.findMany({
-      where: { key: 'homepage_video' }
-    })
-    const settingsMap = settings.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {})
+    const settings = await prisma.setting.findMany()
+    const settingsMap = settings.reduce((acc, s: any) => ({ ...acc, [s.key]: s.value }), {})
     return NextResponse.json(success(settingsMap))
   } catch (error: any) {
     if (error.code === 'P2021') {

@@ -7,6 +7,7 @@ import { Navbar } from '@/components/domain/Navbar'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { cn, formatDateTime, formatPrice } from '@/lib/utils'
 import { toast } from 'sonner'
+import { getAdminPath } from '@/lib/adminPath'
 
 interface AdminOrder {
   id: string
@@ -48,7 +49,7 @@ const paymentMethodLabels: Record<string, string> = {
 }
 
 export default function AdminOrdersPage() {
-  const router = useRouter()
+  const { replace } = useRouter()
   const { user, isLoading: authLoading } = useAuth()
   const [orders, setOrders] = useState<AdminOrder[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -56,9 +57,9 @@ export default function AdminOrdersPage() {
 
   useEffect(() => {
     if (!authLoading && (!user || user.role !== 'ADMIN')) {
-      router.replace('/admin/login')
+      replace(getAdminPath('/login'))
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading, replace])
 
   useEffect(() => {
     if (user?.role === 'ADMIN') {
@@ -66,7 +67,7 @@ export default function AdminOrdersPage() {
     }
   }, [user])
 
-  const fetchOrders = async () => {
+  async function fetchOrders() {
     setIsLoading(true)
     try {
       const res = await fetch('/api/admin/orders', { credentials: 'include' })
@@ -121,7 +122,7 @@ export default function AdminOrdersPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
+        <Loader2 className="size-8 animate-spin text-blue-400" />
       </div>
     )
   }
@@ -134,22 +135,23 @@ export default function AdminOrdersPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-white/5 pb-6">
           <div>
             <div className="flex items-center gap-2 text-blue-400 text-sm font-semibold uppercase tracking-wider mb-1">
-              <ShieldCheck className="w-4 h-4" /> Vận hành đơn hàng
+              <ShieldCheck className="size-4" /> Vận hành đơn hàng
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight">Đơn Hàng</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">Đơn Hàng</h1>
             <p className="text-muted-foreground mt-1">Theo dõi khách hàng, trạng thái và giá trị đơn.</p>
           </div>
           <div className="flex items-center gap-2 text-sm bg-slate-900 border border-white/5 px-4 py-2 rounded-xl">
-            <ShoppingCart className="w-4 h-4 text-blue-400" />
+            <ShoppingCart className="size-4 text-blue-400" />
             <span className="font-semibold">{orders.length}</span> đơn hàng
           </div>
         </div>
 
         <div className="relative mb-6">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground size-5" />
           <input
             type="text"
             placeholder="Tìm theo mã đơn, khách hàng, email hoặc trạng thái..."
+            aria-label="Tìm kiếm đơn hàng"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             className="w-full pl-11 pr-4 py-2.5 bg-slate-900 border border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 placeholder:text-muted-foreground text-sm"
@@ -159,8 +161,8 @@ export default function AdminOrdersPage() {
         <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/5 overflow-hidden">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-400 mb-2" />
-              <p className="text-muted-foreground text-sm">Đang tải danh sách đơn hàng...</p>
+              <Loader2 className="size-8 animate-spin text-blue-400 mb-2" />
+              <p className="text-muted-foreground text-sm">Đang tải danh sách đơn hàng…</p>
             </div>
           ) : filteredOrders.length > 0 ? (
             <div className="overflow-x-auto">
@@ -185,7 +187,7 @@ export default function AdminOrdersPage() {
                       </td>
                       <td className="p-4">
                         <p className="font-bold text-white text-sm flex items-center gap-1.5">
-                          <User className="w-4 h-4 text-slate-500" />
+                          <User className="size-4 text-slate-500" />
                           {order.user.name}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5">{order.user.email}</p>
@@ -195,7 +197,7 @@ export default function AdminOrdersPage() {
                       </td>
                       <td className="p-4">
                         <p className="text-sm font-semibold text-slate-200">
-                          <Package className="w-4 h-4 inline mr-1.5 text-slate-500" />
+                          <Package className="size-4 inline mr-1.5 text-slate-500" />
                           {order.items.length} dòng hàng
                         </p>
                         <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
@@ -220,7 +222,7 @@ export default function AdminOrdersPage() {
                         </select>
                       </td>
                       <td className="p-4 text-xs text-muted-foreground">
-                        <Calendar className="w-3.5 h-3.5 inline mr-1.5 text-slate-500" />
+                        <Calendar className="size-3.5 inline mr-1.5 text-slate-500" />
                         {formatDateTime(order.createdAt)}
                       </td>
                       <td className="p-4 pr-6 text-right font-mono font-bold text-emerald-400">
@@ -233,8 +235,8 @@ export default function AdminOrdersPage() {
             </div>
           ) : (
             <div className="text-center py-20 border border-dashed border-white/5 rounded-2xl m-4">
-              <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <h3 className="font-bold text-lg mb-1">Không có đơn hàng</h3>
+              <ShoppingCart className="size-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+              <h3 className="font-semibold text-lg mb-1">Không có đơn hàng</h3>
               <p className="text-muted-foreground text-sm">Chưa có dữ liệu đơn hàng phù hợp bộ lọc.</p>
             </div>
           )}

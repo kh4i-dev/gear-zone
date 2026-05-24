@@ -66,3 +66,10 @@ skills-lock.json
 
 # Agent skills
 .agents/
+.claude/
+.kiro/
+skills/
+*.save
+react_doctor_report.txt
+react_doctor_utf8.txt
+run_doctor.py

@@ -4,12 +4,12 @@ import { getCurrentUser } from '@/lib/auth'
 import { success, fail, forbidden, badRequest } from '@/lib/api'
 
 export async function GET(request: NextRequest) {
-  try {
-    const user = await getCurrentUser(request)
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json(forbidden('Chỉ admin mới có quyền truy cập'), { status: 403 })
-    }
+  const user = await getCurrentUser(request)
+  if (!user || user.role !== 'ADMIN') {
+    return NextResponse.json(forbidden('Chỉ admin mới có quyền truy cập'), { status: 403 })
+  }
 
+  try {
     const { searchParams } = new URL(request.url)
     const roleFilter = searchParams.get('role')
 
@@ -35,12 +35,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  try {
-    const user = await getCurrentUser(request)
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json(forbidden('Chỉ admin mới có quyền truy cập'), { status: 403 })
-    }
+  const user = await getCurrentUser(request)
+  if (!user || user.role !== 'ADMIN') {
+    return NextResponse.json(forbidden('Chỉ admin mới có quyền truy cập'), { status: 403 })
+  }
 
+  try {
     const body = await request.json()
     const { userId, role } = body
 

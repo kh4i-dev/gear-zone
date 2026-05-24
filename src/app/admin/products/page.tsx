@@ -2,12 +2,16 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import Image from 'next/image'
 import { Boxes, ImageIcon, Loader2, Package, Plus, Search, ShieldCheck, Tag, TrendingUp, Edit2, Trash2 } from 'lucide-react'
 import { Navbar } from '@/components/domain/Navbar'
 import { Button, Input } from '@/components/domain/ui'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { formatPrice } from '@/lib/utils'
 import { toast } from 'sonner'
+import { getAdminPath } from '@/lib/adminPath'
+import { RichTextEditor } from '@/components/domain/RichTextEditor'
 
 interface AdminProduct {
   id: string
@@ -34,30 +38,72 @@ const initialForm = {
 }
 
 export default function AdminProductsPage() {
-  const router = useRouter()
+  const { replace } = useRouter()
   const { user, isLoading: authLoading } = useAuth()
-  const [products, setProducts] = useState<AdminProduct[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
+
+  const [dataState, setDataState] = useState({
+    products: [] as AdminProduct[],
+    categories: [] as any[],
+    isLoading: true,
+  })
+  const { products, categories, isLoading } = dataState
+
+  const setProducts = (val: AdminProduct[] | ((prev: AdminProduct[]) => AdminProduct[])) => {
+    setDataState(prev => {
+      const nextProducts = typeof val === 'function' ? val(prev.products) : val
+      return { ...prev, products: nextProducts }
+    })
+  }
+  const setCategories = (val: any[] | ((prev: any[]) => any[])) => {
+    setDataState(prev => {
+      const nextCategories = typeof val === 'function' ? val(prev.categories) : val
+      return { ...prev, categories: nextCategories }
+    })
+  }
+  const setIsLoading = (val: boolean) => setDataState(prev => ({ ...prev, isLoading: val }))
+
+  const [uiState, setUiState] = useState({
+    isSaving: false,
+    isUploading: false,
+    showForm: false,
+    editingId: null as string | null,
+  })
+  const { isSaving, isUploading, showForm, editingId } = uiState
+
+  const setIsSaving = (val: boolean) => setUiState(prev => ({ ...prev, isSaving: val }))
+  const setIsUploading = (val: boolean) => setUiState(prev => ({ ...prev, isUploading: val }))
+  const setShowForm = (val: boolean) => setUiState(prev => ({ ...prev, showForm: val }))
+  const setEditingId = (val: string | null) => setUiState(prev => ({ ...prev, editingId: val }))
+
   const [searchQuery, setSearchQuery] = useState('')
   const [formData, setFormData] = useState(initialForm)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [showForm, setShowForm] = useState(false)
 
   useEffect(() => {
     if (!authLoading && (!user || user.role !== 'ADMIN')) {
-      router.replace('/admin/login')
+      replace(getAdminPath('/login'))
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading, replace])
 
   useEffect(() => {
     if (user?.role === 'ADMIN') {
       fetchProducts()
+      fetchCategories()
     }
   }, [user])
 
-  const fetchProducts = async () => {
+  async function fetchCategories() {
+    try {
+      const res = await fetch('/api/categories')
+      const result = await res.json()
+      if (res.ok && result.data) {
+        setCategories(result.data)
+      }
+    } catch {
+      // Silently ignore
+    }
+  }
+
+  async function fetchProducts() {
     setIsLoading(true)
     try {
       const res = await fetch('/api/admin/products', { credentials: 'include' })
@@ -108,6 +154,7 @@ export default function AdminProductsPage() {
       setEditingId(null)
       setShowForm(false)
       await fetchProducts()
+      await fetchCategories()
     } catch {
       toast.error(editingId ? 'Không thể cập nhật sản phẩm' : 'Không thể thêm sản phẩm')
     } finally {
@@ -166,12 +213,11 @@ export default function AdminProductsPage() {
     setIsUploading(true)
 
     try {
-      const uploadedUrls: string[] = []
-      for (let i = 0; i < files.length; i++) {
+      async function uploadSingleFile(file: File) {
         const uploadData = new FormData()
-        uploadData.append('image', files[i])
+        uploadData.append('image', file)
 
-        const res = await fetch('/api/admin/upload-product-image', {
+        const res = await window.fetch('/api/admin/upload-product-image', {
           method: 'POST',
           credentials: 'include',
           body: uploadData,
@@ -179,9 +225,15 @@ export default function AdminProductsPage() {
         const result = await res.json()
 
         if (res.ok && result.data?.imageUrl) {
-          uploadedUrls.push(result.data.imageUrl)
+          return result.data.imageUrl
         }
+        return null
       }
+
+      const uploadPromises = Array.from(files).map(uploadSingleFile)
+
+      const results = await Promise.all(uploadPromises)
+      const uploadedUrls = results.filter(Boolean) as string[]
 
       if (uploadedUrls.length > 0) {
         const combined = uploadedUrls.join('|')
@@ -212,13 +264,13 @@ export default function AdminProductsPage() {
   }, [products, searchQuery])
 
   const existingCategories = useMemo(() => {
-    return Array.from(new Set(products.map((p) => p.category?.name).filter(Boolean))) as string[]
-  }, [products])
+    return categories.map((c) => c.name) as string[]
+  }, [categories])
 
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
+        <Loader2 className="size-8 animate-spin text-blue-400" />
       </div>
     )
   }
@@ -231,24 +283,24 @@ export default function AdminProductsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-white/5 pb-6">
           <div>
             <div className="flex items-center gap-2 text-blue-400 text-sm font-semibold uppercase tracking-wider mb-1">
-              <ShieldCheck className="w-4 h-4" /> Quản lý kho hàng
+              <ShieldCheck className="size-4" /> Quản lý kho hàng
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight">Sản Phẩm</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">Sản Phẩm</h1>
             <p className="text-muted-foreground mt-1">Thêm sản phẩm, ảnh, giá bán, giá cũ và số lượng tồn kho.</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 text-sm bg-slate-900 border border-white/5 px-4 py-2 rounded-xl">
-              <Package className="w-4 h-4 text-blue-400" />
+              <Package className="size-4 text-blue-400" />
               <span className="font-semibold">{products.length}</span> sản phẩm
             </div>
-            <button
+            <button type="button"
               onClick={() => {
                 setShowForm(!showForm)
                 if (editingId) handleCancelEdit()
               }}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-lg transition-all"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="size-4" />
               {showForm ? 'Đóng' : 'Thêm sản phẩm'}
             </button>
           </div>
@@ -257,11 +309,11 @@ export default function AdminProductsPage() {
         {(showForm || editingId !== null) && (
           <form onSubmit={handleSubmit} className="mb-8 bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/5 p-5">
           <div className="flex items-center gap-2 mb-5">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-              {editingId ? <Edit2 className="w-4 h-4 text-blue-400" /> : <Plus className="w-4 h-4 text-blue-400" />}
+            <div className="size-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+              {editingId ? <Edit2 className="size-4 text-blue-400" /> : <Plus className="size-4 text-blue-400" />}
             </div>
             <div>
-              <h2 className="font-bold text-lg">{editingId ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới'}</h2>
+              <h2 className="font-semibold text-lg">{editingId ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới'}</h2>
               <p className="text-xs text-muted-foreground">Dùng ảnh URL trước; upload file có thể thêm sau.</p>
             </div>
           </div>
@@ -285,7 +337,7 @@ export default function AdminProductsPage() {
                 />
                 <datalist id="categories">
                   {existingCategories.map((cat) => (
-                    <option key={cat} value={cat} />
+                    <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </datalist>
               </div>
@@ -297,7 +349,7 @@ export default function AdminProductsPage() {
                 className="md:col-span-2"
               />
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-muted-foreground mb-1.5">Chọn các ảnh từ thư mục (Có thể chọn nhiều ảnh cùng lúc)</label>
+                <p className="block text-sm font-medium text-muted-foreground mb-1.5">Chọn các ảnh từ thư mục (Có thể chọn nhiều ảnh cùng lúc)</p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <input
                     type="file"
@@ -305,12 +357,13 @@ export default function AdminProductsPage() {
                     accept="image/png,image/jpeg,image/webp,image/gif"
                     onChange={handleImageUpload}
                     disabled={isUploading}
+                    aria-label="Chọn các tệp ảnh sản phẩm"
                     className="block w-full text-sm text-muted-foreground file:mr-4 file:h-10 file:rounded-xl file:border-0 file:bg-slate-800 file:px-4 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-700 disabled:opacity-50"
                   />
                   {isUploading && (
                     <div className="flex items-center gap-2 text-sm text-blue-400">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Đang tải các ảnh...
+                      <Loader2 className="size-4 animate-spin" />
+                      Đang tải các ảnh…
                     </div>
                   )}
                 </div>
@@ -326,7 +379,7 @@ export default function AdminProductsPage() {
                   placeholder="3790000"
                 />
                 {formData.oldPrice && (
-                  <p className="mt-1.5 text-xs text-emerald-400 font-bold font-mono px-1 flex items-center gap-1 bg-emerald-500/10 py-1 px-2 rounded-lg border border-emerald-500/20 w-fit">
+                  <p className="mt-1.5 text-xs text-emerald-400 font-bold font-mono flex items-center gap-1 bg-emerald-500/10 py-1 px-2 rounded-lg border border-emerald-500/20 w-fit">
                     <span className="text-[10px]">➔ Xem trước:</span> {formatPrice(Number(formData.oldPrice))}
                   </p>
                 )}
@@ -342,7 +395,7 @@ export default function AdminProductsPage() {
                   required
                 />
                 {formData.price && (
-                  <p className="mt-1.5 text-xs text-emerald-400 font-bold font-mono px-1 flex items-center gap-1 bg-emerald-500/10 py-1 px-2 rounded-lg border border-emerald-500/20 w-fit">
+                  <p className="mt-1.5 text-xs text-emerald-400 font-bold font-mono flex items-center gap-1 bg-emerald-500/10 py-1 px-2 rounded-lg border border-emerald-500/20 w-fit">
                     <span className="text-[10px]">➔ Xem trước:</span> {formatPrice(Number(formData.price))}
                   </p>
                 )}
@@ -358,25 +411,24 @@ export default function AdminProductsPage() {
                 required
               />
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-muted-foreground mb-1.5">Mô tả / Bài viết chi tiết (Hỗ trợ HTML)</label>
-                <textarea
+                <p className="block text-sm font-medium text-muted-foreground mb-1.5">Mô tả / Bài viết chi tiết (Soạn thảo trực quan WYSIWYG hoặc HTML)</p>
+                <RichTextEditor
                   value={formData.description}
-                  onChange={(event) => setFormData({ ...formData, description: event.target.value })}
-                  placeholder="Mô tả ngắn hoặc bài viết chi tiết giới thiệu sản phẩm. Hỗ trợ thẻ HTML..."
-                  rows={4}
-                  className="w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  onChange={(val) => setFormData({ ...formData, description: val })}
+                  placeholder="Viết bài viết giới thiệu sản phẩm... Bạn có thể bôi đen chữ để chọn định dạng Đậm, Nghiêng, Gạch chân, Tiêu đề hoặc Danh sách tiện lợi."
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-indigo-400 mb-1.5 font-bold flex items-center gap-1.5">
-                  <span className="inline-block w-1.5 h-1.5 bg-indigo-400 rounded-full"></span>
+                <p className="block text-sm font-medium text-indigo-400 mb-1.5 font-bold flex items-center gap-1.5">
+                  <span className="inline-block size-1.5 bg-indigo-400 rounded-full"></span>
                   Thông số kỹ thuật chi tiết
-                </label>
+                </p>
                 <textarea
                   value={formData.specs}
                   onChange={(event) => setFormData({ ...formData, specs: event.target.value })}
                   placeholder="Nhập thông số kỹ thuật chi tiết, mỗi thông số trên 1 dòng dạng Nhãn: Giá trị&#10;Ví dụ:&#10;Thương hiệu: Akko&#10;Kết nối: Bluetooth 5.0, 2.4Ghz, Type-C&#10;Dung lượng pin: 3000 mAh&#10;Switch: Akko V3 Cream Yellow&#10;LED: RGB 16.8 triệu màu"
                   rows={5}
+                  aria-label="Thông số kỹ thuật chi tiết"
                   className="w-full rounded-xl border border-indigo-500/20 bg-slate-950/60 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                 />
                 <p className="mt-1 text-[11px] text-slate-400">Các thông số này sẽ hiển thị đẹp đẽ trong bảng &quot;Thông số kỹ thuật&quot; và Modal cấu hình chi tiết ở trang khách hàng.</p>
@@ -385,14 +437,16 @@ export default function AdminProductsPage() {
 
             <div className="rounded-2xl border border-white/5 bg-slate-950/50 overflow-hidden min-h-[260px] flex flex-col">
               {formData.imageUrl ? (
-                <img
-                  src={formData.imageUrl}
+                <Image
+                  src={formData.imageUrl.split('|')[0]}
                   alt="Xem trước sản phẩm"
+                  width={400}
+                  height={200}
                   className="h-48 w-full object-cover bg-slate-950"
                 />
               ) : (
                 <div className="h-48 flex items-center justify-center bg-slate-950">
-                  <ImageIcon className="w-10 h-10 text-slate-600" />
+                  <ImageIcon className="size-10 text-slate-600" />
                 </div>
               )}
               <div className="p-4 flex-1">
@@ -416,12 +470,12 @@ export default function AdminProductsPage() {
 
           <div className="flex justify-end gap-3 mt-5">
             {editingId && (
-              <Button type="button" variant="secondary" onClick={handleCancelEdit} disabled={isSaving} className="bg-slate-800 hover:bg-slate-700">
+              <Button type="button" onClick={handleCancelEdit} disabled={isSaving} className="bg-slate-800 hover:bg-slate-700">
                 Hủy
               </Button>
             )}
             <Button type="submit" isLoading={isSaving} className="gap-2">
-              {editingId ? <Edit2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              {editingId ? <Edit2 className="size-4" /> : <Plus className="size-4" />}
               {editingId ? 'Cập nhật' : 'Thêm sản phẩm'}
             </Button>
           </div>
@@ -429,10 +483,11 @@ export default function AdminProductsPage() {
         )}
 
         <div className="relative mb-6">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground size-5" />
           <input
             type="text"
             placeholder="Tìm theo tên sản phẩm hoặc danh mục..."
+            aria-label="Tìm kiếm sản phẩm"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             className="w-full pl-11 pr-4 py-2.5 bg-slate-900 border border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 placeholder:text-muted-foreground text-sm"
@@ -442,8 +497,8 @@ export default function AdminProductsPage() {
         <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/5 overflow-hidden">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-400 mb-2" />
-              <p className="text-muted-foreground text-sm">Đang tải danh sách sản phẩm...</p>
+              <Loader2 className="size-8 animate-spin text-blue-400 mb-2" />
+              <p className="text-muted-foreground text-sm">Đang tải danh sách sản phẩm…</p>
             </div>
           ) : filteredProducts.length > 0 ? (
             <div className="overflow-x-auto">
@@ -464,10 +519,10 @@ export default function AdminProductsPage() {
                       <td className="p-4 pl-6">
                         <div className="flex items-center gap-3">
                           {product.imageUrl ? (
-                            <img src={product.imageUrl} alt={product.name} className="w-14 h-14 rounded-xl object-cover bg-slate-950 border border-white/5" />
+                            <Image src={product.imageUrl.split('|')[0]} alt={product.name} width={56} height={56} className="size-14 rounded-xl object-cover bg-slate-950 border border-white/5" />
                           ) : (
-                            <div className="w-14 h-14 rounded-xl bg-slate-950 border border-white/5 flex items-center justify-center">
-                              <ImageIcon className="w-5 h-5 text-slate-600" />
+                            <div className="size-14 rounded-xl bg-slate-950 border border-white/5 flex items-center justify-center">
+                              <ImageIcon className="size-5 text-slate-600" />
                             </div>
                           )}
                           <div className="min-w-0">
@@ -480,7 +535,7 @@ export default function AdminProductsPage() {
                       </td>
                       <td className="p-4">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                          <Tag className="w-3.5 h-3.5" />
+                          <Tag className="size-3.5" />
                           {product.category?.name || 'Chưa phân loại'}
                         </span>
                       </td>
@@ -492,13 +547,13 @@ export default function AdminProductsPage() {
                       </td>
                       <td className="p-4">
                         <span className={product.stock <= 5 ? 'text-red-400 font-bold' : 'text-slate-200 font-semibold'}>
-                          <Boxes className="w-4 h-4 inline mr-1.5 text-slate-500" />
+                          <Boxes className="size-4 inline mr-1.5 text-slate-500" />
                           {product.stock}
                         </span>
                       </td>
                       <td className="p-4">
                         <span className="text-emerald-400 font-semibold">
-                          <TrendingUp className="w-4 h-4 inline mr-1.5" />
+                          <TrendingUp className="size-4 inline mr-1.5" />
                           {product.soldCount}
                         </span>
                       </td>
@@ -510,7 +565,7 @@ export default function AdminProductsPage() {
                             className="p-2 rounded-lg transition-colors text-blue-400 hover:bg-blue-400/10"
                             title="Sửa sản phẩm"
                           >
-                            <Edit2 className="w-4 h-4" />
+                            <Edit2 className="size-4" />
                           </button>
                           <button
                             type="button"
@@ -519,7 +574,7 @@ export default function AdminProductsPage() {
                             className={`p-2 rounded-lg transition-colors ${product.soldCount > 0 ? 'text-slate-600 cursor-not-allowed' : 'text-red-400 hover:bg-red-400/10'}`}
                             title={product.soldCount > 0 ? 'Không thể xoá sản phẩm đã bán' : 'Xoá sản phẩm'}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="size-4" />
                           </button>
                         </div>
                       </td>
@@ -530,8 +585,8 @@ export default function AdminProductsPage() {
             </div>
           ) : (
             <div className="text-center py-20 border border-dashed border-white/5 rounded-2xl m-4">
-              <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <h3 className="font-bold text-lg mb-1">Không có sản phẩm</h3>
+              <Package className="size-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+              <h3 className="font-semibold text-lg mb-1">Không có sản phẩm</h3>
               <p className="text-muted-foreground text-sm">Chưa có dữ liệu sản phẩm phù hợp bộ lọc.</p>
             </div>
           )}

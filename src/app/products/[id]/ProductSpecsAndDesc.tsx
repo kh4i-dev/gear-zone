@@ -1,6 +1,7 @@
 "use client"
 import { useState } from 'react'
-import { X, ShieldCheck, Cpu } from 'lucide-react'
+import { X, ShieldCheck, Cpu, Truck, Star } from 'lucide-react'
+import Image from 'next/image'
 
 function inlineParse(text: string): string {
   let res = text
@@ -81,28 +82,35 @@ export function ProductSpecsAndDesc({ product }: { product: any }) {
     : [rawDescription, '']
 
   const displayDescription = descPart.trim()
-  const parsedDescription = parseMarkdown(displayDescription)
+  const isHtml = /<[a-z][\s\S]*>/i.test(displayDescription)
+  const parsedDescription = isHtml ? displayDescription : parseMarkdown(displayDescription)
 
-  const customSpecsLines = specsPart 
-    ? specsPart.split('\n').map(l => l.trim()).filter(Boolean) 
-    : []
+  // Determine if we should show the read more / collapse logic based on description length
+  const isLongDescription = displayDescription.length > 800 || parsedDescription.length > 1000
 
-  const customSpecs = customSpecsLines.map(line => {
-    // Split by tab (\t), colon (:), vertical bar (|), equals (=), or 2+ consecutive spaces
-    const match = line.match(/^([^:\t|=]+?)[:\t|=](.+)$/) || line.match(/^(.+?)\s{2,}(.+)$/)
-    let label = ''
-    let value = ''
-    if (match) {
-      label = match[1]?.trim() || ''
-      value = match[2]?.trim() || ''
-    } else {
-      // Fallback: standard colon split
-      const parts = line.split(':')
-      label = parts[0]?.trim() || ''
-      value = parts.slice(1).join(':')?.trim() || ''
+  const customSpecs: { label: string; value: string }[] = []
+  if (specsPart) {
+    const lines = specsPart.split('\n')
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed) continue
+      
+      const match = trimmed.match(/^([^:\t|=]+?)[:\t|=](.+)$/) || trimmed.match(/^(.+?)\s{2,}(.+)$/)
+      let label = ''
+      let value = ''
+      if (match) {
+        label = match[1]?.trim() || ''
+        value = match[2]?.trim() || ''
+      } else {
+        const parts = trimmed.split(':')
+        label = parts[0]?.trim() || ''
+        value = parts.slice(1).join(':')?.trim() || ''
+      }
+      if (label && value) {
+        customSpecs.push({ label, value })
+      }
     }
-    return { label, value }
-  }).filter(spec => spec.label && spec.value)
+  }
 
   // Blended specs list for the right sidebar card
   const summarySpecs = [
@@ -114,18 +122,18 @@ export function ProductSpecsAndDesc({ product }: { product: any }) {
   ]
 
   return (
-    <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+    <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
       {/* LEFT: Description (66% width) */}
       <div className="lg:col-span-2 bg-slate-900/40 border border-white/5 p-6 lg:p-8 rounded-3xl backdrop-blur-md relative flex flex-col">
-        <h2 className="text-xl font-extrabold tracking-tight text-white mb-6 pb-4 border-b border-white/5">
+        <h2 className="text-xl font-semibold tracking-tight text-white mb-6 pb-4 border-b border-white/5">
           Thông tin sản phẩm
         </h2>
         
-        <div className={`prose prose-invert prose-lg max-w-none prose-p:text-slate-300 prose-p:text-justify prose-headings:text-white prose-a:text-indigo-400 prose-img:rounded-2xl prose-img:mx-auto prose-img:my-6 prose-img:shadow-2xl overflow-hidden transition-all duration-500 relative ${!isExpanded ? 'max-h-[600px]' : ''}`}>
+        <div className={`prose prose-invert prose-lg max-w-none prose-p:text-slate-300 prose-p:text-justify prose-headings:text-white prose-a:text-indigo-400 prose-img:rounded-2xl prose-img:mx-auto prose-img:my-6 prose-img:shadow-2xl overflow-hidden transition-all duration-500 relative ${isLongDescription && !isExpanded ? 'max-h-[500px]' : ''}`}>
           {displayDescription ? (
             <div className="space-y-4">
               <div 
-                dangerouslySetInnerHTML={{ __html: parsedDescription }} 
+                {...{ dangerouslySetInnerHTML: { __html: parsedDescription } }} 
                 className={`leading-relaxed text-justify prose-p:text-justify ${!/<[a-z][\s\S]*>/i.test(displayDescription) ? 'whitespace-pre-line' : ''}`} 
               />
 
@@ -144,13 +152,15 @@ export function ProductSpecsAndDesc({ product }: { product: any }) {
               </p>
               
               {/* Thêm ảnh chi tiết minh họa */}
-              <div className="my-6 rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative group">
-                <img 
+              <div className="my-6 rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative group aspect-video">
+                <Image 
                   src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1000" 
                   alt="Chi tiết sản phẩm" 
-                  className="w-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-700" 
+                  sizes="(max-width: 768px) 100vw, 800px"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4 z-10">
                   <p className="text-xs text-slate-300">Hình ảnh trải nghiệm sản phẩm thực tế tại cửa hàng GearZone</p>
                 </div>
               </div>
@@ -162,30 +172,81 @@ export function ProductSpecsAndDesc({ product }: { product: any }) {
           )}
 
           {/* Fade overlay when collapsed */}
-          {!isExpanded && (
-            <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent pointer-events-none" />
+          {isLongDescription && !isExpanded && (
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent pointer-events-none" />
           )}
         </div>
 
+        {/* Premium Store Benefits Grid */}
+        <div className="mt-8 pt-8 border-t border-white/5">
+          <p className="text-xs font-extrabold uppercase tracking-wider text-indigo-400 mb-5 flex items-center gap-2">
+            <span className="size-1.5 bg-indigo-400 rounded-full animate-ping"></span>
+            Đặc quyền mua hàng tại GearZone
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-4 rounded-2xl bg-slate-950/40 border border-white/5 hover:border-indigo-500/20 hover:bg-slate-950/60 transition-all duration-300 group flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 group-hover:scale-110 transition-transform shrink-0">
+                <Truck className="size-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white">Giao hàng hoả tốc 2h</p>
+                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">Miễn phí vận chuyển nội thành Hà Nội & TP.HCM, nhận sản phẩm ngay sau 2 giờ đặt mua.</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-950/40 border border-white/5 hover:border-emerald-500/20 hover:bg-slate-950/60 transition-all duration-300 group flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform shrink-0">
+                <ShieldCheck className="size-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white">Chính hãng 100%</p>
+                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">Đầy đủ tem mác chính ngạch, cam kết bảo hành lỗi 1 đổi 1 tận nơi trong 12 tháng đầu.</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-950/40 border border-white/5 hover:border-amber-500/20 hover:bg-slate-950/60 transition-all duration-300 group flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 group-hover:scale-110 transition-transform shrink-0">
+                <Star className="size-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white">Đổi trả VIP 30 ngày</p>
+                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">Khách hàng được hỗ trợ đổi mới thiết bị cực kỳ nhanh chóng nếu phát hiện lỗi kỹ thuật.</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-950/40 border border-white/5 hover:border-purple-500/20 hover:bg-slate-950/60 transition-all duration-300 group flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform shrink-0">
+                <Cpu className="size-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white">Hỗ trợ setup trọn đời</p>
+                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">Đội ngũ kỹ sư công nghệ sẵn sàng tư vấn cấu hình, tối ưu hóa phần mềm góc máy 24/7.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Read More button */}
-        <button 
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="mt-6 mx-auto bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 font-bold px-6 py-2.5 rounded-xl border border-indigo-500/20 transition-all text-sm flex items-center gap-2"
-        >
-          {isExpanded ? 'Thu gọn bài viết ▲' : 'Đọc tiếp bài viết ▼'}
-        </button>
+        {isLongDescription && (
+          <button type="button" 
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="mt-6 mx-auto bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 font-bold px-6 py-2.5 rounded-xl border border-indigo-500/20 transition-all text-sm flex items-center gap-2"
+          >
+            {isExpanded ? 'Thu gọn bài viết ▲' : 'Đọc tiếp bài viết ▼'}
+          </button>
+        )}
       </div>
 
       {/* RIGHT: Specs Table (33% width) */}
       <div className="bg-slate-900/40 border border-white/5 p-6 lg:p-8 rounded-3xl backdrop-blur-md h-fit">
-        <h2 className="text-xl font-extrabold tracking-tight text-white mb-6 pb-4 border-b border-white/5">
+        <h2 className="text-xl font-semibold tracking-tight text-white mb-6 pb-4 border-b border-white/5">
           Thông số kỹ thuật
         </h2>
         
         <table className="w-full text-left text-sm text-slate-300 border-collapse rounded-xl overflow-hidden border border-white/5">
           <tbody>
-            {summarySpecs.map((spec, idx) => (
-              <tr key={idx} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
+            {summarySpecs.map((spec) => (
+              <tr key={spec.label} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
                 <th className="py-3.5 px-4 font-semibold text-slate-400 w-1/3 bg-slate-950/50 text-xs">{spec.label}</th>
                 <td className="py-3.5 px-4 font-medium text-white bg-slate-900/20 text-xs">{spec.value}</td>
               </tr>
@@ -193,11 +254,11 @@ export function ProductSpecsAndDesc({ product }: { product: any }) {
           </tbody>
         </table>
         
-        <button 
+        <button type="button" 
           onClick={() => setShowSpecsModal(true)}
           className="w-full mt-6 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-3 px-4 rounded-xl transition-all border border-white/5 active:scale-95 flex items-center justify-center gap-2"
         >
-          <Cpu className="w-3.5 h-3.5 text-blue-400" />
+          <Cpu className="size-3.5 text-blue-400" />
           Xem cấu hình chi tiết ➔
         </button>
       </div>
@@ -209,19 +270,19 @@ export function ProductSpecsAndDesc({ product }: { product: any }) {
             {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b border-white/5 mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                  <Cpu className="w-5 h-5 text-blue-400" />
+                <div className="size-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                  <Cpu className="size-5 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-lg text-white">Cấu hình chi tiết</h3>
+                  <h3 className="font-semibold text-lg text-white">Cấu hình chi tiết</h3>
                   <p className="text-xs text-slate-400">{product.name}</p>
                 </div>
               </div>
-              <button 
+              <button type="button" 
                 onClick={() => setShowSpecsModal(false)}
                 className="p-1.5 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="size-5" />
               </button>
             </div>
 
@@ -260,8 +321,8 @@ export function ProductSpecsAndDesc({ product }: { product: any }) {
                           Thông số kỹ thuật
                         </th>
                       </tr>
-                      {customSpecs.map((spec, idx) => (
-                        <tr key={idx} className="border-b border-white/5 last:border-0 hover:bg-white/[0.01]">
+                      {customSpecs.map((spec) => (
+                        <tr key={spec.label} className="border-b border-white/5 last:border-0 hover:bg-white/[0.01]">
                           <th className="py-3 px-4 font-semibold text-slate-400 w-1/3 text-xs">{spec.label}</th>
                           <td className="py-3 px-4 font-medium text-white text-xs">{spec.value}</td>
                         </tr>
@@ -279,7 +340,7 @@ export function ProductSpecsAndDesc({ product }: { product: any }) {
 
               {/* Genuine GearZone tag */}
               <div className="flex items-center gap-2 bg-indigo-500/5 border border-indigo-500/10 p-3 rounded-2xl">
-                <ShieldCheck className="w-5 h-5 text-indigo-400 shrink-0" />
+                <ShieldCheck className="size-5 text-indigo-400 shrink-0" />
                 <p className="text-[11px] text-slate-400 leading-normal">
                   Thông số kỹ thuật được kiểm duyệt chính xác bởi đội ngũ kỹ thuật viên của <strong>GearZone Store</strong>. Bảo hành chính hãng 100%.
                 </p>
@@ -288,7 +349,7 @@ export function ProductSpecsAndDesc({ product }: { product: any }) {
 
             {/* Footer */}
             <div className="pt-4 border-t border-white/5 flex justify-end mt-4">
-              <button 
+              <button type="button" 
                 onClick={() => setShowSpecsModal(false)}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all active:scale-95"
               >

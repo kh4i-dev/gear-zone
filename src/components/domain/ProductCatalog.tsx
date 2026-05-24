@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ImageIcon, Package, Search, ShoppingCart, SlidersHorizontal, Star, Tag } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
 import { useCart } from '@/components/providers/CartProvider'
@@ -27,17 +28,28 @@ interface ProductCatalogProps {
 }
 
 export function ProductCatalog({ products, compact = false }: ProductCatalogProps) {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [category, setCategory] = useState('all')
-  const [minPrice, setMinPrice] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
-  const [sortKey, setSortKey] = useState<SortKey>('featured')
-  const [inStockOnly, setInStockOnly] = useState(false)
+  const [filters, setFilters] = useState({
+    searchQuery: '',
+    category: 'all',
+    minPrice: '',
+    maxPrice: '',
+    sortKey: 'featured' as SortKey,
+    inStockOnly: false,
+  })
+
+  const { searchQuery, category, minPrice, maxPrice, sortKey, inStockOnly } = filters
+
+  const setSearchQuery = (val: string) => setFilters(prev => ({ ...prev, searchQuery: val }))
+  const setCategory = (val: string) => setFilters(prev => ({ ...prev, category: val }))
+  const setMinPrice = (val: string) => setFilters(prev => ({ ...prev, minPrice: val }))
+  const setMaxPrice = (val: string) => setFilters(prev => ({ ...prev, maxPrice: val }))
+  const setSortKey = (val: SortKey) => setFilters(prev => ({ ...prev, sortKey: val }))
+  const setInStockOnly = (val: boolean) => setFilters(prev => ({ ...prev, inStockOnly: val }))
 
   const { addToCart } = useCart()
 
   const categories = useMemo(() => {
-    return Array.from(new Set(products.map((product) => product.category?.name).filter(Boolean))).sort() as string[]
+    return Array.from(new Set(products.flatMap((product) => product.category?.name ? [product.category.name] : []))).sort() as string[]
   }, [products])
 
   const filteredProducts = useMemo(() => {
@@ -72,16 +84,17 @@ export function ProductCatalog({ products, compact = false }: ProductCatalogProp
     <div className="space-y-6">
       <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4 shadow-sm backdrop-blur-md">
         <div className="mb-4 flex items-center gap-2 text-sm font-bold text-white">
-          <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
+          <SlidersHorizontal className="size-4 text-indigo-600" />
           Bộ lọc sản phẩm
         </div>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
           <div className="relative xl:col-span-2">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
             <input
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Tìm tên hàng, hãng, mô tả..."
+              aria-label="Tìm kiếm sản phẩm"
               className="h-11 w-full rounded-xl border border-white/10 bg-slate-950/60 pl-10 pr-3 text-sm text-white placeholder-slate-500 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
             />
           </div>
@@ -101,6 +114,7 @@ export function ProductCatalog({ products, compact = false }: ProductCatalogProp
             value={minPrice}
             onChange={(event) => setMinPrice(event.target.value)}
             placeholder="Giá từ"
+            aria-label="Giá tối thiểu"
             className="h-11 rounded-xl border border-white/10 bg-slate-950/60 px-3 text-sm text-white placeholder-slate-500 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
           />
           <input
@@ -109,6 +123,7 @@ export function ProductCatalog({ products, compact = false }: ProductCatalogProp
             value={maxPrice}
             onChange={(event) => setMaxPrice(event.target.value)}
             placeholder="Giá đến"
+            aria-label="Giá tối đa"
             className="h-11 rounded-xl border border-white/10 bg-slate-950/60 px-3 text-sm text-white placeholder-slate-500 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
           />
           <select
@@ -123,15 +138,16 @@ export function ProductCatalog({ products, compact = false }: ProductCatalogProp
             <option value="stock-desc">Tồn kho nhiều</option>
           </select>
         </div>
-        <label className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-slate-300">
+        <p className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-slate-300">
           <input
             type="checkbox"
             checked={inStockOnly}
             onChange={(event) => setInStockOnly(event.target.checked)}
-            className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+            aria-label="Chỉ hiện hàng còn tồn"
+            className="size-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
           />
           Chỉ hiện hàng còn tồn
-        </label>
+        </p>
       </div>
 
       {filteredProducts.length > 0 ? (
@@ -150,24 +166,24 @@ export function ProductCatalog({ products, compact = false }: ProductCatalogProp
                     </span>
                   )}
                   {product.imageUrl ? (
-                    <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                    <Image src={product.imageUrl} alt={product.name} width={300} height={225} className="size-full object-cover transition duration-300 group-hover:scale-105" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center transition duration-300 group-hover:scale-105">
-                      <ImageIcon className="h-10 w-10 text-slate-400" />
+                    <div className="flex size-full items-center justify-center transition duration-300 group-hover:scale-105">
+                      <ImageIcon className="size-10 text-slate-400" />
                     </div>
                   )}
                 </Link>
                 <div className="p-4 flex flex-1 flex-col">
                   <div className="mb-3 inline-flex items-center gap-1.5 rounded-lg bg-indigo-500/10 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-indigo-400">
-                    <Tag className="h-3 w-3" />
+                    <Tag className="size-3" />
                     {product.category?.name || 'Khác'}
                   </div>
                   <Link href={`/products/${product.id}`} className="group">
-                    <h2 className="min-h-12 text-base font-extrabold leading-6 text-white group-hover:text-indigo-400 transition-colors line-clamp-2">{product.name}</h2>
+                    <h2 className="min-h-12 text-base font-semibold leading-6 text-white group-hover:text-indigo-400 transition-colors line-clamp-2">{product.name}</h2>
                   </Link>
                   <div className="mt-2 flex items-center gap-1 text-amber-400">
                     {Array.from({ length: 5 }).map((_, index) => (
-                      <Star key={index} className="h-3.5 w-3.5 fill-current" />
+                      <Star key={index} className="size-3.5 fill-current" />
                     ))}
                     <span className="ml-1 text-xs font-semibold text-slate-500">({Math.max(product.soldCount * 7, 12)})</span>
                   </div>
@@ -187,7 +203,7 @@ export function ProductCatalog({ products, compact = false }: ProductCatalogProp
                     <span className="text-slate-500">Đã bán {product.soldCount}</span>
                   </div>
                   <div className="mt-auto pt-4">
-                    <button
+                    <button type="button"
                       onClick={(e) => {
                         e.preventDefault()
                         e.stopPropagation()
@@ -201,9 +217,9 @@ export function ProductCatalog({ products, compact = false }: ProductCatalogProp
                       toast.success(`Đã thêm ${product.name} vào giỏ hàng`)
                     }}
                     disabled={product.stock <= 0}
-                    className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 text-sm font-extrabold text-white transition hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+                    className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 text-sm font-extrabold text-white transition hover:bg-indigo-600 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-black/40"
                   >
-                    <ShoppingCart className="h-4 w-4" />
+                    <ShoppingCart className="size-4" />
                     Thêm vào giỏ
                   </button>
                   </div>
@@ -214,8 +230,8 @@ export function ProductCatalog({ products, compact = false }: ProductCatalogProp
         </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-white/10 bg-slate-900/40 py-20 text-center">
-          <Package className="mx-auto mb-4 h-12 w-12 text-slate-600" />
-          <h2 className="text-lg font-extrabold text-white">Không tìm thấy sản phẩm</h2>
+          <Package className="mx-auto mb-4 size-12 text-slate-600" />
+          <h2 className="text-lg font-semibold text-white">Không tìm thấy sản phẩm</h2>
           <p className="mt-1 text-sm text-slate-400">Thử đổi từ khóa, khoảng giá hoặc bộ lọc tồn kho.</p>
         </div>
       )}

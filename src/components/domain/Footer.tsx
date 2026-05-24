@@ -16,13 +16,14 @@ export async function Footer() {
   const email = settingsMap.contact_email || ''
   const facebook = settingsMap.contact_facebook || ''
   const zalo = settingsMap.contact_zalo || ''
+  const openingHours = settingsMap.contact_opening_hours || ''
   const guideBuy = settingsMap.guide_buy_link || ''
   const warranty = settingsMap.warranty_link || ''
   const returnPolicy = settingsMap.return_link || ''
   const payment = settingsMap.payment_link || ''
 
   // If no contact info and no social link is set, we don't need to render empty sections.
-  const hasContactInfo = address || hotline || email
+  const hasContactInfo = address || hotline || email || openingHours
   const hasSocial = facebook || zalo
 
   return (
@@ -31,8 +32,8 @@ export async function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div className="col-span-1 md:col-span-1">
             <Link href="/" className="flex items-center gap-3 mb-6">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white">
-                <Gamepad2 className="h-5 w-5" />
+              <span className="flex size-10 items-center justify-center rounded-xl bg-indigo-600 text-white">
+                <Gamepad2 className="size-5" />
               </span>
               <span className="text-xl font-extrabold tracking-tight text-white">GearZone</span>
             </Link>
@@ -42,12 +43,12 @@ export async function Footer() {
             {hasSocial && (
               <div className="flex gap-4">
                 {facebook && (
-                  <a href={facebook} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors">
-                    <Facebook className="w-5 h-5" />
+                  <a href={facebook} target="_blank" rel="noopener noreferrer" className="size-10 rounded-full bg-slate-900 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors">
+                    <Facebook className="size-5" />
                   </a>
                 )}
                 {zalo && (
-                  <a href={zalo} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors">
+                  <a href={zalo} target="_blank" rel="noopener noreferrer" className="size-10 rounded-full bg-slate-900 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors">
                     <span className="font-extrabold text-xs">Zalo</span>
                   </a>
                 )}
@@ -56,18 +57,18 @@ export async function Footer() {
           </div>
           
           <div>
-            <h3 className="text-white font-bold mb-6">Sản phẩm</h3>
+            <h3 className="text-white font-semibold mb-6">Sản phẩm</h3>
             <ul className="space-y-3 text-sm">
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Bàn phím cơ</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Chuột Gaming</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Tai nghe</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Màn hình</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Phụ kiện khác</a></li>
+              <li><Link href="/products" className="hover:text-indigo-400 transition-colors">Bàn phím cơ</Link></li>
+              <li><Link href="/products" className="hover:text-indigo-400 transition-colors">Chuột Gaming</Link></li>
+              <li><Link href="/products" className="hover:text-indigo-400 transition-colors">Tai nghe</Link></li>
+              <li><Link href="/products" className="hover:text-indigo-400 transition-colors">Màn hình</Link></li>
+              <li><Link href="/products" className="hover:text-indigo-400 transition-colors">Phụ kiện khác</Link></li>
             </ul>
           </div>
           
           <div>
-            <h3 className="text-white font-bold mb-6">Hỗ trợ khách hàng</h3>
+            <h3 className="text-white font-semibold mb-6">Hỗ trợ khách hàng</h3>
             <ul className="space-y-3 text-sm">
               <li><Link href={guideBuy} className="hover:text-indigo-400 transition-colors">Hướng dẫn mua hàng</Link></li>
               <li><Link href={warranty} className="hover:text-indigo-400 transition-colors">Chính sách bảo hành</Link></li>
@@ -79,7 +80,7 @@ export async function Footer() {
           
           {hasContactInfo && (
             <div>
-              <h3 className="text-white font-bold mb-6">Thông tin liên hệ</h3>
+              <h3 className="text-white font-semibold mb-6">Thông tin liên hệ</h3>
               <ul className="space-y-4 text-sm">
                 {address && (
                   <li className="flex flex-col">
@@ -99,6 +100,12 @@ export async function Footer() {
                     <a href={`mailto:${email}`} className="text-white hover:underline">{email}</a>
                   </li>
                 )}
+                {openingHours && (
+                  <li className="flex flex-col">
+                    <span className="text-slate-500 mb-1">Giờ mở cửa:</span>
+                    <span className="text-white">{openingHours}</span>
+                  </li>
+                )}
               </ul>
             </div>
           )}
@@ -107,8 +114,8 @@ export async function Footer() {
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p>© 2026 GearZone. All rights reserved.</p>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-white transition-colors">Điều khoản dịch vụ</a>
-            <a href="#" className="hover:text-white transition-colors">Chính sách bảo mật</a>
+            <Link href="/" className="hover:text-white transition-colors">Điều khoản dịch vụ</Link>
+            <Link href="/" className="hover:text-white transition-colors">Chính sách bảo mật</Link>
           </div>
         </div>
       </div>

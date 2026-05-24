@@ -19,7 +19,7 @@ async function verifyAndGetUser(token: string) {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true, role: true },
+      select: { id: true, username: true, email: true, phone: true, name: true, role: true },
     })
 
     return user

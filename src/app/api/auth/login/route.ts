@@ -14,42 +14,57 @@ const COOKIE_NAME = 'gearzone_session'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password } = body
+    const { username, password } = body
 
-    let loginEmail = email.toLowerCase().trim()
-    let loginPassword = password
-
-    if (loginEmail === 'admin') {
-      loginEmail = 'admin@example.com'
+    if (!username || !password) {
+      return NextResponse.json(fail('VALIDATION_ERROR', 'Tài khoản và mật khẩu là bắt buộc'), { status: 400 })
     }
+
+    const loginUsername = username.toLowerCase().trim()
+    const loginPassword = password
+
     // Auto-sync / reset Admin user with Env configurations dynamically
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com'
     const adminPassword = process.env.ADMIN_PASSWORD
-    if (loginEmail === adminEmail && adminPassword) {
+    if (loginUsername === 'admin' && adminPassword) {
       const hashedAdminPassword = await bcrypt.hash(adminPassword, 10)
       await prisma.user.upsert({
-        where: { email: adminEmail },
+        where: { username: 'admin' },
         update: {
           password: hashedAdminPassword,
+          email: adminEmail,
+          phone: '0000000000',
           role: 'ADMIN'
         },
         create: {
+          username: 'admin',
           email: adminEmail,
           name: 'Admin',
           password: hashedAdminPassword,
+          phone: '0000000000',
           role: 'ADMIN'
         }
       })
     }
 
-    const user = await prisma.user.findUnique({ where: { email: loginEmail } })
+    // Find user by username, phone, or email
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { username: loginUsername },
+          { phone: loginUsername },
+          { email: loginUsername }
+        ]
+      }
+    })
+
     if (!user) {
-      return NextResponse.json(fail('INVALID_CREDENTIALS', 'Email hoặc mật khẩu không đúng'), { status: 401 })
+      return NextResponse.json(fail('INVALID_CREDENTIALS', 'Tài khoản hoặc mật khẩu không đúng'), { status: 401 })
     }
 
     const isValid = await bcrypt.compare(loginPassword, user.password)
     if (!isValid) {
-      return NextResponse.json(fail('INVALID_CREDENTIALS', 'Email hoặc mật khẩu không đúng'), { status: 401 })
+      return NextResponse.json(fail('INVALID_CREDENTIALS', 'Tài khoản hoặc mật khẩu không đúng'), { status: 401 })
     }
 
     const token = await new SignJWT({ sub: user.id, role: user.role })
@@ -60,6 +75,8 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json(success({
       user: {
         id: user.id,
+        username: user.username,
+        phone: user.phone,
         email: user.email,
         name: user.name,
         role: user.role,

@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import Image from 'next/image'
 import { prisma } from '@/lib/db'
 import { StoreNavbar } from '@/components/domain/StoreNavbar'
 import { getCurrentUser } from '@/lib/auth'
@@ -171,9 +172,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     <div className="min-h-screen bg-slate-950 text-white">
       <StoreNavbar />
 
-      <main className="mx-auto max-w-5xl px-4 py-8">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <Link href="/products" className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 font-semibold transition group">
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
           Quay lại danh sách sản phẩm
         </Link>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 bg-slate-900/40 border border-white/5 p-6 lg:p-8 rounded-3xl backdrop-blur-md">
@@ -183,16 +184,16 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           {/* Product Info */}
           <div className="flex flex-col">
             <div className="inline-flex items-center gap-2 bg-indigo-500/10 text-indigo-400 w-fit px-3 py-1 rounded-full text-sm font-bold mb-4 border border-indigo-500/20">
-              <Tag className="w-4 h-4" />
+              <Tag className="size-4" />
               {product.category?.name || 'Chưa phân loại'}
             </div>
 
-            <h1 className="text-3xl lg:text-4xl font-extrabold mb-4">{product.name}</h1>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight leading-tight mb-4 break-words">{product.name}</h1>
             
             <div className="flex items-center gap-4 mb-6">
               <div className="flex items-center gap-1 text-amber-400">
                 {Array.from({ length: 5 }).map((_, idx) => (
-                  <Star key={idx} className="w-5 h-5 fill-current" />
+                  <Star key={idx} className="size-5 fill-current" />
                 ))}
               </div>
               <span className="text-slate-400 font-semibold text-sm">
@@ -220,14 +221,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
             <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="flex items-center gap-3 bg-slate-900 border border-white/5 p-4 rounded-xl">
-                <Truck className="w-6 h-6 text-emerald-400 shrink-0" />
+                <Truck className="size-6 text-emerald-400 shrink-0" />
                 <div>
                   <p className="font-bold text-sm">Giao hàng 2H</p>
                   <p className="text-xs text-slate-400">Nội thành miễn phí</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-slate-900 border border-white/5 p-4 rounded-xl">
-                <ShieldCheck className="w-6 h-6 text-amber-400 shrink-0" />
+                <ShieldCheck className="size-6 text-amber-400 shrink-0" />
                 <div>
                   <p className="font-bold text-sm">Bảo hành VIP</p>
                   <p className="text-xs text-slate-400">12-24 tháng 1 đổi 1</p>
@@ -237,7 +238,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
             <div className="mt-auto pt-4 flex items-center gap-4">
               <div className="bg-slate-900 border border-white/5 rounded-xl px-4 py-3 shrink-0 flex items-center justify-center">
-                <Package className="w-5 h-5 text-indigo-400 mr-2" />
+                <Package className="size-5 text-indigo-400 mr-2" />
                 <span className="font-bold">
                   {product.stock > 0 ? `Còn ${product.stock}` : <span className="text-rose-500">Hết hàng</span>}
                 </span>
@@ -275,7 +276,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         {relatedProducts.length > 0 && (
           <div className="mt-16">
             <div className="flex items-end justify-between border-b border-white/5 pb-4 mb-8">
-              <h2 className="text-xl font-extrabold tracking-tight text-white">Sản phẩm tương tự</h2>
+              <h2 className="text-xl font-semibold tracking-tight text-white">Sản phẩm tương tự</h2>
               <Link href={`/products?category=${product.categoryId}`} className="text-sm font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
                 Xem thêm &gt;
               </Link>
@@ -285,15 +286,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 <Link key={p.id} href={`/products/${p.id}`} className="group bg-slate-900 border border-white/5 rounded-2xl overflow-hidden hover:border-indigo-500/50 transition-all">
                   <div className="aspect-square bg-slate-950 relative">
                     {p.imageUrl ? (
-                      <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <Image src={p.imageUrl.split('|')[0]} alt={p.name} width={180} height={180} className="size-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <ImageIcon className="w-12 h-12 text-slate-800" />
+                      <div className="size-full flex items-center justify-center">
+                        <ImageIcon className="size-12 text-slate-800" />
                       </div>
                     )}
                   </div>
                   <div className="p-4">
-                    <h3 className="font-bold text-sm text-slate-300 line-clamp-2 mb-2 group-hover:text-indigo-400 transition-colors">{p.name}</h3>
+                    <h3 className="font-semibold text-sm text-slate-300 line-clamp-2 mb-2 group-hover:text-indigo-400 transition-colors">{p.name}</h3>
                     <div className="flex items-end gap-2">
                       <span className="font-extrabold text-white">{formatPrice(p.price)}</span>
                       {p.oldPrice && <span className="text-xs text-slate-500 line-through mb-0.5">{formatPrice(p.oldPrice)}</span>}
@@ -310,87 +311,129 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
         {/* Đánh giá & Nhận xét (GearVN Style) */}
         <div className="mt-12 bg-slate-900/40 border border-white/5 p-6 lg:p-8 rounded-3xl backdrop-blur-md">
-          <h2 className="text-xl font-extrabold tracking-tight text-white mb-6 pb-4 border-b border-white/5">
+          <h2 className="text-xl font-semibold tracking-tight text-white mb-6 pb-4 border-b border-white/5">
             Đánh giá & Nhận xét {product.name}
           </h2>
-          <div className="flex flex-col md:flex-row gap-8 items-center justify-between p-6 bg-slate-950/40 rounded-2xl border border-white/5">
-            <div className="text-center md:border-r border-white/5 md:pr-12">
-              <p className="text-5xl font-extrabold text-white">{reviewData.averageRating}/5</p>
-              <div className="flex items-center gap-1 text-amber-400 my-2 justify-center">
-                {Array.from({ length: 5 }).map((_, idx) => (
-                  <Star 
-                    key={idx} 
-                    className={`w-5 h-5 ${idx < Math.round(Number(reviewData.averageRating)) ? 'fill-current' : 'text-slate-600'}`} 
-                  />
-                ))}
-              </div>
-              <p className="text-xs text-slate-400">{reviewData.totalReviews} đánh giá & nhận xét</p>
-            </div>
-            <div className="flex-1 space-y-2 w-full max-w-md">
-              {/* 5 stars */}
-              <div className="flex items-center gap-4 text-xs">
-                <span className="w-8 text-slate-400">5 sao</span>
-                <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${reviewData.pct5}%` }} />
-                </div>
-                <span className="w-8 text-right text-slate-400">{reviewData.pct5}%</span>
-              </div>
-              {/* 4 stars */}
-              <div className="flex items-center gap-4 text-xs">
-                <span className="w-8 text-slate-400">4 sao</span>
-                <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${reviewData.pct4}%` }} />
-                </div>
-                <span className="w-8 text-right text-slate-400">{reviewData.pct4}%</span>
-              </div>
-              {/* 3, 2, 1 stars */}
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-4 text-xs opacity-40">
-                  <span className="w-8 text-slate-400">{3 - i} sao</span>
-                  <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
-                    <div className="w-0 h-full bg-indigo-500 rounded-full" />
-                  </div>
-                  <span className="w-8 text-right text-slate-400">0%</span>
-                </div>
-              ))}
-            </div>
-            <button className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm w-full md:w-auto">
-              Viết đánh giá
-            </button>
-          </div>
-
-          {/* Render dynamic mock reviews */}
-          <div className="mt-8 space-y-4">
-            {reviewData.reviews.map((rev, idx) => (
-              <div key={idx} className="p-6 bg-slate-900/20 border border-white/5 rounded-2xl hover:border-white/10 transition-colors">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 font-bold text-indigo-400">
-                      {rev.avatarLetter}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-white">{rev.name}</h4>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[11px] text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">✓ Đã mua tại shop</span>
-                        <span className="text-xs text-slate-500">• {rev.date}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 text-amber-400">
-                    {Array.from({ length: 5 }).map((_, sIdx) => (
+          {product.soldCount > 0 ? (
+            <>
+              <div className="flex flex-col md:flex-row gap-8 items-center justify-between p-6 bg-slate-950/40 rounded-2xl border border-white/5">
+                <div className="text-center md:border-r border-white/5 md:pr-12">
+                  <p className="text-5xl font-extrabold text-white">{reviewData.averageRating}/5</p>
+                  <div className="flex items-center gap-1 text-amber-400 my-2 justify-center">
+                    {Array.from({ length: 5 }).map((_, idx) => (
                       <Star 
-                        key={sIdx} 
-                        className={`w-4 h-4 ${sIdx < rev.rating ? 'fill-current' : 'text-slate-700'}`} 
+                        key={idx} 
+                        className={`size-5 ${idx < Math.round(Number(reviewData.averageRating)) ? 'fill-current' : 'text-slate-600'}`} 
                       />
                     ))}
                   </div>
+                  <p className="text-xs text-slate-400">{reviewData.totalReviews} đánh giá & nhận xét</p>
                 </div>
-                <p className="text-sm text-slate-300 leading-relaxed text-justify prose-p:text-justify whitespace-pre-line">
-                  {rev.comment}
-                </p>
+                <div className="flex-1 space-y-2 w-full max-w-md">
+                  {/* 5 stars */}
+                  <div className="flex items-center gap-4 text-xs">
+                    <span className="w-8 text-slate-400">5 sao</span>
+                    <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${reviewData.pct5}%` }} />
+                    </div>
+                    <span className="w-8 text-right text-slate-400">{reviewData.pct5}%</span>
+                  </div>
+                  {/* 4 stars */}
+                  <div className="flex items-center gap-4 text-xs">
+                    <span className="w-8 text-slate-400">4 sao</span>
+                    <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${reviewData.pct4}%` }} />
+                    </div>
+                    <span className="w-8 text-right text-slate-400">{reviewData.pct4}%</span>
+                  </div>
+                  {/* 3, 2, 1 stars */}
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-4 text-xs opacity-40">
+                      <span className="w-8 text-slate-400">{3 - i} sao</span>
+                      <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div className="w-0 h-full bg-indigo-500 rounded-full" />
+                      </div>
+                      <span className="w-8 text-right text-slate-400">0%</span>
+                    </div>
+                  ))}
+                </div>
+                <button type="button" className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm w-full md:w-auto">
+                  Viết đánh giá
+                </button>
               </div>
-            ))}
-          </div>
+
+              {/* Render dynamic mock reviews */}
+              <div className="mt-8 space-y-4">
+                {reviewData.reviews.map((rev) => (
+                  <div key={`${rev.name}-${rev.date}`} className="p-6 bg-slate-900/20 border border-white/5 rounded-2xl hover:border-white/10 transition-colors">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="size-10 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 font-bold text-indigo-400">
+                          {rev.avatarLetter}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-sm text-white">{rev.name}</h4>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[11px] text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">✓ Đã mua tại shop</span>
+                            <span className="text-xs text-slate-500">• {rev.date}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 text-amber-400">
+                        {Array.from({ length: 5 }).map((_, sIdx) => (
+                          <Star 
+                            key={sIdx} 
+                            className={`size-4 ${sIdx < rev.rating ? 'fill-current' : 'text-slate-700'}`} 
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-sm text-slate-300 leading-relaxed text-justify prose-p:text-justify whitespace-pre-line">
+                      {rev.comment}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex flex-col md:flex-row gap-8 items-center justify-between p-6 bg-slate-950/40 rounded-2xl border border-white/5">
+                <div className="text-center md:border-r border-white/5 md:pr-12">
+                  <p className="text-5xl font-extrabold text-slate-500">0/5</p>
+                  <div className="flex items-center gap-1 text-slate-700 my-2 justify-center">
+                    {Array.from({ length: 5 }).map((_, idx) => (
+                      <Star 
+                        key={idx} 
+                        className="size-5 text-slate-700" 
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500">0 đánh giá & nhận xét</p>
+                </div>
+                <div className="flex-1 space-y-2 w-full max-w-md">
+                  {/* 5, 4, 3, 2, 1 stars all 0% */}
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-4 text-xs opacity-30">
+                      <span className="w-8 text-slate-500">{5 - i} sao</span>
+                      <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div className="w-0 h-full bg-indigo-500 rounded-full" />
+                      </div>
+                      <span className="w-8 text-right text-slate-500">0%</span>
+                    </div>
+                  ))}
+                </div>
+                <button type="button" className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm w-full md:w-auto">
+                  Viết đánh giá
+                </button>
+              </div>
+
+              <div className="mt-8 text-center py-12 bg-slate-900/10 border border-dashed border-white/5 rounded-2xl">
+                <Star className="size-8 text-slate-600 mx-auto mb-3 opacity-30" />
+                <p className="text-sm text-slate-400">Chưa có đánh giá nào cho sản phẩm này</p>
+                <p className="text-xs text-slate-500 mt-1">Hãy là người đầu tiên mua sản phẩm và viết đánh giá!</p>
+              </div>
+            </>
+          )}
         </div>
       </main>
     </div>

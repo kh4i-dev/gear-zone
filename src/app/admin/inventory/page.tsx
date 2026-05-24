@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
   Boxes,
@@ -21,6 +22,7 @@ import { Navbar } from '@/components/domain/Navbar'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { formatPrice } from '@/lib/utils'
 import { toast } from 'sonner'
+import { getAdminPath } from '@/lib/adminPath'
 
 interface Product {
   id: string
@@ -34,21 +36,52 @@ interface Product {
 }
 
 export default function AdminInventoryPage() {
-  const router = useRouter()
+  const { replace } = useRouter()
   const { user, isLoading: authLoading } = useAuth()
-  const [products, setProducts] = useState<Product[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+
+  const [productsState, setProductsState] = useState({
+    products: [] as Product[],
+    isLoading: true,
+  })
+  const { products, isLoading } = productsState
+
+  const setProducts = (val: Product[] | ((prev: Product[]) => Product[])) => {
+    setProductsState(prev => {
+      const nextProducts = typeof val === 'function' ? val(prev.products) : val
+      return { ...prev, products: nextProducts }
+    })
+  }
+  const setIsLoading = (val: boolean) => setProductsState(prev => ({ ...prev, isLoading: val }))
+
+  const [inventoryState, setInventoryState] = useState({
+    stockChanges: {} as Record<string, number>,
+    savingRows: {} as Record<string, boolean>,
+    isBulkSaving: false,
+  })
+  const { stockChanges, savingRows, isBulkSaving } = inventoryState
+
+  const setStockChanges = (val: Record<string, number> | ((prev: Record<string, number>) => Record<string, number>)) => {
+    setInventoryState(prev => {
+      const nextChanges = typeof val === 'function' ? val(prev.stockChanges) : val
+      return { ...prev, stockChanges: nextChanges }
+    })
+  }
+  const setSavingRows = (val: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => {
+    setInventoryState(prev => {
+      const nextRows = typeof val === 'function' ? val(prev.savingRows) : val
+      return { ...prev, savingRows: nextRows }
+    })
+  }
+  const setIsBulkSaving = (val: boolean) => setInventoryState(prev => ({ ...prev, isBulkSaving: val }))
+
   const [searchQuery, setSearchQuery] = useState('')
-  const [stockChanges, setStockChanges] = useState<Record<string, number>>({})
-  const [savingRows, setSavingRows] = useState<Record<string, boolean>>({})
-  const [isBulkSaving, setIsBulkSaving] = useState(false)
   const [filterTab, setFilterTab] = useState<'all' | 'low' | 'out'>('all')
 
   useEffect(() => {
     if (!authLoading && (!user || user.role !== 'ADMIN')) {
-      router.replace('/admin/login')
+      replace(getAdminPath('/login'))
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading, replace])
 
   useEffect(() => {
     if (user?.role === 'ADMIN') {
@@ -56,7 +89,7 @@ export default function AdminInventoryPage() {
     }
   }, [user])
 
-  const fetchProducts = async () => {
+  async function fetchProducts() {
     setIsLoading(true)
     try {
       const res = await fetch('/api/admin/products', { credentials: 'include' })
@@ -139,15 +172,16 @@ export default function AdminInventoryPage() {
     if (modifiedIds.length === 0) return
 
     setIsBulkSaving(true)
-    let successCount = 0
+    
+    const productMap = new Map(products.map(p => [p.id, p]))
 
-    for (const id of modifiedIds) {
-      const product = products.find(p => p.id === id)
+    async function saveSingleProduct(id: string) {
+      const product = productMap.get(id)
       const newStock = stockChanges[id]
-      if (!product || newStock === undefined) continue
+      if (!product || newStock === undefined) return null
 
       try {
-        const res = await fetch(`/api/admin/products/${id}`, {
+        const res = await window.fetch(`/api/admin/products/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -162,13 +196,25 @@ export default function AdminInventoryPage() {
         })
 
         if (res.ok) {
-          successCount++
-          // Update product locally
-          setProducts(prev => prev.map(p => p.id === id ? { ...p, stock: newStock } : p))
+          return { id, newStock }
         }
       } catch (err) {
-        console.error(`Failed to update stock for ${id}`, err)
+        console.error(`Error saving product ${id}:`, err)
       }
+      return null
+    }
+
+    const savePromises = modifiedIds.map(saveSingleProduct)
+
+    const results = await Promise.all(savePromises)
+    const successfulUpdates = results.filter(Boolean) as { id: string; newStock: number }[]
+    const successCount = successfulUpdates.length
+
+    if (successfulUpdates.length > 0) {
+      setProducts(prev => prev.map(p => {
+        const update = successfulUpdates.find(u => u.id === p.id)
+        return update ? { ...p, stock: update.newStock } : p
+      }))
     }
 
     toast.success(`Đã kiểm kê thành công ${successCount}/${modifiedIds.length} sản phẩm!`)
@@ -207,8 +253,8 @@ export default function AdminInventoryPage() {
 
       <main className="container mx-auto px-4 py-8">
         {/* Back Link */}
-        <Link href="/admin/dashboard" className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 font-semibold transition group">
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <Link href={getAdminPath('/dashboard')} className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 font-semibold transition group">
+          <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
           Quay lại Dashboard
         </Link>
 
@@ -216,22 +262,22 @@ export default function AdminInventoryPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 border-b border-white/5 pb-6 gap-4">
           <div>
             <div className="flex items-center gap-2 text-blue-400 text-sm font-semibold uppercase tracking-wider mb-1">
-              <Boxes className="w-4 h-4" /> Kiểm kê kho hàng
+              <Boxes className="size-4" /> Kiểm kê kho hàng
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight">Quản Lý Tồn Kho</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">Quản Lý Tồn Kho</h1>
             <p className="text-muted-foreground mt-1">Cập nhật số lượng tồn kho nhanh chóng và chính xác.</p>
           </div>
 
           {unsavedCount > 0 && (
-            <button
+            <button type="button"
               onClick={handleBulkSave}
               disabled={isBulkSaving}
               className="px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl transition-all font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/10 active:scale-95 disabled:opacity-50"
             >
               {isBulkSaving ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="size-4 animate-spin" />
               ) : (
-                <CheckCircle className="w-4 h-4" />
+                <CheckCircle className="size-4" />
               )}
               Lưu tất cả thay đổi ({unsavedCount})
             </button>
@@ -241,8 +287,8 @@ export default function AdminInventoryPage() {
         {/* Dashboard Stats Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/5 p-5 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
-              <Package className="w-6 h-6 text-blue-400" />
+            <div className="size-12 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+              <Package className="size-6 text-blue-400" />
             </div>
             <div>
               <p className="text-xs text-slate-400 font-semibold uppercase">Tổng sản phẩm</p>
@@ -251,8 +297,8 @@ export default function AdminInventoryPage() {
           </div>
 
           <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/5 p-5 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-              <AlertTriangle className="w-6 h-6 text-amber-400" />
+            <div className="size-12 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+              <AlertTriangle className="size-6 text-amber-400" />
             </div>
             <div>
               <p className="text-xs text-slate-400 font-semibold uppercase">Sắp hết hàng (&lt;=5)</p>
@@ -261,8 +307,8 @@ export default function AdminInventoryPage() {
           </div>
 
           <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/5 p-5 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20">
-              <AlertTriangle className="w-6 h-6 text-red-400" />
+            <div className="size-12 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20">
+              <AlertTriangle className="size-6 text-red-400" />
             </div>
             <div>
               <p className="text-xs text-slate-400 font-semibold uppercase">Hết hàng (0)</p>
@@ -275,7 +321,7 @@ export default function AdminInventoryPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           {/* Tabs */}
           <div className="flex bg-slate-900/80 p-1 border border-white/5 rounded-xl w-fit">
-            <button
+            <button type="button"
               onClick={() => setFilterTab('all')}
               className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
                 filterTab === 'all'
@@ -285,7 +331,7 @@ export default function AdminInventoryPage() {
             >
               Tất cả
             </button>
-            <button
+            <button type="button"
               onClick={() => setFilterTab('low')}
               className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
                 filterTab === 'low'
@@ -295,7 +341,7 @@ export default function AdminInventoryPage() {
             >
               Sắp hết hàng ({lowStockCount})
             </button>
-            <button
+            <button type="button"
               onClick={() => setFilterTab('out')}
               className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
                 filterTab === 'out'
@@ -309,10 +355,11 @@ export default function AdminInventoryPage() {
 
           {/* Search Input */}
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground size-4" />
             <input
               type="text"
               placeholder="Tìm kiếm sản phẩm theo tên hoặc danh mục..."
+              aria-label="Tìm kiếm sản phẩm tồn kho"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm"
@@ -324,8 +371,8 @@ export default function AdminInventoryPage() {
         <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/5 overflow-hidden">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-24">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-400 mb-2" />
-              <p className="text-slate-400 text-sm">Đang tải danh sách tồn kho...</p>
+              <Loader2 className="size-8 animate-spin text-blue-400 mb-2" />
+              <p className="text-slate-400 text-sm">Đang tải danh sách tồn kho…</p>
             </div>
           ) : filteredProducts.length > 0 ? (
             <div className="overflow-x-auto">
@@ -376,14 +423,16 @@ export default function AdminInventoryPage() {
                         <td className="p-4 pl-6">
                           <div className="flex items-center gap-3.5">
                             {product.imageUrl ? (
-                              <img
+                              <Image
                                 src={product.imageUrl}
                                 alt={product.name}
-                                className="w-12 h-12 rounded-xl object-cover bg-slate-950 border border-white/5"
+                                width={48}
+                                height={48}
+                                className="size-12 rounded-xl object-cover bg-slate-950 border border-white/5"
                               />
                             ) : (
-                              <div className="w-12 h-12 rounded-xl bg-slate-950 border border-white/5 flex items-center justify-center text-slate-700">
-                                <Package className="w-5 h-5" />
+                              <div className="size-12 rounded-xl bg-slate-950 border border-white/5 flex items-center justify-center text-slate-700">
+                                <Package className="size-5" />
                               </div>
                             )}
                             <div className="min-w-0">
@@ -408,11 +457,12 @@ export default function AdminInventoryPage() {
                           <div className="flex flex-col items-center justify-center gap-1.5">
                             <div className="flex items-center gap-1.5">
                               {/* Decrement */}
-                              <button
+                              <button type="button"
                                 onClick={() => handleStockChange(product.id, currentStock - 1)}
-                                className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-90 transition-all flex items-center justify-center border border-white/5"
+                                aria-label="Giảm tồn kho"
+                                className="size-8 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-90 transition-all flex items-center justify-center border border-white/5"
                               >
-                                <Minus className="w-3.5 h-3.5" />
+                                <Minus className="size-3.5" />
                               </button>
 
                               {/* Stock input */}
@@ -424,15 +474,17 @@ export default function AdminInventoryPage() {
                                   const val = parseInt(e.target.value, 10)
                                   handleStockChange(product.id, isNaN(val) ? 0 : val)
                                 }}
+                                aria-label="Số lượng tồn kho"
                                 className="w-16 h-8 text-center bg-slate-950 border border-white/10 rounded-lg text-sm font-bold font-mono focus:outline-none focus:border-blue-500/50"
                               />
 
                               {/* Increment */}
-                              <button
+                              <button type="button"
                                 onClick={() => handleStockChange(product.id, currentStock + 1)}
-                                className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-90 transition-all flex items-center justify-center border border-white/5"
+                                aria-label="Tăng tồn kho"
+                                className="size-8 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-90 transition-all flex items-center justify-center border border-white/5"
                               >
-                                <Plus className="w-3.5 h-3.5" />
+                                <Plus className="size-3.5" />
                               </button>
                             </div>
 
@@ -452,16 +504,16 @@ export default function AdminInventoryPage() {
                         <td className="p-4 pr-6 text-right">
                           <div className="flex items-center justify-end gap-2">
                             {isChanged && (
-                              <button
+                              <button type="button"
                                 onClick={() => handleResetRow(product.id)}
                                 className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all"
                                 title="Hủy thay đổi"
                               >
-                                <RotateCcw className="w-4 h-4" />
+                                <RotateCcw className="size-4" />
                               </button>
                             )}
 
-                            <button
+                            <button type="button"
                               onClick={() => handleSaveRow(product)}
                               disabled={!isChanged || isSaving}
                               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm ${
@@ -471,9 +523,9 @@ export default function AdminInventoryPage() {
                               }`}
                             >
                               {isSaving ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                <Loader2 className="size-3.5 animate-spin" />
                               ) : (
-                                <Save className="w-3.5 h-3.5" />
+                                <Save className="size-3.5" />
                               )}
                               Lưu
                             </button>
@@ -487,8 +539,8 @@ export default function AdminInventoryPage() {
             </div>
           ) : (
             <div className="text-center py-20">
-              <Package className="w-12 h-12 text-slate-700 mx-auto mb-3 opacity-50" />
-              <h3 className="font-bold text-lg mb-1">Không có sản phẩm nào</h3>
+              <Package className="size-12 text-slate-700 mx-auto mb-3 opacity-50" />
+              <h3 className="font-semibold text-lg mb-1">Không có sản phẩm nào</h3>
               <p className="text-slate-500 text-sm">Chưa có sản phẩm phù hợp bộ lọc.</p>
             </div>
           )}

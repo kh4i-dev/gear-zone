@@ -15,7 +15,7 @@ export function ProductDetailsTabs({ product }: { product: any }) {
   return (
     <div className="mt-8 bg-slate-900/40 border border-white/5 p-6 lg:p-12 rounded-3xl backdrop-blur-md">
       <div className="flex items-center gap-8 border-b border-white/10 mb-8">
-        <button 
+        <button type="button" 
           onClick={() => setActiveTab('description')}
           className={`pb-4 text-xl font-extrabold tracking-tight transition-colors relative ${activeTab === 'description' ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
         >
@@ -24,7 +24,7 @@ export function ProductDetailsTabs({ product }: { product: any }) {
             <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-indigo-500" />
           )}
         </button>
-        <button 
+        <button type="button" 
           onClick={() => setActiveTab('specs')}
           className={`pb-4 text-xl font-extrabold tracking-tight transition-colors relative ${activeTab === 'specs' ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
         >
@@ -39,7 +39,7 @@ export function ProductDetailsTabs({ product }: { product: any }) {
         <div className="prose prose-invert prose-lg max-w-none prose-p:text-slate-300 prose-headings:text-white prose-a:text-indigo-400 prose-img:rounded-2xl prose-img:mx-auto prose-img:shadow-2xl">
           {product.description ? (
             // Using dangerouslySetInnerHTML allows rendering HTML (images, bold, etc.) from an Admin WYSIWYG editor
-            <div dangerouslySetInnerHTML={{ __html: product.description }} className="leading-relaxed" />
+            <div {...{ dangerouslySetInnerHTML: { __html: product.description } }} className="leading-relaxed" />
           ) : (
             <p className="text-slate-500 italic">
               Chưa có bài viết đánh giá chi tiết cho sản phẩm này.
@@ -52,8 +52,8 @@ export function ProductDetailsTabs({ product }: { product: any }) {
         <div className="max-w-3xl">
           <table className="w-full text-left text-sm text-slate-300 border-collapse rounded-xl overflow-hidden shadow-lg border border-white/5">
             <tbody>
-              {mockSpecs.map((spec, idx) => (
-                <tr key={idx} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
+              {mockSpecs.map((spec) => (
+                <tr key={spec.label} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
                   <th className="py-4 px-6 font-semibold text-slate-400 w-1/3 bg-slate-950/50">{spec.label}</th>
                   <td className="py-4 px-6 font-medium text-white bg-slate-900/20">{spec.value}</td>
                 </tr>

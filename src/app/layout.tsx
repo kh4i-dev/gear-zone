@@ -1,6 +1,8 @@
+import { Suspense, type ReactNode } from 'react'
 import { AuthProvider } from '@/components/providers/AuthProvider'
 import { CartProvider } from '@/components/providers/CartProvider'
 import { Footer } from '@/components/domain/Footer'
+import { AuthModal } from '@/components/domain/AuthModal'
 import { Toaster } from 'sonner'
 import './globals.css'
 
@@ -9,7 +11,7 @@ export const metadata = {
   description: 'Cửa hàng thiết bị chơi game hàng đầu',
 }
 
-export default function RootLayout({ children }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi">
       <body className="bg-slate-950 text-white antialiased">
@@ -22,6 +24,9 @@ export default function RootLayout({ children }) {
               <Footer />
             </div>
             <Toaster position="top-right" richColors />
+            <Suspense fallback={null}>
+              <AuthModal />
+            </Suspense>
           </CartProvider>
         </AuthProvider>
       </body>
