@@ -353,9 +353,10 @@ function AuthModalContent({ authType, redirectPath }: AuthModalContentProps) {
 }
 
 function AuthModalWrapper() {
-  const { get } = useSearchParams()
-  const authType = get('auth')
-  const redirectPath = get('redirect')
+  const searchParams = useSearchParams()
+  const { get } = searchParams
+  const authType = get.call(searchParams, 'auth')
+  const redirectPath = get.call(searchParams, 'redirect')
 
   if (!authType) return null
 

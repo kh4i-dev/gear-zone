@@ -19,6 +19,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'api.qrserver.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.hstatic.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn2.cellphones.com.vn',
+      },
     ],
   },
 };

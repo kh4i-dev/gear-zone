@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useReducer } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   Loader2, 
@@ -35,61 +35,167 @@ import { toast } from 'sonner'
 import { Input, Button } from '@/components/domain/ui'
 import { getAdminPath } from '@/lib/adminPath'
 
+type SettingsStatus = {
+  isLoading: boolean
+  isSaving: boolean
+  isUploading: boolean
+  isCatLoading: boolean
+  isChangingPass: boolean
+}
+
+type SettingsPageState = {
+  videoUrl: string
+  themeAccent: string
+  introTitle: string
+  introText: string
+  bannerTitle: string
+  bannerSubtitle: string
+  bannerCtaText: string
+  bannerCtaLink: string
+  tickerSpeed: string
+  tickerMessages: string[]
+  newTickerMsg: string
+  address: string
+  hotline: string
+  email: string
+  zalo: string
+  facebook: string
+  openingHours: string
+  guideBuyLink: string
+  warrantyLink: string
+  returnLink: string
+  paymentLink: string
+  seoTitle: string
+  seoDescription: string
+  seoKeywords: string
+  categories: any[]
+  newCatName: string
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
+  activeSection: string
+}
+
+const initialSettingsPageState: SettingsPageState = {
+  videoUrl: '',
+  themeAccent: 'indigo',
+  introTitle: '',
+  introText: '',
+  bannerTitle: '',
+  bannerSubtitle: '',
+  bannerCtaText: '',
+  bannerCtaLink: '',
+  tickerSpeed: '25s',
+  tickerMessages: [],
+  newTickerMsg: '',
+  address: '',
+  hotline: '',
+  email: '',
+  zalo: '',
+  facebook: '',
+  openingHours: '',
+  guideBuyLink: '',
+  warrantyLink: '',
+  returnLink: '',
+  paymentLink: '',
+  seoTitle: '',
+  seoDescription: '',
+  seoKeywords: '',
+  categories: [],
+  newCatName: '',
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+  activeSection: 'video',
+}
+
 export default function AdminSettingsPage() {
   const { replace } = useRouter()
   const { user, isLoading: authLoading } = useAuth()
   
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
+  const [status, setStatus] = useReducer(
+    (state: SettingsStatus, patch: Partial<SettingsStatus>) => ({ ...state, ...patch }),
+    {
+      isLoading: true,
+      isSaving: false,
+      isUploading: false,
+      isCatLoading: false,
+      isChangingPass: false,
+    }
+  )
+  const { isLoading, isSaving, isUploading, isCatLoading, isChangingPass } = status
+  const setIsLoading = (isLoading: boolean) => setStatus({ isLoading })
+  const setIsSaving = (isSaving: boolean) => setStatus({ isSaving })
+  const setIsUploading = (isUploading: boolean) => setStatus({ isUploading })
+  const setIsCatLoading = (isCatLoading: boolean) => setStatus({ isCatLoading })
+  const setIsChangingPass = (isChangingPass: boolean) => setStatus({ isChangingPass })
   
-  // Section 1: Video & Accent Color
-  const [videoUrl, setVideoUrl] = useState('')
-  const [themeAccent, setThemeAccent] = useState('indigo')
-
-  // Section 2: Banner config
-  const [bannerTitle, setBannerTitle] = useState('')
-  const [bannerSubtitle, setBannerSubtitle] = useState('')
-  const [bannerCtaText, setBannerCtaText] = useState('')
-  const [bannerCtaLink, setBannerCtaLink] = useState('')
-
-  // Section 3: Ticker list
-  const [tickerSpeed, setTickerSpeed] = useState('25s')
-  const [tickerMessages, setTickerMessages] = useState<string[]>([])
-  const [newTickerMsg, setNewTickerMsg] = useState('')
-
-  // Section 4: Contact details
-  const [address, setAddress] = useState('')
-  const [hotline, setHotline] = useState('')
-  const [email, setEmail] = useState('')
-  const [zalo, setZalo] = useState('')
-  const [facebook, setFacebook] = useState('')
-  const [openingHours, setOpeningHours] = useState('')
-
-  // Section 5: Policies
-  const [guideBuyLink, setGuideBuyLink] = useState('')
-  const [warrantyLink, setWarrantyLink] = useState('')
-  const [returnLink, setReturnLink] = useState('')
-  const [paymentLink, setPaymentLink] = useState('')
-
-  // Section 6: SEO
-  const [seoTitle, setSeoTitle] = useState('')
-  const [seoDescription, setSeoDescription] = useState('')
-  const [seoKeywords, setSeoKeywords] = useState('')
-
-  // Section 7: Categories list
-  const [categories, setCategories] = useState<any[]>([])
-  const [newCatName, setNewCatName] = useState('')
-  const [isCatLoading, setIsCatLoading] = useState(false)
-
-  // Section 8: Security (Password Change)
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [isChangingPass, setIsChangingPass] = useState(false)
-
-  // Tabs state
-  const [activeSection, setActiveSection] = useState('video') 
+  const [pageState, updatePageState] = useReducer(
+    (state: SettingsPageState, patch: Partial<SettingsPageState>) => ({ ...state, ...patch }),
+    initialSettingsPageState
+  )
+  const {
+    videoUrl,
+    themeAccent,
+    introTitle,
+    introText,
+    bannerTitle,
+    bannerSubtitle,
+    bannerCtaText,
+    bannerCtaLink,
+    tickerSpeed,
+    tickerMessages,
+    newTickerMsg,
+    address,
+    hotline,
+    email,
+    zalo,
+    facebook,
+    openingHours,
+    guideBuyLink,
+    warrantyLink,
+    returnLink,
+    paymentLink,
+    seoTitle,
+    seoDescription,
+    seoKeywords,
+    categories,
+    newCatName,
+    currentPassword,
+    newPassword,
+    confirmPassword,
+    activeSection,
+  } = pageState
+  const setVideoUrl = (videoUrl: string) => updatePageState({ videoUrl })
+  const setThemeAccent = (themeAccent: string) => updatePageState({ themeAccent })
+  const setIntroTitle = (introTitle: string) => updatePageState({ introTitle })
+  const setIntroText = (introText: string) => updatePageState({ introText })
+  const setBannerTitle = (bannerTitle: string) => updatePageState({ bannerTitle })
+  const setBannerSubtitle = (bannerSubtitle: string) => updatePageState({ bannerSubtitle })
+  const setBannerCtaText = (bannerCtaText: string) => updatePageState({ bannerCtaText })
+  const setBannerCtaLink = (bannerCtaLink: string) => updatePageState({ bannerCtaLink })
+  const setTickerSpeed = (tickerSpeed: string) => updatePageState({ tickerSpeed })
+  const setTickerMessages = (tickerMessages: string[]) => updatePageState({ tickerMessages })
+  const setNewTickerMsg = (newTickerMsg: string) => updatePageState({ newTickerMsg })
+  const setAddress = (address: string) => updatePageState({ address })
+  const setHotline = (hotline: string) => updatePageState({ hotline })
+  const setEmail = (email: string) => updatePageState({ email })
+  const setZalo = (zalo: string) => updatePageState({ zalo })
+  const setFacebook = (facebook: string) => updatePageState({ facebook })
+  const setOpeningHours = (openingHours: string) => updatePageState({ openingHours })
+  const setGuideBuyLink = (guideBuyLink: string) => updatePageState({ guideBuyLink })
+  const setWarrantyLink = (warrantyLink: string) => updatePageState({ warrantyLink })
+  const setReturnLink = (returnLink: string) => updatePageState({ returnLink })
+  const setPaymentLink = (paymentLink: string) => updatePageState({ paymentLink })
+  const setSeoTitle = (seoTitle: string) => updatePageState({ seoTitle })
+  const setSeoDescription = (seoDescription: string) => updatePageState({ seoDescription })
+  const setSeoKeywords = (seoKeywords: string) => updatePageState({ seoKeywords })
+  const setCategories = (categories: any[]) => updatePageState({ categories })
+  const setNewCatName = (newCatName: string) => updatePageState({ newCatName })
+  const setCurrentPassword = (currentPassword: string) => updatePageState({ currentPassword })
+  const setNewPassword = (newPassword: string) => updatePageState({ newPassword })
+  const setConfirmPassword = (confirmPassword: string) => updatePageState({ confirmPassword })
+  const setActiveSection = (activeSection: string) => updatePageState({ activeSection })
   // 'video' | 'banner' | 'ticker' | 'contact' | 'policy' | 'seo' | 'category' | 'security'
 
   useEffect(() => {
@@ -137,6 +243,8 @@ export default function AdminSettingsPage() {
         
         // Dynamic dynamic parts
         setThemeAccent(result.data.theme_accent || 'indigo')
+        setIntroTitle(result.data.homepage_intro_title || 'Chào mừng đến với GearZone')
+        setIntroText(result.data.homepage_intro_text || 'GearZone chuyên gaming gear, linh kiện và phụ kiện máy tính chính hãng. Chúng tôi tập trung vào sản phẩm rõ thông tin, giá minh bạch, tồn kho thực và hỗ trợ nhanh cho game thủ.')
         setBannerTitle(result.data.homepage_banner_title || '')
         setBannerSubtitle(result.data.homepage_banner_subtitle || '')
         setBannerCtaText(result.data.homepage_banner_cta_text || '')
@@ -192,6 +300,8 @@ export default function AdminSettingsPage() {
             
             // New settings
             theme_accent: themeAccent,
+            homepage_intro_title: introTitle,
+            homepage_intro_text: introText,
             homepage_banner_title: bannerTitle,
             homepage_banner_subtitle: bannerSubtitle,
             homepage_banner_cta_text: bannerCtaText,
@@ -369,7 +479,7 @@ export default function AdminSettingsPage() {
     { id: 'security', label: 'Bảo mật & Mật khẩu', icon: KeyRound },
   ]
 
-  const accentColors = [
+  const accentColors: Array<{ id: string; name: string; class: string; shadow?: string; border?: string; check?: string }> = [
     { id: 'indigo', name: 'Indigo (Chàm)', class: 'bg-indigo-600', shadow: 'shadow-indigo-500/20' },
     { id: 'emerald', name: 'Emerald (Lục)', class: 'bg-emerald-600', shadow: 'shadow-emerald-500/20' },
     { id: 'violet', name: 'Violet (Tím)', class: 'bg-violet-600', shadow: 'shadow-violet-500/20' },
@@ -445,15 +555,40 @@ export default function AdminSettingsPage() {
                           onClick={() => setThemeAccent(color.id)}
                           className={`flex items-center gap-3 p-3 rounded-xl border text-sm font-bold transition-all ${
                             themeAccent === color.id
-                              ? 'bg-slate-900 border-indigo-500/80 shadow-md'
+                              ? `${color.class} border-white/20 text-white shadow-md`
                               : 'bg-slate-900/40 border-white/5 hover:border-white/15'
                           }`}
                         >
-                          <span className={`size-4 rounded-full ${color.class} ${color.shadow}`} />
+                          <span className={`size-4 rounded-full ${color.class} ${color.shadow ?? ''}`} />
                           <span className="truncate">{color.name}</span>
-                          {themeAccent === color.id && <Check className="size-4 text-indigo-400 ml-auto shrink-0" />}
+                          {themeAccent === color.id && <Check className="size-4 text-white ml-auto shrink-0" />}
                         </button>
                       ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-950/50 p-6 rounded-2xl border border-white/5 space-y-4">
+                    <div>
+                      <p className="block text-sm font-semibold mb-2">Lời chào / tiêu đề giới thiệu shop</p>
+                      <Input
+                        value={introTitle}
+                        onChange={(e) => setIntroTitle(e.target.value)}
+                        placeholder="VD: Chào mừng đến với GearZone"
+                        className="bg-slate-900 border-white/10"
+                      />
+                    </div>
+
+                    <div>
+                      <p className="block text-sm font-semibold mb-2">Mô tả ngắn về cửa hàng</p>
+                      <textarea
+                        value={introText}
+                        onChange={(e) => setIntroText(e.target.value)}
+                        placeholder="VD: GearZone chuyên gaming gear, linh kiện và phụ kiện máy tính chính hãng..."
+                        aria-label="Mô tả ngắn về cửa hàng"
+                        rows={4}
+                        className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-600 resize-none"
+                      />
+                      <p className="text-xs text-slate-500 mt-2">Đoạn này hiển thị ngay dưới video trang chủ. Nên viết 2-3 dòng ngắn.</p>
                     </div>
                   </div>
 

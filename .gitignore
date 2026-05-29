@@ -27,6 +27,7 @@ yarn-error.log*
 
 # Vercel
 .vercel
+.codegraph/
 
 # TypeScript
 *.tsbuildinfo
@@ -39,6 +40,7 @@ prisma/*.db-journal
 # IDE
 .idea/
 .vscode/
+.cursor/
 .windsurf/
 *.swp
 *.swo

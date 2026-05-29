@@ -1,27 +1,54 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import { Loader2 } from 'lucide-react'
-import { ProductCatalog, type StoreProduct } from '@/components/domain/ProductCatalog'
+import { ProductCatalog } from '@/components/domain/ProductCatalog'
 import { StoreNavbar } from '@/components/domain/StoreNavbar'
+import { type StoreProduct } from '@/components/domain/ProductCard'
+
+const productListeners = new Set<() => void>()
+let productSnapshot: StoreProduct[] | undefined
+let productRequest: Promise<void> | null = null
+
+function loadProducts() {
+  if (productRequest) return productRequest
+
+  productRequest = window.fetch('/api/products')
+    .then((res) => res.json())
+    .then((result) => {
+      productSnapshot = result.data || []
+    })
+    .catch(() => {
+      productSnapshot = []
+    })
+    .finally(() => {
+      productListeners.forEach((listener) => listener())
+    })
+
+  return productRequest
+}
+
+const productStore = {
+  subscribe(listener: () => void) {
+    productListeners.add(listener)
+    if (productSnapshot === undefined) {
+      loadProducts()
+    }
+    return () => {
+      productListeners.delete(listener)
+    }
+  },
+  getSnapshot: () => productSnapshot,
+  getServerSnapshot: () => undefined,
+}
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<StoreProduct[] | undefined>(undefined)
+  const products = useSyncExternalStore(
+    productStore.subscribe,
+    productStore.getSnapshot,
+    productStore.getServerSnapshot
+  )
   const isLoading = products === undefined
-
-  useEffect(() => {
-    async function fetchProducts() {
-      try {
-        const res = await window.fetch('/api/products')
-        const result = await res.json()
-        setProducts(result.data || [])
-      } catch {
-        setProducts([])
-      }
-    }
-
-    fetchProducts()
-  }, [])
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">

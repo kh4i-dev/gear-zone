@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { fail, forbidden, success } from '@/lib/api'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser(request)
   if (!user || user.role !== 'ADMIN') {

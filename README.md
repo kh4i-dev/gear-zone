@@ -1,81 +1,41 @@
-# Gear Zone 🎮
+# GearZone
 
-**Nền tảng thương mại điện tử chuyên dụng cho thiết bị chơi game (Gaming Gear).**
+Nen tang thuong mai dien tu cho thiet bi gaming gear.
 
-## Công nghệ sử dụng
+## Cong Nghe
 
-- **Frontend:** Next.js (App Router), React, Tailwind CSS
+- **Frontend:** Next.js App Router, React, Tailwind CSS
 - **Backend:** Next.js API Routes
-- **Database:** SQLite (Dev) / Prisma ORM
-- **Authentication:** JWT (jose) + bcrypt
-- **Payment:** VietQR, MoMo, PayOS, Sepay
+- **Database:** Prisma ORM voi SQLite khi development; nen chuyen PostgreSQL/MySQL khi production
+- **Authentication:** JWT (`jose`) + `bcryptjs`
+- **Cart:** client state qua `CartProvider` va `localStorage`
+- **Payment:** COD, chuyen khoan/VietQR va MoMo qua cau hinh he thong; hien tai chua co bang `Payment` rieng
 
-## Kiến trúc hệ thống
+## Tai Lieu Chinh
 
-### Use Case Diagram
-![Use Case Diagram](images/use_case_gearzone.jpeg)
-*Sơ đồ use case mô tả các tác nhân và chức năng chính của hệ thống.*
+- [Bao cao phan tich va thiet ke he thong](docs/gearzone_system_design.md)
 
-### Sơ đồ chức năng
-![Sơ đồ chức năng](images/so_do_chuc_nang_gearzone.svg)
-*Phân rã chức năng của hệ thống Gear Zone.*
+## So Do
 
-### Sơ đồ thành phần
-![Sơ đồ thành phần](images/so_do_thanh_phan_v2.svg)
-*Các thành phần và mối quan hệ giữa chúng.*
+| Noi dung | File |
+|:--|:--|
+| Use case | [images/use_case_gearzone.jpeg](images/use_case_gearzone.jpeg) |
+| Chuc nang | [images/so_do_chuc_nang_gearzone.svg](images/so_do_chuc_nang_gearzone.svg) |
+| Thanh phan | [images/so_do_thanh_phan_v2.svg](images/so_do_thanh_phan_v2.svg) |
+| Activity dat hang | [images/activity_diagram_swimlane_gearzone.svg](images/activity_diagram_swimlane_gearzone.svg) |
+| Sequence dat hang | [images/so_do_tuan_tu_dat_hang_gearzone.svg](images/so_do_tuan_tu_dat_hang_gearzone.svg) |
+| Trang thai don hang | [images/so_do_trang_thai_don_hang_v2.svg](images/so_do_trang_thai_don_hang_v2.svg) |
+| ERD | [images/erd_gearzone.svg](images/erd_gearzone.svg) |
+| Class diagram | [images/class_diagram_gearzone.svg](images/class_diagram_gearzone.svg) |
+| Deployment | [images/deployment_diagram_gearzone_v2.svg](images/deployment_diagram_gearzone_v2.svg) |
 
----
-
-## Luồng hoạt động (Workflow)
-
-### Activity Diagram (Đặt hàng)
-![Activity Diagram](images/activity_diagram_swimlane_gearzone.svg)
-*Quy trình đặt hàng với swimlane phân chia trách nhiệm giữa các tác nhân.*
-
-### Sequence Diagram (Đặt hàng)
-![Sequence Diagram](images/so_do_tuan_tu_dat_hang_gearzone.svg)
-*Luồng tương tác giữa các đối tượng trong quá trình đặt hàng.*
-
-### State Diagram (Đơn hàng)
-![State Diagram](images/so_do_trang_thai_don_hang_v2.svg)
-*Các trạng thái của đơn hàng từ khi tạo đến khi hoàn tất.*
-
----
-
-## Thiết kế dữ liệu
-
-### Class Diagram
-![Class Diagram](images/class_diagram_gearzone.svg)
-
-Xem tương tác tại: [Class Diagram (HTML)](images/class_diagram_gearzone.html)
-
-### Chi tiết UML
-Xem thêm: [Mô tả UML](images/so_do_UML_gaming_gear.md)
-
----
-
-## Triển khai
-
-### Deployment Diagram
-![Deployment Diagram](images/deployment_diagram_gearzone_v2.svg)
-*Kiến trúc triển khai hệ thống Gear Zone.*
-
----
-
-## Cài đặt & Chạy
+## Chay Local
 
 ```bash
-# Cài đặt dependencies
 npm install
-
-# Tạo database
 npx prisma db push
-
-# Seed dữ liệu mẫu
-npx prisma db seed
-
-# Chạy dev
+npm run db:seed
 npm run dev
 ```
 
-Truy cập: `http://localhost:3000`
+Mo `http://localhost:3000`.

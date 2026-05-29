@@ -6,9 +6,10 @@ export interface InputProps
   label?: string
   error?: string
   hint?: string
+  endAdornment?: React.ReactNode
 }
 
-const Input = ({ className, label, error, hint, ref, ...props }: InputProps & { ref?: React.Ref<HTMLInputElement> }) => {
+const Input = ({ className, label, error, hint, endAdornment, ref, ...props }: InputProps & { ref?: React.Ref<HTMLInputElement> }) => {
   const id = React.useId()
   return (
     <div className="w-full">
@@ -17,16 +18,24 @@ const Input = ({ className, label, error, hint, ref, ...props }: InputProps & { 
           {label}
         </label>
       )}
-      <input
-        id={id}
-        className={cn(
-          'flex h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50',
-          error && 'border-red-500 focus:ring-red-500/50',
-          className
+      <div className="relative">
+        <input
+          id={id}
+          className={cn(
+            'flex h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50',
+            error && 'border-red-500 focus:ring-red-500/50',
+            endAdornment && 'pr-8',
+            className
+          )}
+          ref={ref}
+          {...props}
+        />
+        {endAdornment && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none flex items-center">
+            {endAdornment}
+          </div>
         )}
-        ref={ref}
-        {...props}
-      />
+      </div>
       {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
       {!error && hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </div>
@@ -86,3 +95,47 @@ const Button = ({ className, variant = 'default', size = 'default', isLoading, c
 Button.displayName = 'Button'
 
 export { Input, Button }
+
+export interface MoneyInputVNDProps extends Omit<InputProps, 'onChange' | 'value' | 'type'> {
+  value: number
+  onChange: (val: number) => void
+}
+
+export const MoneyInputVND = ({ className, value, onChange, ...props }: MoneyInputVNDProps) => {
+  const [displayValue, setDisplayValue] = React.useState(
+    value === 0 ? '' : new Intl.NumberFormat('vi-VN').format(value)
+  )
+
+  React.useEffect(() => {
+    const digits = displayValue.replace(/\\D/g, '')
+    const currentParsed = digits ? parseInt(digits, 10) : 0
+    if (currentParsed !== value) {
+      setDisplayValue(value === 0 ? '' : new Intl.NumberFormat('vi-VN').format(value))
+    }
+  }, [value, displayValue])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value
+    if (!raw) {
+      setDisplayValue('')
+      onChange(0)
+      return
+    }
+    const digits = raw.replace(/\\D/g, '')
+    const parsed = digits ? parseInt(digits, 10) : 0
+    onChange(parsed)
+    setDisplayValue(new Intl.NumberFormat('vi-VN').format(parsed))
+  }
+
+  return (
+    <Input
+      {...props}
+      type="text"
+      inputMode="numeric"
+      value={displayValue}
+      onChange={handleChange}
+      endAdornment={<span className="text-sm font-medium select-none">đ</span>}
+      className={cn("text-right", className)}
+    />
+  )
+}
