@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Calendar, ImageIcon, Loader2, Package, ReceiptText, ShoppingBag } from 'lucide-react'
 import { StoreNavbar } from '@/components/domain/StoreNavbar'
 import { useAuth } from '@/components/providers/AuthProvider'
@@ -60,7 +61,7 @@ export default function OrdersPage() {
 
     const fetchOrders = async () => {
       try {
-        const res = await fetch('/api/orders', { credentials: 'include' })
+        const res = await window.fetch('/api/orders', { credentials: 'include' })
         const result = await res.json()
         setOrders(result.data || [])
       } finally {
@@ -77,18 +78,18 @@ export default function OrdersPage() {
 
       <section className="mx-auto max-w-7xl px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-extrabold tracking-tight">Đơn hàng</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Đơn hàng</h1>
           <p className="mt-2 text-sm text-slate-400">Theo dõi trạng thái và các sản phẩm trong đơn đã đặt.</p>
         </div>
 
         {authLoading || isLoading ? (
           <div className="flex items-center justify-center py-28">
-            <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+            <Loader2 className="size-8 animate-spin text-indigo-600" />
           </div>
         ) : !user ? (
           <div className="rounded-3xl border border-white/10 bg-slate-900/40 p-10 text-center shadow-sm">
-            <ReceiptText className="mx-auto mb-4 h-12 w-12 text-slate-600" />
-            <h2 className="text-xl font-extrabold text-white">Bạn cần đăng nhập để xem đơn hàng</h2>
+            <ReceiptText className="mx-auto mb-4 size-12 text-slate-600" />
+            <h2 className="text-xl font-semibold text-white">Bạn cần đăng nhập để xem đơn hàng</h2>
             <p className="mt-2 text-sm text-slate-400">Sau khi đăng nhập, các đơn hàng của tài khoản sẽ xuất hiện tại đây.</p>
             <Link href="/login" className="mt-6 inline-flex rounded-xl bg-indigo-600 px-5 py-3 text-sm font-extrabold text-white hover:bg-indigo-500">
               Đăng nhập
@@ -103,7 +104,7 @@ export default function OrdersPage() {
                     <p className="font-mono text-sm font-bold text-indigo-400">#{order.id.slice(0, 8).toUpperCase()}</p>
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400">
                       <span className="flex items-center gap-1">
-                        <Calendar className="h-3.5 w-3.5" />
+                        <Calendar className="size-3.5" />
                         {formatDateTime(order.createdAt)}
                       </span>
                       <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-300 bg-slate-800 border border-white/5 rounded px-1.5 py-0.5">
@@ -121,16 +122,18 @@ export default function OrdersPage() {
 
                 {order.status === 'AWAITING_PAYMENT' && order.paymentMethod === 'bank' && (
                   <div className="mt-4 p-5 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 flex flex-col md:flex-row gap-5 items-center">
-                    <div className="bg-white p-3 rounded-2xl w-40 h-40 flex items-center justify-center shrink-0 shadow-xl border border-white/10">
-                      <img 
+                    <div className="bg-white p-3 rounded-2xl size-40 flex items-center justify-center shrink-0 shadow-xl border border-white/10">
+                      <Image 
                         src={`https://img.vietqr.io/image/${process.env.NEXT_PUBLIC_VIETQR_BANK_ID || 'vietcombank'}-${process.env.NEXT_PUBLIC_VIETQR_ACCOUNT_NO || '1026820007'}-compact2.png?amount=${order.totalAmount}&addInfo=GEARZONE ${order.id.slice(0, 8).toUpperCase()}&accountName=${encodeURIComponent(process.env.NEXT_PUBLIC_VIETQR_ACCOUNT_NAME || 'TRAN VAN KHAI')}`} 
                         alt="Mã VietQR Thanh Toán" 
-                        className="w-full h-full object-contain"
+                        width={160}
+                        height={160}
+                        className="size-full object-contain"
                       />
                     </div>
                     <div className="flex-1 text-sm space-y-2 text-slate-300 w-full">
-                      <h4 className="font-bold text-white text-base flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+                      <h4 className="font-semibold text-white text-base flex items-center gap-2">
+                        <span className="size-2.5 rounded-full bg-amber-500 animate-pulse" />
                         Hướng dẫn chuyển khoản nhanh qua QR
                       </h4>
                       <p className="text-slate-400 text-xs">Mở app ngân hàng quét mã QR bên cạnh để thanh toán nhanh và chính xác nhất.</p>
@@ -166,10 +169,10 @@ export default function OrdersPage() {
                   {order.items.map((item) => (
                     <div key={item.id} className="flex items-center gap-3 rounded-xl bg-slate-950 p-3 border border-white/5">
                       {item.product.imageUrl ? (
-                        <img src={item.product.imageUrl} alt={item.product.name} className="h-14 w-14 rounded-xl object-cover" />
+                        <Image src={item.product.imageUrl.split('|')[0]} alt={item.product.name} width={56} height={56} className="size-14 rounded-xl object-cover" />
                       ) : (
-                        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-900 border border-white/5">
-                          <ImageIcon className="h-5 w-5 text-slate-600" />
+                        <div className="flex size-14 items-center justify-center rounded-xl bg-slate-900 border border-white/5">
+                          <ImageIcon className="size-5 text-slate-600" />
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
@@ -185,11 +188,11 @@ export default function OrdersPage() {
           </div>
         ) : (
           <div className="rounded-3xl border border-dashed border-white/10 bg-slate-900/40 p-10 text-center">
-            <ShoppingBag className="mx-auto mb-4 h-12 w-12 text-slate-600" />
-            <h2 className="text-xl font-extrabold text-white">Chưa có đơn hàng</h2>
+            <ShoppingBag className="mx-auto mb-4 size-12 text-slate-600" />
+            <h2 className="text-xl font-semibold text-white">Chưa có đơn hàng</h2>
             <p className="mt-2 text-sm text-slate-400">Khi bạn đặt hàng, thông tin đơn sẽ được hiển thị ở đây.</p>
             <Link href="/products" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-extrabold text-white hover:bg-indigo-500">
-              <Package className="h-4 w-4" />
+              <Package className="size-4" />
               Mua sản phẩm
             </Link>
           </div>

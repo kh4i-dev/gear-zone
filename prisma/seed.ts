@@ -4,17 +4,19 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
-  const adminEmail = process.env.ADMIN_EMAIL
-  const adminPassword = process.env.ADMIN_PASSWORD
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com'
+  const adminPassword = process.env.ADMIN_PASSWORD || '123'
 
   if (adminEmail && adminPassword) {
     const hashed = await bcrypt.hash(adminPassword, 10)
-    const existing = await prisma.user.findUnique({ where: { email: adminEmail } })
+    const existing = await prisma.user.findUnique({ where: { username: 'admin' } })
     if (existing) {
       await prisma.user.update({
-        where: { email: adminEmail },
+        where: { username: 'admin' },
         data: {
           password: hashed,
+          email: adminEmail,
+          phone: '0000000000',
           role: 'ADMIN',
         },
       })
@@ -22,9 +24,11 @@ async function main() {
     } else {
       await prisma.user.create({
         data: {
+          username: 'admin',
           email: adminEmail,
           name: 'Admin',
           password: hashed,
+          phone: '0000000000',
           role: 'ADMIN',
         },
       })
@@ -35,18 +39,22 @@ async function main() {
     console.log('ADMIN_EMAIL or ADMIN_PASSWORD not set; skipping admin user seed')
   }
 
-  const categories = ['Bàn phím', 'Chuột', 'Tai nghe']
-  for (const name of categories) {
-    await prisma.category.upsert({
-      where: { name },
-      update: {},
-      create: { name },
-    })
-  }
+  const categories = ['Bàn phím', 'Chuột', 'Tai nghe', 'Màn hình', 'Giá đỡ màn hình (Arm)', 'Lót chuột (Mousepad)']
+  await Promise.all(
+    categories.map(name =>
+      prisma.category.upsert({
+        where: { name },
+        update: {},
+        create: { name },
+      })
+    )
+  )
 
-  const keyboard = await prisma.category.findUnique({ where: { name: 'Bàn phím' } })
-  const mouse = await prisma.category.findUnique({ where: { name: 'Chuột' } })
-  const headset = await prisma.category.findUnique({ where: { name: 'Tai nghe' } })
+  const [keyboard, mouse, headset] = await Promise.all([
+    prisma.category.findUnique({ where: { name: 'Bàn phím' } }),
+    prisma.category.findUnique({ where: { name: 'Chuột' } }),
+    prisma.category.findUnique({ where: { name: 'Tai nghe' } })
+  ])
 
   const sampleProducts = [
     {
@@ -90,12 +98,16 @@ async function main() {
     },
   ]
 
-  for (const product of sampleProducts) {
-    const existingProduct = await prisma.product.findFirst({ where: { name: product.name } })
-    if (!existingProduct) {
-      await prisma.product.create({ data: product.data })
-    }
-  }
+  const productNames = sampleProducts.map(p => p.name)
+  const existingProducts = await prisma.product.findMany({
+    where: { name: { in: productNames } }
+  })
+  const existingNames = new Set(existingProducts.map(p => p.name))
+  
+  const productsToCreate = sampleProducts.filter(p => !existingNames.has(p.name))
+  await Promise.all(productsToCreate.map(product => 
+    prisma.product.create({ data: product.data })
+  ))
 
   console.log('Sample products seeded')
 }

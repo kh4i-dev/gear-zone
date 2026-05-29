@@ -4,14 +4,13 @@ import { getCurrentUser } from '@/lib/auth'
 import { badRequest, fail, forbidden, success } from '@/lib/api'
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const user = await getCurrentUser(request)
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json(forbidden('Chỉ admin mới có quyền truy cập'), { status: 403 })
-    }
+  const user = await getCurrentUser(request)
+  if (!user || user.role !== 'ADMIN') {
+    return NextResponse.json(forbidden('Chỉ admin mới có quyền truy cập'), { status: 403 })
+  }
 
-    const { id } = await params
-    const body = await request.json()
+  try {
+    const [{ id }, body] = await Promise.all([params, request.json()])
     
     const existingProduct = await prisma.product.findUnique({ where: { id } })
     if (!existingProduct) {
@@ -68,12 +67,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const user = await getCurrentUser(request)
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json(forbidden('Chỉ admin mới có quyền truy cập'), { status: 403 })
-    }
+  const user = await getCurrentUser(request)
+  if (!user || user.role !== 'ADMIN') {
+    return NextResponse.json(forbidden('Chỉ admin mới có quyền truy cập'), { status: 403 })
+  }
 
+  try {
     const { id } = await params
     
     const existingProduct = await prisma.product.findUnique({ where: { id } })

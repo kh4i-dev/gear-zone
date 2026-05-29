@@ -1,80 +1,265 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useSyncExternalStore, useMemo } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Award, Globe, Headset, Loader2, Mail, Package, ShieldCheck, Truck, Zap, ShoppingCart, Star, ImageIcon, Tag } from 'lucide-react'
-import { ProductCatalog, type StoreProduct } from '@/components/domain/ProductCatalog'
+import { ArrowRight, Award, Globe, Headset, Loader2, Mail, Package, ShieldCheck, Truck, Zap, ShoppingCart, Star, ImageIcon, Tag, RotateCcw, Cpu, Gamepad2 } from 'lucide-react'
 import { StoreNavbar } from '@/components/domain/StoreNavbar'
+import { ProductCard, type StoreProduct } from '@/components/domain/ProductCard'
 import { useCart } from '@/components/providers/CartProvider'
 import { toast } from 'sonner'
 import { formatPrice } from '@/lib/utils'
 
-export default function StoreHomePage() {
-  const [products, setProducts] = useState<StoreProduct[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [videoUrl, setVideoUrl] = useState<string | null>(null)
-  
-  const { addToCart } = useCart()
-  const [activeTab, setActiveTab] = useState('all')
+const DEFAULT_HOME_SETTINGS = {
+  videoUrl: null as string | null,
+  themeAccent: 'indigo',
+  introTitle: 'Chào mừng đến với GearZone',
+  introText: 'GearZone chuyên gaming gear, linh kiện và phụ kiện máy tính chính hãng. Chúng tôi tập trung vào sản phẩm rõ thông tin, giá minh bạch, tồn kho thực và hỗ trợ nhanh cho game thủ.',
+  bannerTitle: 'GearZone - phụ kiện gaming rõ giá, rõ tồn kho.',
+  bannerSubtitle: 'Xem ảnh sản phẩm, giá cũ, giá khuyến mãi, số lượng còn lại và lọc nhanh theo tên hàng, danh mục hoặc khoảng giá.',
+  bannerCtaText: 'Xem sản phẩm',
+  bannerCtaLink: '/products',
+  tickerSpeed: '25s',
+  tickerMessages: [
+    'Giao hàng siêu tốc 2h nội thành',
+    'Bảo hành chính hãng 12-24 tháng',
+    'Đổi trả miễn phí trong 7 ngày',
+    'Build PC Gaming giá siêu ưu đãi',
+    'Gear xịn - Skill đỉnh',
+  ]
+}
 
-  const uniqueCategories = Array.from(new Set(products.map(p => p.category?.name).filter(Boolean))) as string[]
+type HomeData = {
+  products?: StoreProduct[]
+  settings?: typeof DEFAULT_HOME_SETTINGS
+}
 
-  const displayedProducts = products
-    .filter(p => activeTab === 'all' || p.category?.name === activeTab)
-    .slice(0, 8)
+const accentStyles = {
+  indigo: {
+    ticker: 'bg-indigo-600/20 border-indigo-500/20',
+    tickerText: 'text-indigo-200',
+    soft: 'bg-indigo-500/15 text-indigo-200',
+    primary: 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/25 text-white',
+    focus: 'focus:ring-indigo-500',
+    glow: 'bg-indigo-500/10',
+    text: 'text-indigo-400',
+    selected: 'bg-indigo-600 border-indigo-500 shadow-indigo-600/20 text-white',
+  },
+  emerald: {
+    ticker: 'bg-emerald-600/20 border-emerald-500/20',
+    tickerText: 'text-emerald-200',
+    soft: 'bg-emerald-500/15 text-emerald-200',
+    primary: 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/25 text-white',
+    focus: 'focus:ring-emerald-500',
+    glow: 'bg-emerald-500/10',
+    text: 'text-emerald-400',
+    selected: 'bg-emerald-600 border-emerald-500 shadow-emerald-600/20 text-white',
+  },
+  violet: {
+    ticker: 'bg-violet-600/20 border-violet-500/20',
+    tickerText: 'text-violet-200',
+    soft: 'bg-violet-500/15 text-violet-200',
+    primary: 'bg-violet-600 hover:bg-violet-500 shadow-violet-600/25 text-white',
+    focus: 'focus:ring-violet-500',
+    glow: 'bg-violet-500/10',
+    text: 'text-violet-400',
+    selected: 'bg-violet-600 border-violet-500 shadow-violet-600/20 text-white',
+  },
+  amber: {
+    ticker: 'bg-amber-600/20 border-amber-500/20',
+    tickerText: 'text-amber-200',
+    soft: 'bg-amber-500/15 text-amber-200',
+    primary: 'bg-amber-500 hover:bg-amber-400 shadow-amber-500/25 text-black',
+    focus: 'focus:ring-amber-500',
+    glow: 'bg-amber-500/10',
+    text: 'text-amber-400',
+    selected: 'bg-amber-500 border-amber-400 shadow-amber-500/20 text-black',
+  },
+  rose: {
+    ticker: 'bg-rose-600/20 border-rose-500/20',
+    tickerText: 'text-rose-200',
+    soft: 'bg-rose-500/15 text-rose-200',
+    primary: 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/25 text-white',
+    focus: 'focus:ring-rose-500',
+    glow: 'bg-rose-500/10',
+    text: 'text-rose-400',
+    selected: 'bg-rose-600 border-rose-500 shadow-rose-600/20 text-white',
+  },
+  blue: {
+    ticker: 'bg-blue-600/20 border-blue-500/20',
+    tickerText: 'text-blue-200',
+    soft: 'bg-blue-500/15 text-blue-200',
+    primary: 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/25 text-white',
+    focus: 'focus:ring-blue-500',
+    glow: 'bg-blue-500/10',
+    text: 'text-blue-400',
+    selected: 'bg-blue-600 border-blue-500 shadow-blue-600/20 text-white',
+  },
+} as const
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch('/api/products')
-        const result = await res.json()
-        setProducts(result.data || [])
-      } finally {
-        setIsLoading(false)
-      }
-    }
+const homeListeners = new Set<() => void>()
+const initialHomeSnapshot: HomeData = {}
+let homeSnapshot: HomeData = {}
+let homeRequest: Promise<void> | null = null
 
-    const fetchSettings = async () => {
-      try {
-        const res = await fetch('/api/settings')
-        const result = await res.json()
-        if (result.data?.homepage_video) {
-          setVideoUrl(result.data.homepage_video)
-        }
-      } catch (e) {
-        console.error('Lỗi khi tải cài đặt', e)
-      }
-    }
+function parseTickerMessages(raw: string | null | undefined, fallback: string[]) {
+  if (!raw) return fallback
 
-    fetchProducts()
-    fetchSettings()
-  }, [])
-
-  const tickerConfig = {
-    speed: '25s', // Có thể cấu hình tốc độ (thay đổi thành 10s, 30s...)
-    messages: [
-      '🚀 Giao hàng siêu tốc 2h nội thành',
-      '🛡️ Bảo hành chính hãng 12-24 tháng',
-      '⚙️ Đổi trả miễn phí trong 7 ngày',
-      '🔥 Build PC Gaming giá siêu ưu đãi',
-      '🎮 Gear xịn - Skill đỉnh',
-    ]
+  try {
+    const list = JSON.parse(raw)
+    // Strip emojis if present in stored messages
+    return list.map((msg: string) => msg.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim())
+  } catch {
+    return raw.split('|').filter(Boolean).map(msg => msg.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '').trim())
   }
+}
 
-  // Duplicate the messages array multiple times to create a seamless infinite scrolling effect
-  const tickerItems = [...tickerConfig.messages, ...tickerConfig.messages, ...tickerConfig.messages, ...tickerConfig.messages]
+function loadHomeData() {
+  if (homeRequest) return homeRequest
+
+  homeRequest = Promise.all([
+    window.fetch('/api/products')
+      .then((res) => res.json())
+      .then((result) => result.data || [])
+      .catch((error) => {
+        console.error('Lỗi khi tải sản phẩm', error)
+        return []
+      }),
+    window.fetch('/api/settings')
+      .then((res) => res.json())
+      .then((result) => {
+        if (!result.data) return DEFAULT_HOME_SETTINGS
+
+        return {
+          videoUrl: result.data.homepage_video || DEFAULT_HOME_SETTINGS.videoUrl,
+          themeAccent: result.data.theme_accent || DEFAULT_HOME_SETTINGS.themeAccent,
+          introTitle: result.data.homepage_intro_title || DEFAULT_HOME_SETTINGS.introTitle,
+          introText: result.data.homepage_intro_text || DEFAULT_HOME_SETTINGS.introText,
+          bannerTitle: result.data.homepage_banner_title || DEFAULT_HOME_SETTINGS.bannerTitle,
+          bannerSubtitle: result.data.homepage_banner_subtitle || DEFAULT_HOME_SETTINGS.bannerSubtitle,
+          bannerCtaText: result.data.homepage_banner_cta_text || DEFAULT_HOME_SETTINGS.bannerCtaText,
+          bannerCtaLink: result.data.homepage_banner_cta_link || DEFAULT_HOME_SETTINGS.bannerCtaLink,
+          tickerSpeed: result.data.homepage_ticker_speed || DEFAULT_HOME_SETTINGS.tickerSpeed,
+          tickerMessages: parseTickerMessages(
+            result.data.homepage_ticker_messages,
+            DEFAULT_HOME_SETTINGS.tickerMessages
+          ),
+        }
+      })
+      .catch((error) => {
+        console.error('Lỗi khi tải cài đặt', error)
+        return DEFAULT_HOME_SETTINGS
+      }),
+  ]).then(([products, settings]) => {
+    homeSnapshot = { products, settings }
+    homeListeners.forEach((listener) => listener())
+  })
+
+  return homeRequest
+}
+
+const homeStore = {
+  subscribe(listener: () => void) {
+    homeListeners.add(listener)
+    if (!homeRequest) {
+      loadHomeData()
+    }
+    return () => {
+      homeListeners.delete(listener)
+    }
+  },
+  getSnapshot: () => homeSnapshot,
+  getServerSnapshot: () => initialHomeSnapshot,
+}
+
+export default function StoreHomePage() {
+  const homeData = useSyncExternalStore(
+    homeStore.subscribe,
+    homeStore.getSnapshot,
+    homeStore.getServerSnapshot
+  )
+  const products = homeData.products
+  const isLoading = products === undefined
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault()
+    toast.success('Đăng ký email thành công! Bạn sẽ nhận được khuyến mãi sớm nhất.')
+  }
+  
+  const settings = homeData.settings ?? DEFAULT_HOME_SETTINGS
+  const accent = accentStyles[settings.themeAccent as keyof typeof accentStyles] ?? accentStyles.indigo
+  
+  const tickerItems = useMemo(() => {
+    // Custom infinite ticker item list with proper Lucide icons (Emoji-free)
+    const tickerIconMap: { [key: string]: any } = {
+      'Giao hàng siêu tốc 2h nội thành': Truck,
+      'Bảo hành chính hãng 12-24 tháng': ShieldCheck,
+      'Đổi trả miễn phí trong 7 ngày': RotateCcw,
+      'Build PC Gaming giá siêu ưu đãi': Cpu,
+      'Gear xịn - Skill đỉnh': Gamepad2,
+    }
+
+    const list = settings.tickerMessages.map((msg) => {
+      const match = Object.keys(tickerIconMap).find(k => msg.toLowerCase().includes(k.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().slice(0, 10)))
+      const IconComp = match ? tickerIconMap[match] : Zap
+      return { text: msg, icon: IconComp }
+    })
+    // Duplicate for seamless loop
+    return [...list, ...list, ...list, ...list].map((item, idx) => ({
+      id: `ticker-${idx}-${item.text}`,
+      ...item
+    }))
+  }, [settings.tickerMessages])
+
+  // Top 4 Featured Products logic - uses ES2023 toSorted for immutable sorting
+  const featuredProducts = useMemo(() => {
+    if (!products) return []
+    return products
+      .toSorted((a, b) => {
+        // 1. Best soldCount
+        if (b.soldCount !== a.soldCount) {
+          return b.soldCount - a.soldCount
+        }
+        // 2. Fallback: Discount
+        const discA = a.oldPrice ? (a.oldPrice - a.price) / a.oldPrice : 0
+        const discB = b.oldPrice ? (b.oldPrice - b.price) / b.oldPrice : 0
+        if (discB !== discA) return discB - discA
+        // 3. Fallback: Created date (assume mock id/date)
+        return b.id.localeCompare(a.id)
+      })
+      .slice(0, 4)
+  }, [products])
+
+  // Group Products by Categories for Category blocks - combined iterations using reduce
+  const categoryBlocks = useMemo(() => {
+    if (!products) return []
+    const groups: { [key: string]: StoreProduct[] } = {}
+    products.forEach(p => {
+      const catName = p.category?.name || 'Phụ kiện / Khác'
+      if (!groups[catName]) groups[catName] = []
+      groups[catName].push(p)
+    })
+
+    return Object.entries(groups).reduce((acc, [name, list]) => {
+      const sliced = list.slice(0, 4)
+      if (sliced.length > 0) {
+        acc.push({ name, products: sliced })
+      }
+      return acc
+    }, [] as { name: string; products: StoreProduct[] }[])
+  }, [products])
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50">
-      {/* Ticker Section */}
-      <div className="bg-indigo-600/20 border-b border-indigo-500/20 overflow-hidden py-2 relative">
+      {/* Ticker Section - Lucide icons, premium scrolling, no hover pause */}
+      <div className={`${accent.ticker} border-b overflow-hidden py-2 relative`}>
         <div 
-          className="whitespace-nowrap inline-flex gap-8 px-4 animate-ticker hover:[animation-play-state:paused]"
-          style={{ animationDuration: tickerConfig.speed }}
+          className="whitespace-nowrap inline-flex gap-12 px-4 animate-ticker"
+          style={{ animationDuration: settings.tickerSpeed }}
         >
-          {tickerItems.map((msg, idx) => (
-            <span key={idx} className="text-indigo-200 text-sm font-bold flex-shrink-0">
-              {msg}
+          {tickerItems.map((item) => (
+            <span key={item.id} className={`${accent.tickerText} text-xs font-extrabold tracking-wider uppercase flex items-center gap-2 flex-shrink-0 select-none`}>
+              <item.icon className="size-4 shrink-0" strokeWidth={2.5} />
+              {item.text}
             </span>
           ))}
         </div>
@@ -84,69 +269,56 @@ export default function StoreHomePage() {
 
       {/* Cinema Video Section */}
       <section className="mx-auto w-full max-w-[1920px] px-4 md:px-8 py-4 h-[calc(100vh-120px)] flex flex-col relative mb-12">
-        <div className="relative rounded-[2rem] flex-1 flex flex-col shadow-2xl shadow-indigo-500/10">
-          <div className="absolute inset-0 bg-indigo-500/5 blur-3xl rounded-[3rem] -z-10" />
+        <div className="relative rounded-[2rem] flex-1 flex flex-col shadow-2xl shadow-black/30">
+          <div className="absolute inset-0 rounded-[2rem] border border-white/10 pointer-events-none z-10" />
           
-          <div className="relative rounded-[2rem] overflow-hidden flex items-center justify-center flex-1 w-full shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/5 bg-black">
-            {videoUrl ? (
+          <div className="absolute inset-0 rounded-[2rem] overflow-hidden bg-slate-950">
+            {settings.videoUrl ? (
               <video 
-                src={videoUrl} 
+                src={settings.videoUrl} 
                 autoPlay 
                 muted 
-                loop
+                loop 
                 playsInline
-                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                aria-label="Video giới thiệu sản phẩm trang chủ"
+                className="size-full object-cover opacity-85"
               />
             ) : (
-              <div className="flex flex-col items-center justify-center text-slate-500 p-8 text-center h-full w-full bg-slate-900">
-                <div className="w-20 h-20 mb-4 rounded-full bg-slate-800 flex items-center justify-center border border-white/10">
-                  <span className="text-3xl">🎬</span>
-                </div>
-                <h3 className="text-xl font-bold text-slate-300 mb-2">Video giới thiệu chưa được cấu hình</h3>
+              <div className="size-full flex flex-col items-center justify-center text-slate-400 gap-4">
+                <ImageIcon className="size-16 opacity-20" />
                 <p className="max-w-md text-sm">Vui lòng đăng nhập Admin &gt; Cài đặt để thêm video URL hoặc upload video từ máy tính của bạn.</p>
               </div>
             )}
           </div>
           
-          {/* Text and Controls below the video */}
           <div className="pt-6 pb-2 px-4 text-center shrink-0 flex flex-col items-center justify-center">
-            <h3 className="text-2xl md:text-3xl font-extrabold text-white mb-2 tracking-tight">Trải Nghiệm Đỉnh Cao</h3>
+            <h3 className="text-2xl md:text-3xl font-semibold text-white mb-2 tracking-tight">{settings.introTitle}</h3>
             <p className="text-slate-400 max-w-3xl mx-auto text-sm md:text-base leading-relaxed mb-6">
-              Khám phá không gian mua sắm gaming gear chuyên nghiệp nhất. Nơi hội tụ của các thương hiệu hàng đầu thế giới với hệ sinh thái sản phẩm đa dạng.
+              {settings.introText}
             </p>
-            
-            {/* Scroll Down Indicator */}
-            <div className="flex justify-center animate-bounce">
-              <div 
-                className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer" 
-                onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-              </div>
-            </div>
           </div>
           
-          {/* Ambient light effect under the screen */}
-          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-3/4 h-8 bg-indigo-500/20 blur-2xl rounded-full" />
+          <div className={`absolute -bottom-10 left-1/4 right-1/4 h-20 ${accent.glow} blur-[80px] rounded-full pointer-events-none`} />
         </div>
       </section>
 
+      {/* Hero Banner Section */}
       <section className="mx-auto max-w-7xl px-4 pb-8">
         <div className="grid gap-6 rounded-3xl bg-slate-900 border border-white/5 p-6 text-white shadow-xl md:grid-cols-[1.2fr_0.8fr] md:p-8">
           <div className="flex flex-col justify-center py-4">
-            <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full bg-indigo-500/15 px-3 py-1 text-sm font-bold text-indigo-200">
+            <div className={`mb-4 inline-flex w-fit items-center gap-2 rounded-full ${accent.soft} px-3 py-1 text-sm font-bold`}>
               Gaming gear store
             </div>
-            <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight md:text-5xl">
-              GearZone - phụ kiện gaming rõ giá, rõ tồn kho.
+            <h1 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
+              {settings.bannerTitle}
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 md:text-base">
-              Xem ảnh sản phẩm, giá cũ, giá khuyến mãi, số lượng còn lại và lọc nhanh theo tên hàng, danh mục hoặc khoảng giá.
+              {settings.bannerSubtitle}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/products" className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-slate-950 hover:bg-indigo-50">
-                Xem sản phẩm
-                <ArrowRight className="h-4 w-4" />
+              <Link href={settings.bannerCtaLink} className={`inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-extrabold shadow-lg ${accent.primary}`}>
+                {settings.bannerCtaText}
+                <ArrowRight className="size-4" />
               </Link>
               <Link href="/orders" className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-5 py-3 text-sm font-bold text-white hover:bg-white/10">
                 Tra cứu đơn hàng
@@ -156,29 +328,28 @@ export default function StoreHomePage() {
 
           <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-1">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <Package className="mb-3 h-5 w-5 text-indigo-300" />
-              <p className="text-2xl font-extrabold">{products.length}</p>
-              <p className="text-sm text-slate-300">sản phẩm đang bán</p>
+              <Package className="mb-3 size-5 text-indigo-300" />
+              <h3 className="font-semibold text-base text-white">100% Chính Hãng</h3>
+              <p className="mt-1 text-xs text-slate-400">Các thương hiệu uy tín hàng đầu Razer, Logitech, Keychron, Asus…</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <Truck className="mb-3 h-5 w-5 text-emerald-300" />
-              <p className="text-2xl font-extrabold">24h</p>
-              <p className="text-sm text-slate-300">xử lý đơn nội thành</p>
+              <Truck className="mb-3 size-5 text-emerald-300" />
+              <h3 className="font-semibold text-base text-white">Giao Hàng Siêu Tốc</h3>
+              <p className="mt-1 text-xs text-slate-400">Ship hàng nội thành nhanh chóng trong vòng 2h kể từ lúc xác nhận.</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <ShieldCheck className="mb-3 h-5 w-5 text-amber-300" />
-              <p className="text-2xl font-extrabold">Chính hãng</p>
-              <p className="text-sm text-slate-300">bảo hành theo sản phẩm</p>
+              <ShieldCheck className="mb-3 size-5 text-violet-300" />
+              <h3 className="font-semibold text-base text-white">Bảo Hành Dễ Dàng</h3>
+              <p className="mt-1 text-xs text-slate-400">Bảo hành 12 - 24 tháng theo số serial, an tâm sử dụng trọn đời.</p>
             </div>
           </div>
         </div>
       </section>
 
-
-
-      <section className="mx-auto max-w-7xl px-4 pb-20">
-        <div className="mb-10 text-center">
-          <h2 className="text-3xl font-extrabold tracking-tight text-white mb-4">Tại sao chọn GearZone?</h2>
+      {/* Why Choose Us section (Premium look) */}
+      <section className="mx-auto max-w-7xl px-4 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-semibold tracking-tight text-white mb-4">Tại sao chọn GearZone?</h2>
           <p className="text-slate-400 max-w-2xl mx-auto">Chúng tôi mang đến những giá trị tốt nhất cho cộng đồng game thủ với dịch vụ chuyên nghiệp và sản phẩm chất lượng cao.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -187,192 +358,126 @@ export default function StoreHomePage() {
             { icon: Zap, title: 'Giao hàng siêu tốc', desc: 'Nhận hàng ngay trong 2h đối với khu vực nội thành.' },
             { icon: Headset, title: 'Hỗ trợ 24/7', desc: 'Đội ngũ kỹ thuật viên luôn sẵn sàng giải đáp mọi thắc mắc của bạn.' },
             { icon: Globe, title: 'Cộng đồng lớn mạnh', desc: 'Tham gia các giải đấu và event độc quyền dành cho member GearZone.' },
-          ].map((feature, idx) => (
-            <div key={idx} className="bg-slate-900/50 border border-white/5 p-6 rounded-2xl hover:bg-slate-900 transition-colors group">
-              <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <feature.icon className="w-6 h-6 text-indigo-400" />
+          ].map((feature) => (
+            <div key={feature.title} className="bg-slate-900/50 border border-white/5 p-6 rounded-2xl hover:bg-slate-900 transition-colors group">
+              <div className="size-12 bg-indigo-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <feature.icon className="size-6 text-indigo-400" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
               <p className="text-sm text-slate-400 leading-relaxed">{feature.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Featured Products Section */}
-      <section className="mx-auto max-w-7xl px-4 pb-24">
-        <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/5 pb-6">
+      {/* SECTION 1: Featured Products Section (Premium Look) */}
+      <section className="mx-auto max-w-7xl px-4 py-12">
+        <div className="mb-8 flex items-end justify-between border-b border-white/5 pb-6">
           <div>
             <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 text-xs font-bold text-indigo-400 uppercase tracking-wider">
-              🎮 Siêu phẩm Gear xịn
+              🔥 TOP BÁN CHẠY
             </div>
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">
+            <h2 className="text-3xl font-bold tracking-tight text-white">
               Sản phẩm nổi bật
             </h2>
+            <p className="mt-1 text-sm text-slate-400">Những thiết bị đỉnh cao được nhiều game thủ tin dùng nhất.</p>
           </div>
-
-          {/* Category Tabs */}
-          {products.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setActiveTab('all')}
-                className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all border ${
-                  activeTab === 'all'
-                    ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-600/20'
-                    : 'bg-slate-900 border-white/5 text-slate-400 hover:text-white hover:border-white/10'
-                }`}
-              >
-                Tất cả
-              </button>
-              {uniqueCategories.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveTab(cat)}
-                  className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all border ${
-                    activeTab === cat
-                      ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-600/20'
-                      : 'bg-slate-900 border-white/5 text-slate-400 hover:text-white hover:border-white/10'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          )}
+          <Link href="/products" className="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+            Xem tất cả
+            <ArrowRight className="size-4" />
+          </Link>
         </div>
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="h-10 w-10 animate-spin text-indigo-500" />
-            <p className="mt-4 text-sm text-slate-400">Đang tải siêu phẩm gaming...</p>
+            <Loader2 className="size-10 animate-spin text-indigo-500" />
+            <p className="mt-4 text-sm text-slate-400">Đang tải siêu phẩm gaming…</p>
           </div>
-        ) : displayedProducts.length > 0 ? (
+        ) : featuredProducts.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {displayedProducts.map((product) => {
-              const discount = product.oldPrice && product.oldPrice > product.price
-                ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
-                : null
-
-              return (
-                <article
-                  key={product.id}
-                  className="group relative overflow-hidden rounded-3xl border border-white/5 bg-slate-900/20 backdrop-blur-md shadow-xl transition-all duration-500 hover:-translate-y-1 hover:border-indigo-500/30 hover:shadow-2xl hover:shadow-indigo-500/5 flex flex-col"
-                >
-                  <Link href={`/products/${product.id}`} className="relative aspect-[4/3] bg-slate-950 block overflow-hidden">
-                    {product.imageUrl ? (
-                      <img
-                        src={product.imageUrl}
-                        alt={product.name}
-                        className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center transition duration-700 group-hover:scale-105">
-                        <ImageIcon className="h-12 w-12 text-slate-700" />
-                      </div>
-                    )}
-                  </Link>
-                  <div className="p-5 flex flex-1 flex-col justify-between">
-                    <div>
-                      <div className="mb-3 inline-flex items-center gap-1.5 rounded-lg bg-indigo-500/10 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-widest text-indigo-400 border border-indigo-500/20">
-                        <Tag className="h-3 w-3" />
-                        {product.category?.name || 'Khác'}
-                      </div>
-                      <Link href={`/products/${product.id}`} className="group/title block">
-                        <h3 className="text-base font-extrabold leading-6 text-white group-hover/title:text-indigo-400 transition-colors line-clamp-2 min-h-12">
-                          {product.name}
-                        </h3>
-                      </Link>
-                      <div className="mt-2 flex items-center gap-1 text-amber-400">
-                        {Array.from({ length: 5 }).map((_, index) => (
-                          <Star key={index} className="h-3.5 w-3.5 fill-current" />
-                        ))}
-                        <span className="ml-1 text-[11px] font-bold text-slate-500">
-                          ({Math.max(product.soldCount * 7, 12)} đánh giá)
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="mt-6">
-                      <div className="flex items-end justify-between border-t border-white/5 pt-4">
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg font-extrabold text-white">
-                              {formatPrice(product.price)}
-                            </span>
-                            {discount && (
-                              <span className="bg-rose-500/10 text-rose-500 border border-rose-500/20 px-1.5 py-0.5 rounded text-[10px] font-extrabold">
-                                -{discount}%
-                              </span>
-                            )}
-                          </div>
-                          {product.oldPrice && (
-                            <span className="text-xs font-semibold text-slate-500 line-through">
-                              {formatPrice(product.oldPrice)}
-                            </span>
-                          )}
-                        </div>
-
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            addToCart({
-                              productId: product.id,
-                              name: product.name,
-                              price: product.price,
-                              imageUrl: product.imageUrl,
-                              maxStock: product.stock,
-                            })
-                            toast.success(`Đã thêm ${product.name} vào giỏ hàng`)
-                          }}
-                          disabled={product.stock <= 0}
-                          className="h-10 w-10 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition-all duration-300 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500 active:scale-95"
-                          title="Thêm vào giỏ hàng"
-                        >
-                          <ShoppingCart className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              )
-            })}
+            {featuredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} accent={accent} showBadge={true} badgeText="BÁN CHẠY" />
+            ))}
           </div>
         ) : (
           <div className="rounded-3xl border border-dashed border-white/10 bg-slate-900/10 py-20 text-center backdrop-blur-md">
-            <Package className="mx-auto mb-4 h-12 w-12 text-slate-600" />
-            <h3 className="text-lg font-extrabold text-white">Chưa có sản phẩm nào</h3>
-            <p className="mt-1 text-sm text-slate-400">Vui lòng quay lại sau.</p>
+            <Package className="mx-auto size-12 text-slate-600 mb-4 opacity-50" />
+            <h3 className="text-lg font-semibold text-white mb-1">Chưa có sản phẩm nổi bật</h3>
+            <p className="text-slate-400 text-sm">Vui lòng quay lại sau.</p>
           </div>
         )}
-
-        <div className="mt-12 flex justify-center">
-          <Link
-            href="/products"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900/40 hover:bg-slate-900 hover:border-white/20 px-6 py-3.5 text-sm font-extrabold text-white transition-all group"
-          >
-            Khám phá tất cả sản phẩm
-            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="border-t border-white/5 bg-gradient-to-b from-transparent to-indigo-950/20">
-        <div className="mx-auto max-w-4xl px-4 py-20 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-600 mb-6 shadow-lg shadow-indigo-600/20">
-            <Mail className="w-8 h-8 text-white" />
+      {/* SECTION 2: Category Blocks (Mouse, Keyboard, Headset, Monitor, others) */}
+      <section className="mx-auto max-w-7xl px-4 py-12 space-y-16">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="size-8 animate-spin text-indigo-500" />
           </div>
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white mb-6">Nhận thông tin khuyến mãi mới nhất</h2>
-          <p className="text-slate-300 text-lg mb-8">Đăng ký email để không bỏ lỡ các deal sốc và sản phẩm limited edition từ GearZone.</p>
-          <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" onSubmit={(e) => e.preventDefault()}>
-            <input type="email" placeholder="Nhập email của bạn..." className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-3 rounded-xl transition-colors">
-              Đăng ký
+        ) : (
+          categoryBlocks.map((block) => (
+            <div key={block.name} className="space-y-6">
+              <div className="flex items-end justify-between border-b border-white/5 pb-4">
+                <div>
+                  <h3 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                    <span className="inline-block size-2 rounded-full bg-indigo-500 animate-pulse" />
+                    {block.name}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">Khám phá các sản phẩm hàng đầu trong danh mục {block.name}.</p>
+                </div>
+                <Link 
+                  href={`/products?category=${encodeURIComponent(block.name)}`} 
+                  className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors inline-flex items-center gap-1"
+                >
+                  Xem tất cả {block.name}
+                  <ArrowRight className="size-3.5" />
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                {block.products.map((product) => (
+                  <ProductCard key={product.id} product={product} accent={accent} />
+                ))}
+              </div>
+            </div>
+          ))
+        )}
+      </section>
+
+      {/* Email newsletter signup section (Premium layout) */}
+      <section className="mx-auto max-w-7xl px-4 py-16 relative">
+        <div className="relative rounded-3xl bg-slate-900 border border-white/5 p-8 md:p-12 overflow-hidden shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="absolute -top-32 -right-32 size-64 rounded-full bg-indigo-600/10 blur-3xl pointer-events-none" />
+          
+          <div className="flex-1 text-center md:text-left z-10">
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-white mb-3">Đừng bỏ lỡ ưu đãi nào!</h2>
+            <p className="text-slate-400 text-sm md:text-base max-w-xl">Đăng ký email để nhận tin tức về siêu phẩm gaming mới nhất, code giảm giá độc quyền và các chương trình giveaway.</p>
+          </div>
+          
+          <form onSubmit={handleSubscribe} className="w-full md:w-auto flex flex-col sm:flex-row gap-3 shrink-0 z-10">
+            <div className="relative min-w-[280px]">
+              <Mail className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="email"
+                required
+                placeholder="Nhập email của bạn..."
+                aria-label="Địa chỉ Email"
+                className="h-12 w-full rounded-xl border border-white/10 bg-slate-950/60 pl-11 pr-4 text-sm text-white placeholder-slate-500 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              />
+            </div>
+            <button 
+              type="submit"
+              className="h-12 rounded-xl bg-indigo-600 px-6 text-sm font-bold text-white hover:bg-indigo-500 active:scale-95 transition-all shadow-lg shadow-indigo-600/25"
+            >
+              Đăng ký ngay
             </button>
           </form>
         </div>
       </section>
+
+      {/* Footer copyright */}
+      <footer className="border-t border-white/5 py-8 bg-slate-950 text-center">
+        <p className="text-xs text-slate-500">© 2026 GearZone Store. All rights reserved. Built for professional gamers.</p>
+      </footer>
     </main>
   )
 }

@@ -21,20 +21,20 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser(request)
     if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json(unauthorized(), { status: 401 })
+      return NextResponse.json(fail('UNAUTHORIZED', 'Unauthorized'), { status: 401 })
     }
 
     const { settings } = await request.json()
     
     // settings is an object of key-value pairs
     // Update or create each setting
-    for (const [key, value] of Object.entries(settings)) {
-      await prisma.setting.upsert({
+    await Promise.all(Object.entries(settings).map(([key, value]) => 
+      prisma.setting.upsert({
         where: { key },
         update: { value: String(value) },
         create: { key, value: String(value) },
       })
-    }
+    ))
 
     return NextResponse.json(success(null))
   } catch (error) {

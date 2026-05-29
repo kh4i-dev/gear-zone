@@ -20,25 +20,30 @@ async function cancelExpiredOrders() {
         }
       })
 
-      for (const order of expiredOrders) {
-        // Update order status to CANCELLED
-        await tx.order.update({
+      const orderUpdates = expiredOrders.map(order => 
+        tx.order.update({
           where: { id: order.id },
           data: { status: 'CANCELLED' }
         })
-
-        // Replenish stock and soldCount for each item
-        for (const item of order.items) {
-          await tx.product.update({
+      );
+      
+      const productUpdates = expiredOrders.flatMap(order => 
+        order.items.map(item => 
+          tx.product.update({
             where: { id: item.productId },
             data: {
               stock: { increment: item.quantity },
               soldCount: { decrement: item.quantity }
             }
           })
-        }
-        console.log(`[Auto-Cancel] Order ${order.id} automatically cancelled due to payment timeout (5 mins). Stock replenished.`)
-      }
+        )
+      );
+
+      await Promise.all([...orderUpdates, ...productUpdates]);
+      
+      expiredOrders.forEach(order => {
+        console.log(`[Auto-Cancel] Order ${order.id} automatically cancelled due to payment timeout (5 mins). Stock replenished.`);
+      });
     })
   } catch (error) {
     console.error('Error during auto-cancelling expired orders:', error)
@@ -49,7 +54,7 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser(request)
     if (!user) {
-      return NextResponse.json(unauthorized('Vui lòng đăng nhập để xem đơn hàng'), { status: 401 })
+      return NextResponse.json(fail('UNAUTHORIZED', 'Vui lòng đăng nhập để xem đơn hàng'), { status: 401 })
     }
 
     // Process auto-cancellation of expired orders first
@@ -78,7 +83,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser(request)
     if (!user) {
-      return NextResponse.json(unauthorized('Vui lòng đăng nhập để thanh toán'), { status: 401 })
+      return NextResponse.json(fail('UNAUTHORIZED', 'Vui lòng đăng nhập để thanh toán'), { status: 401 })
     }
 
     // Process auto-cancellation of expired orders first to release locked stock
@@ -120,10 +125,13 @@ export async function POST(request: NextRequest) {
         : 'PENDING'
 
       // Check stock before checking out
+      const productIds = items.map((item: any) => item.productId)
+      const products = await tx.product.findMany({
+        where: { id: { in: productIds } }
+      })
+      const productMap = new Map(products.map(p => [p.id, p]))
       for (const item of items) {
-        const product = await tx.product.findUnique({
-          where: { id: item.productId }
-        })
+        const product = productMap.get(item.productId)
         if (!product || product.stock < item.quantity) {
           throw new Error(`Sản phẩm ${product?.name || 'không xác định'} đã hết hàng hoặc số lượng trong kho không đủ!`)
         }
@@ -150,15 +158,15 @@ export async function POST(request: NextRequest) {
       })
 
       // Update product stock and soldCount
-      for (const item of items) {
-        await tx.product.update({
+      await Promise.all(items.map((item: any) => 
+        tx.product.update({
           where: { id: item.productId },
           data: {
             stock: { decrement: item.quantity },
             soldCount: { increment: item.quantity },
           },
         })
-      }
+      ))
 
       return newOrder
     })

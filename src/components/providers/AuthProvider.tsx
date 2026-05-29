@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import React, { createContext, useCallback, use, useEffect, useMemo, useSyncExternalStore } from 'react'
 
 interface User {
   id: string
@@ -21,28 +21,52 @@ const AuthContext = createContext<AuthContextType>({
   refreshUser: async () => null,
 })
 
+const authListeners = new Set<() => void>()
+const initialAuthSnapshot = { user: null as User | null, isLoading: true }
+let authSnapshot = {
+  user: null as User | null,
+  isLoading: true,
+}
+
+function emitAuthChange() {
+  authListeners.forEach((listener) => listener())
+}
+
+const authStore = {
+  subscribe(listener: () => void) {
+    authListeners.add(listener)
+    return () => {
+      authListeners.delete(listener)
+    }
+  },
+  getSnapshot: () => authSnapshot,
+  getServerSnapshot: () => initialAuthSnapshot,
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const authState = useSyncExternalStore(
+    authStore.subscribe,
+    authStore.getSnapshot,
+    authStore.getServerSnapshot
+  )
 
   const refreshUser = useCallback(async () => {
-    setIsLoading(true)
-
     try {
-      const res = await fetch('/api/auth/me', { credentials: 'include' })
+      const res = await window.fetch('/api/auth/me', { credentials: 'include' })
       if (res.ok) {
         const { data } = await res.json()
-        setUser(data)
+        authSnapshot = { user: data, isLoading: false }
+        emitAuthChange()
         return data as User
       }
 
-      setUser(null)
+      authSnapshot = { user: null, isLoading: false }
+      emitAuthChange()
       return null
     } catch {
-      setUser(null)
+      authSnapshot = { user: null, isLoading: false }
+      emitAuthChange()
       return null
-    } finally {
-      setIsLoading(false)
     }
   }, [])
 
@@ -50,13 +74,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser()
   }, [refreshUser])
 
+  const authValue = useMemo(() => ({
+    user: authState.user,
+    isLoading: authState.isLoading,
+    refreshUser
+  }), [authState, refreshUser])
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, refreshUser }}>
+    <AuthContext.Provider value={authValue}>
       {children}
     </AuthContext.Provider>
   )
 }
 
 export function useAuth() {
-  return useContext(AuthContext)
+  return use(AuthContext)
 }

@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 import { ArrowLeft } from 'lucide-react'
 
 export default function UserRegisterPage() {
-  const router = useRouter()
+  const { push, refresh } = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
@@ -52,8 +52,8 @@ export default function UserRegisterPage() {
       }
 
       toast.success('Đăng ký tài khoản thành công!')
-      router.push('/')
-      router.refresh()
+      push('/')
+      refresh()
     } catch {
       toast.error('Lỗi kết nối')
     } finally {
@@ -64,20 +64,20 @@ export default function UserRegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-purple-950 to-slate-950 py-12 px-4 relative overflow-hidden">
       {/* Background decorations */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+      <div className="absolute top-0 left-1/4 size-96 bg-purple-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 size-96 bg-blue-500/10 rounded-full blur-3xl" />
 
       <div className="w-full max-w-md z-10">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-white mb-8 transition-colors group"
         >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
           Quay lại trang chủ
         </Link>
 
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-extrabold text-gradient tracking-tight bg-gradient-to-r from-blue-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-semibold tracking-tight text-white">
             Tạo tài khoản mới
           </h1>
           <p className="text-muted-foreground mt-2">Đăng ký để trở thành thành viên GearZone</p>

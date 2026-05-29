@@ -17,9 +17,10 @@ import {
 import { Navbar } from '@/components/domain/Navbar'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { formatPrice, cn } from '@/lib/utils'
+import { getAdminPath } from '@/lib/adminPath'
 
 export default function AdminDashboard() {
-  const router = useRouter()
+  const { replace } = useRouter()
   const { user, isLoading: authLoading } = useAuth()
   const [stats, setStats] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -27,16 +28,16 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!authLoading && (!user || user.role !== 'ADMIN')) {
       setIsLoading(false)
-      router.replace('/admin/login')
+      replace(getAdminPath('/login'))
       return
     }
 
     if (user && user.role === 'ADMIN') {
       fetchDashboard()
     }
-  }, [user, authLoading])
+  }, [user, authLoading, replace])
 
-  const fetchDashboard = async () => {
+  async function fetchDashboard() {
     try {
       const res = await fetch('/api/admin/dashboard', { credentials: 'include' })
       if (res.ok) {
@@ -53,7 +54,7 @@ export default function AdminDashboard() {
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
+        <Loader2 className="size-8 animate-spin text-blue-400" />
       </div>
     )
   }
@@ -102,29 +103,29 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-6">
           <div>
             <div className="flex items-center gap-2 text-blue-400 text-sm font-semibold uppercase tracking-wider mb-1">
-              <ShieldCheck className="w-4 h-4" /> Hệ thống quản trị
+              <ShieldCheck className="size-4" /> Hệ thống quản trị
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight">Dashboard Quản Trị</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">Dashboard Quản Trị</h1>
             <p className="text-muted-foreground mt-1">Chào mừng quay trở lại, {user.name}</p>
           </div>
           <div className="flex gap-3">
             <Link
-              href="/admin/products"
+              href={getAdminPath('/products')}
               className="px-4 py-2 bg-slate-900 border border-white/5 hover:border-blue-500/30 rounded-xl transition-all font-medium text-sm flex items-center gap-1.5"
             >
-              <Package className="w-4 h-4" /> Sản phẩm
+              <Package className="size-4" /> Sản phẩm
             </Link>
             <Link
-              href="/admin/orders"
+              href={getAdminPath('/orders')}
               className="px-4 py-2 bg-slate-900 border border-white/5 hover:border-blue-500/30 rounded-xl transition-all font-medium text-sm flex items-center gap-1.5"
             >
-              <ShoppingCart className="w-4 h-4" /> Đơn hàng
+              <ShoppingCart className="size-4" /> Đơn hàng
             </Link>
             <Link
-              href="/admin/users"
+              href={getAdminPath('/users')}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl transition-all font-medium text-sm flex items-center gap-1.5 shadow-lg shadow-blue-500/20"
             >
-              <Users className="w-4 h-4" /> Khách hàng
+              <Users className="size-4" /> Khách hàng
             </Link>
           </div>
         </div>
@@ -137,8 +138,8 @@ export default function AdminDashboard() {
               className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/5 p-6 hover:border-white/10 transition-colors"
             >
               <div className="flex items-center justify-between mb-4">
-                <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', stat.bgColor)}>
-                  <stat.icon className={cn('w-6 h-6', stat.color)} />
+                <div className={cn('size-12 rounded-xl flex items-center justify-center', stat.bgColor)}>
+                  <stat.icon className={cn('size-6', stat.color)} />
                 </div>
               </div>
               <p className="text-sm text-muted-foreground font-medium">{stat.label}</p>
@@ -154,24 +155,24 @@ export default function AdminDashboard() {
           {/* Pending Orders */}
           <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/5 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold">Đơn hàng chờ xử lý</h2>
+              <h2 className="text-lg font-semibold">Đơn hàng chờ xử lý</h2>
               <Link
-                href="/admin/orders"
+                href={getAdminPath('/orders')}
                 className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 font-semibold"
               >
                 Xem tất cả
-                <ArrowUpRight className="w-4 h-4" />
+                <ArrowUpRight className="size-4" />
               </Link>
             </div>
 
             <div className="space-y-4">
               {stats?.pendingOrders > 0 ? (
                 <Link 
-                  href="/admin/orders" 
+                  href={getAdminPath('/orders')} 
                   className="flex items-center gap-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl hover:border-amber-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer group"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 group-hover:bg-amber-500/30 transition-colors">
-                    <AlertTriangle className="w-6 h-6 text-amber-400 animate-pulse" />
+                  <div className="size-12 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 group-hover:bg-amber-500/30 transition-colors">
+                    <AlertTriangle className="size-6 text-amber-400 animate-pulse" />
                   </div>
                   <div>
                     <p className="font-bold text-amber-400 text-lg group-hover:text-amber-300 transition-colors">{stats.pendingOrders} đơn hàng</p>
@@ -187,24 +188,24 @@ export default function AdminDashboard() {
           {/* Low Stock Alert */}
           <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/5 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold">Cảnh báo tồn kho</h2>
+              <h2 className="text-lg font-semibold">Cảnh báo tồn kho</h2>
               <Link
-                href="/admin/inventory"
+                href={getAdminPath('/inventory')}
                 className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 font-semibold"
               >
                 Quản lý kho
-                <ArrowUpRight className="w-4 h-4" />
+                <ArrowUpRight className="size-4" />
               </Link>
             </div>
 
             <div className="space-y-4">
               {stats?.lowStockProducts > 0 ? (
                 <Link 
-                  href="/admin/inventory" 
+                  href={getAdminPath('/inventory')} 
                   className="flex items-center gap-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl hover:border-red-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer group"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center shrink-0 group-hover:bg-red-500/30 transition-colors">
-                    <AlertTriangle className="w-6 h-6 text-red-400 animate-bounce" />
+                  <div className="size-12 rounded-xl bg-red-500/20 flex items-center justify-center shrink-0 group-hover:bg-red-500/30 transition-colors">
+                    <AlertTriangle className="size-6 text-red-400 animate-pulse" />
                   </div>
                   <div>
                     <p className="font-bold text-red-400 text-lg group-hover:text-red-300 transition-colors">{stats.lowStockProducts} sản phẩm</p>
@@ -223,9 +224,9 @@ export default function AdminDashboard() {
           {/* Recent Orders */}
           <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/5 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold">Đơn hàng gần đây</h2>
+              <h2 className="text-lg font-semibold">Đơn hàng gần đây</h2>
               <Link
-                href="/admin/orders"
+                href={getAdminPath('/orders')}
                 className="text-sm text-blue-400 hover:text-blue-300 font-semibold"
               >
                 Xem tất cả
@@ -264,9 +265,9 @@ export default function AdminDashboard() {
           {/* Top Selling Products */}
           <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/5 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold">Sản phẩm bán chạy</h2>
+              <h2 className="text-lg font-semibold">Sản phẩm bán chạy</h2>
               <Link
-                href="/admin/products"
+                href={getAdminPath('/products')}
                 className="text-sm text-blue-400 hover:text-blue-300 font-semibold"
               >
                 Quản lý sản phẩm
@@ -279,7 +280,7 @@ export default function AdminDashboard() {
                   key={product.id}
                   className="flex items-center gap-4 p-3.5 bg-slate-950/40 border border-white/5 rounded-xl hover:border-white/10 transition-all"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 font-extrabold text-sm border border-blue-500/20">
+                  <div className="size-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 font-extrabold text-sm border border-blue-500/20">
                     {index + 1}
                   </div>
                   <div className="flex-1 min-w-0">

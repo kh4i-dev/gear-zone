@@ -5,11 +5,12 @@ import { getCurrentUser } from '@/lib/auth'
 import { success, forbidden, fail } from '@/lib/api'
 
 export async function GET(request: NextRequest) {
+  const user = await getCurrentUser(request)
+  if (!user || user.role !== 'ADMIN') {
+    return NextResponse.json(forbidden('Chỉ admin mới có quyền truy cập'), { status: 403 })
+  }
+
   try {
-    const user = await getCurrentUser(request)
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json(forbidden('Chỉ admin mới có quyền truy cập'), { status: 403 })
-    }
 
     const [
       totalRevenueAgg,

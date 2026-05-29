@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser(request)
     if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json(forbidden('Chỉ admin mới có quyền truy cập'), { status: 403 })
+      return NextResponse.json(fail('FORBIDDEN', 'Chỉ admin mới có quyền truy cập'), { status: 403 })
     }
 
     const formData = await request.formData()
