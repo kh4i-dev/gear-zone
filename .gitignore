@@ -1,0 +1,84 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing / Test artifacts
+coverage/
+test-results/
+
+# Next.js
+.next/
+out/
+build/
+
+# Production
+dist/
+
+# Misc
+.DS_Store
+*.pem
+.env*
+!.env.example
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vercel
+.vercel
+.codegraph/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+
+# IDE
+.idea/
+.vscode/
+.cursor/
+.windsurf/
+*.swp
+*.swo
+
+# Database
+*.db
+*.db-journal
+
+# Uploads
+public/uploads/
+
+# Documents / Reports
+*.pdf
+*.docx
+~$*
+
+# Scratch / Temp
+scratch/
+
+# Scripts (local helpers)
+scripts/
+
+# Agent lock
+skills-lock.json
+
+# Agent skills
+.agents/
+.claude/
+.kiro/
+skills/
+*.save
+run_doctor.py
+
+# React Doctor reports
+react-doctor-*.txt
+react_doctor_*.txt
+
+# Logs / baselines
+*-baseline.log
+react-doctor-output.txt

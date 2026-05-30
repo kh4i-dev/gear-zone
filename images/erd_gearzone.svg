@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="920" viewBox="0 0 1500 920">
+  <defs>
+    <style>
+      .page { fill: #fff; }
+      .title { font-family: Arial, sans-serif; font-size: 30px; font-weight: 700; fill: #111827; }
+      .sub { font-family: Arial, sans-serif; font-size: 14px; fill: #4b5563; }
+      .box { fill: #fff; stroke: #3f4652; stroke-width: 1.5; }
+      .head { fill: #f3f4f6; stroke: #3f4652; stroke-width: 1.5; }
+      .name { font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; fill: #374151; }
+      .col { stroke: #3f4652; stroke-width: 1.1; }
+      .row { stroke: #d1d5db; stroke-width: 0.8; }
+      .txt { font-family: Arial, sans-serif; font-size: 12px; fill: #374151; }
+      .key { font-family: Arial, sans-serif; font-size: 12px; fill: #374151; }
+      .rel { fill: none; stroke: #4b5563; stroke-width: 1.5; stroke-linecap: square; stroke-linejoin: miter; }
+      .mark { fill: none; stroke: #4b5563; stroke-width: 1.5; stroke-linecap: square; }
+      .label { font-family: Arial, sans-serif; font-size: 12px; fill: #4b5563; }
+      .noteBox { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1; }
+      .note { font-family: Arial, sans-serif; font-size: 13px; fill: #475569; }
+    </style>
+  </defs>
+
+  <rect class="page" width="1500" height="920" />
+  <text class="title" x="70" y="58">ERD - GearZone</text>
+  <text class="sub" x="70" y="84">Crow's foot ERD theo schema hiện tại. Không thêm Payment vì Prisma chưa có model Payment.</text>
+
+  <!-- USER -->
+  <g id="USER">
+    <rect class="box" x="70" y="210" width="300" height="275" />
+    <rect class="head" x="70" y="210" width="300" height="28" />
+    <text class="name" x="220" y="229" text-anchor="middle">USER</text>
+    <line class="col" x1="118" y1="238" x2="118" y2="485" />
+    <text class="key" x="86" y="260">PK</text><text class="txt" x="132" y="260">USER_ID</text>
+    <line class="row" x1="70" y1="270" x2="370" y2="270" />
+    <text class="txt" x="132" y="288">USERNAME</text>
+    <line class="row" x1="70" y1="298" x2="370" y2="298" />
+    <text class="txt" x="132" y="316">EMAIL</text>
+    <line class="row" x1="70" y1="326" x2="370" y2="326" />
+    <text class="txt" x="132" y="344">NAME</text>
+    <line class="row" x1="70" y1="354" x2="370" y2="354" />
+    <text class="txt" x="132" y="372">PASSWORD</text>
+    <line class="row" x1="70" y1="382" x2="370" y2="382" />
+    <text class="txt" x="132" y="400">PHONE</text>
+    <line class="row" x1="70" y1="410" x2="370" y2="410" />
+    <text class="txt" x="132" y="428">ADDRESS</text>
+    <line class="row" x1="70" y1="438" x2="370" y2="438" />
+    <text class="txt" x="132" y="456">ROLE</text>
+  </g>
+
+  <!-- ORDER -->
+  <g id="ORDER">
+    <rect class="box" x="540" y="185" width="330" height="330" />
+    <rect class="head" x="540" y="185" width="330" height="28" />
+    <text class="name" x="705" y="204" text-anchor="middle">ORDER</text>
+    <line class="col" x1="588" y1="213" x2="588" y2="515" />
+    <text class="key" x="556" y="235">PK</text><text class="txt" x="602" y="235">ORDER_ID</text>
+    <line class="row" x1="540" y1="245" x2="870" y2="245" />
+    <text class="key" x="556" y="263">FK</text><text class="txt" x="602" y="263">USER_ID</text>
+    <line class="row" x1="540" y1="273" x2="870" y2="273" />
+    <text class="txt" x="602" y="291">STATUS</text>
+    <line class="row" x1="540" y1="301" x2="870" y2="301" />
+    <text class="txt" x="602" y="319">TOTAL_AMOUNT</text>
+    <line class="row" x1="540" y1="329" x2="870" y2="329" />
+    <text class="txt" x="602" y="347">PAYMENT_METHOD</text>
+    <line class="row" x1="540" y1="357" x2="870" y2="357" />
+    <text class="txt" x="602" y="375">SHIPPING_NAME</text>
+    <line class="row" x1="540" y1="385" x2="870" y2="385" />
+    <text class="txt" x="602" y="403">SHIPPING_PHONE</text>
+    <line class="row" x1="540" y1="413" x2="870" y2="413" />
+    <text class="txt" x="602" y="431">SHIPPING_ADDRESS</text>
+    <line class="row" x1="540" y1="441" x2="870" y2="441" />
+    <text class="txt" x="602" y="459">CREATED_AT</text>
+    <line class="row" x1="540" y1="469" x2="870" y2="469" />
+    <text class="txt" x="602" y="487">UPDATED_AT</text>
+  </g>
+
+  <!-- ORDER_ITEM -->
+  <g id="ORDER_ITEM">
+    <rect class="box" x="560" y="655" width="300" height="178" />
+    <rect class="head" x="560" y="655" width="300" height="28" />
+    <text class="name" x="710" y="674" text-anchor="middle">ORDER_ITEM</text>
+    <line class="col" x1="608" y1="683" x2="608" y2="833" />
+    <text class="key" x="576" y="705">PK</text><text class="txt" x="622" y="705">ORDER_ITEM_ID</text>
+    <line class="row" x1="560" y1="715" x2="860" y2="715" />
+    <text class="key" x="576" y="733">FK</text><text class="txt" x="622" y="733">ORDER_ID</text>
+    <line class="row" x1="560" y1="743" x2="860" y2="743" />
+    <text class="key" x="576" y="761">FK</text><text class="txt" x="622" y="761">PRODUCT_ID</text>
+    <line class="row" x1="560" y1="771" x2="860" y2="771" />
+    <text class="txt" x="622" y="789">QUANTITY</text>
+    <line class="row" x1="560" y1="799" x2="860" y2="799" />
+    <text class="txt" x="622" y="817">PRICE</text>
+  </g>
+
+  <!-- CATEGORY -->
+  <g id="CATEGORY">
+    <rect class="box" x="1110" y="120" width="310" height="110" />
+    <rect class="head" x="1110" y="120" width="310" height="28" />
+    <text class="name" x="1265" y="139" text-anchor="middle">CATEGORY</text>
+    <line class="col" x1="1158" y1="148" x2="1158" y2="230" />
+    <text class="key" x="1126" y="170">PK</text><text class="txt" x="1172" y="170">CATEGORY_ID</text>
+    <line class="row" x1="1110" y1="180" x2="1420" y2="180" />
+    <text class="txt" x="1172" y="198">CATEGORY_NAME</text>
+  </g>
+
+  <!-- PRODUCT -->
+  <g id="PRODUCT">
+    <rect class="box" x="1110" y="395" width="330" height="290" />
+    <rect class="head" x="1110" y="395" width="330" height="28" />
+    <text class="name" x="1275" y="414" text-anchor="middle">PRODUCT</text>
+    <line class="col" x1="1158" y1="423" x2="1158" y2="685" />
+    <text class="key" x="1126" y="445">PK</text><text class="txt" x="1172" y="445">PRODUCT_ID</text>
+    <line class="row" x1="1110" y1="455" x2="1440" y2="455" />
+    <text class="key" x="1126" y="473">FK</text><text class="txt" x="1172" y="473">CATEGORY_ID</text>
+    <line class="row" x1="1110" y1="483" x2="1440" y2="483" />
+    <text class="txt" x="1172" y="501">PRODUCT_NAME</text>
+    <line class="row" x1="1110" y1="511" x2="1440" y2="511" />
+    <text class="txt" x="1172" y="529">DESCRIPTION</text>
+    <line class="row" x1="1110" y1="539" x2="1440" y2="539" />
+    <text class="txt" x="1172" y="557">IMAGE_URL</text>
+    <line class="row" x1="1110" y1="567" x2="1440" y2="567" />
+    <text class="txt" x="1172" y="585">PRICE</text>
+    <line class="row" x1="1110" y1="595" x2="1440" y2="595" />
+    <text class="txt" x="1172" y="613">OLD_PRICE</text>
+    <line class="row" x1="1110" y1="623" x2="1440" y2="623" />
+    <text class="txt" x="1172" y="641">STOCK</text>
+    <line class="row" x1="1110" y1="651" x2="1440" y2="651" />
+    <text class="txt" x="1172" y="669">SOLD_COUNT</text>
+  </g>
+
+  <!-- SETTING -->
+  <g id="SETTING">
+    <rect class="box" x="70" y="670" width="300" height="110" />
+    <rect class="head" x="70" y="670" width="300" height="28" />
+    <text class="name" x="220" y="689" text-anchor="middle">SETTING</text>
+    <line class="col" x1="118" y1="698" x2="118" y2="780" />
+    <text class="key" x="86" y="720">PK</text><text class="txt" x="132" y="720">SETTING_KEY</text>
+    <line class="row" x1="70" y1="730" x2="370" y2="730" />
+    <text class="txt" x="132" y="748">SETTING_VALUE</text>
+  </g>
+
+  <!-- USER one to ORDER zero or many -->
+  <path class="rel" d="M370 350 H540" />
+  <line class="mark" x1="382" y1="337" x2="382" y2="363" />
+  <line class="mark" x1="388" y1="337" x2="388" y2="363" />
+  <circle class="mark" cx="512" cy="350" r="5" />
+  <path class="mark" d="M540 350 L522 337 M540 350 L522 350 M540 350 L522 363" />
+  <text class="label" x="430" y="336">places</text>
+  <text class="label" x="420" y="376">is placed by</text>
+
+  <!-- ORDER one to ORDER_ITEM one or many -->
+  <path class="rel" d="M710 515 V655" />
+  <line class="mark" x1="697" y1="532" x2="723" y2="532" />
+  <line class="mark" x1="697" y1="538" x2="723" y2="538" />
+  <line class="mark" x1="697" y1="628" x2="723" y2="628" />
+  <path class="mark" d="M710 655 L697 637 M710 655 L710 637 M710 655 L723 637" />
+  <text class="label" x="730" y="590">contains</text>
+
+  <!-- PRODUCT one to ORDER_ITEM zero or many -->
+  <path class="rel" d="M860 742 H1000 V545 H1110" />
+  <path class="mark" d="M860 742 L878 729 M860 742 L878 742 M860 742 L878 755" />
+  <circle class="mark" cx="884" cy="742" r="5" />
+  <line class="mark" x1="1093" y1="532" x2="1093" y2="558" />
+  <line class="mark" x1="1099" y1="532" x2="1099" y2="558" />
+  <text class="label" x="905" y="728">references</text>
+
+  <!-- CATEGORY zero or one to PRODUCT zero or many -->
+  <path class="rel" d="M1265 230 V395" />
+  <circle class="mark" cx="1265" cy="254" r="5" />
+  <line class="mark" x1="1252" y1="267" x2="1278" y2="267" />
+  <circle class="mark" cx="1265" cy="371" r="5" />
+  <path class="mark" d="M1265 395 L1252 377 M1265 395 L1265 377 M1265 395 L1278 377" />
+  <text class="label" x="1288" y="315">classifies</text>
+
+  <rect class="noteBox" x="70" y="850" width="1360" height="34" />
+  <text class="note" x="90" y="872">Ghi chú: Đây là ERD vật lý theo Prisma hiện tại. Payment chưa có bảng riêng; nếu cần chuẩn nghiệp vụ thanh toán thì phải thêm model Payment vào schema rồi vẽ quan hệ ORDER 1 - 0..1 PAYMENT.</text>
+</svg>
