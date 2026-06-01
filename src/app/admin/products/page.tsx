@@ -7,7 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { 
   Boxes, ImageIcon, Loader2, Package, Plus, Search, ShieldCheck, Tag, TrendingUp, Edit2, Trash2, 
-  EyeOff, XCircle, Copy, ExternalLink, MoreVertical, AlertTriangle
+  EyeOff, XCircle, Copy, ExternalLink, MoreVertical, AlertTriangle, ListFilter, X
 } from 'lucide-react'
 import { Navbar } from '@/components/domain/Navbar'
 import { Button, Input, MoneyInputVND } from '@/components/domain/ui'
@@ -18,6 +18,8 @@ import { toast } from 'sonner'
 import { getAdminPath } from '@/lib/adminPath'
 import { RichTextEditor } from '@/components/domain/RichTextEditor'
 import { ProductImageFrame } from '@/components/domain/ProductImageFrame'
+import { AdminImageGallery } from '@/components/domain/AdminImageGallery'
+import { buildCategoryCounts, buildBrandCounts } from '@/lib/products/adminProductFilters'
 
 interface AdminProduct {
   id: string
@@ -28,10 +30,12 @@ interface AdminProduct {
   oldPrice: number | null
   stock: number
   soldCount: number
-  category: { name: string } | null
+  category: { id?: string | null; name: string } | null
   updatedAt: string
   isVisible: boolean
   status: string
+  images?: { url: string; sortOrder: number; isPrimary?: boolean | null }[]
+  specs?: { name: string; value: string }[] | null
 }
 
 type SalesStatus = 'active' | 'hidden' | 'discontinued' | 'draft'
@@ -45,7 +49,7 @@ const initialForm = {
   price: 0,
   stock: '',
   description: '',
-  specs: '',
+  specRows: [] as { name: string; value: string }[],
 }
 
 const COMMON_BRANDS = [
@@ -114,18 +118,18 @@ export default function AdminProductsPage() {
   const [formData, setFormData] = useState(initialForm)
   const [hasSubmitted, setHasSubmitted] = useState(false)
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<'all' | string>('all')
   const [selectedBrand, setSelectedBrand] = useState<'all' | string>('all')
   const [brands, setBrands] = useState<string[] | undefined>(undefined)
   const resolvedBrands = brands || COMMON_BRANDS
 
+  const categoryStats = useMemo(() => {
+    return buildCategoryCounts(products, categories)
+  }, [products, categories])
+
   const brandStats = useMemo(() => {
-    const stats: Record<string, number> = {}
-    products.forEach(p => {
-      const b = getProductBrand(p.name, resolvedBrands)
-      stats[b] = (stats[b] || 0) + 1
-    })
-    return stats
-  }, [products, resolvedBrands])
+    return buildBrandCounts(products, resolvedBrands, selectedCategory)
+  }, [products, resolvedBrands, selectedCategory])
 
   useEffect(() => {
     async function fetchSettings() {
@@ -194,19 +198,28 @@ export default function AdminProductsPage() {
     try {
       const url = editingId ? `/api/admin/products/${editingId}` : '/api/admin/products'
       const method = editingId ? 'PUT' : 'POST'
-
-      const combinedDescription = formData.description.trim() + 
-        (formData.specs.trim() ? '\n$$$SPECS$$$\n' + formData.specs.trim() : '')
+      const galleryUrls = formData.imageUrl
+        .split(/\r?\n/)
+        .map((url) => url.trim())
+        .filter(Boolean)
+      const validSpecs = formData.specRows.filter((s) => s.name.trim() && s.value.trim())
 
       setHasSubmitted(true)
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          ...formData,
+          name: formData.name,
+          categoryName: formData.categoryName,
+          imageUrl: galleryUrls[0] || '',
           oldPrice: formData.oldPrice ?? null,
-          description: combinedDescription
+          price: formData.price,
+          stock: Number(formData.stock) || 0,
+          description: formData.description.trim(),
+          galleryImages: galleryUrls,
+          specs: validSpecs.length > 0 ? validSpecs : null,
         }),
       })
       const result = await res.json()
@@ -233,22 +246,49 @@ export default function AdminProductsPage() {
   const handleEditClick = (product: AdminProduct) => {
     setEditingId(product.id)
     setOpenActionMenuId(null)
-    
-    const rawDescription = product.description || ''
-    const hasSpecs = rawDescription.includes('$$$SPECS$$$')
-    const [descPart, specsPart] = hasSpecs 
-      ? rawDescription.split('$$$SPECS$$$') 
-      : [rawDescription, '']
+
+    const galleryUrls = product.images?.length
+      ? product.images
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((img) => img.url)
+          .join('\n')
+      : product.imageUrl || ''
+
+    const parsedSpecs: { name: string; value: string }[] = []
+    if (Array.isArray(product.specs) && product.specs.length > 0) {
+      parsedSpecs.push(...product.specs.filter((s) => s.name && s.value))
+    } else {
+      const rawDescription = product.description || ''
+      const specMatch = rawDescription.match(/\$\$\$SPECS\$\$\$([\s\S]*)/)
+      if (specMatch) {
+        specMatch[1]
+          .trim()
+          .split('\n')
+          .forEach((line) => {
+            const colonIdx = line.indexOf(':')
+            if (colonIdx > 0) {
+              parsedSpecs.push({
+                name: line.slice(0, colonIdx).trim(),
+                value: line.slice(colonIdx + 1).trim(),
+              })
+            }
+          })
+      }
+    }
+
+    const description = Array.isArray(product.specs)
+      ? (product.description || '').replace(/\n\n?\$\$\$SPECS\$\$\$[\s\S]*/, '').trim()
+      : product.description || ''
 
     setFormData({
       name: product.name,
       categoryName: product.category?.name || '',
-      imageUrl: product.imageUrl || '',
+      imageUrl: galleryUrls,
       oldPrice: product.oldPrice ?? null,
       price: product.price,
       stock: product.stock.toString(),
-      description: descPart.trim(),
-      specs: specsPart.trim(),
+      description,
+      specRows: parsedSpecs,
     })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -256,6 +296,8 @@ export default function AdminProductsPage() {
   const handleCancelEdit = () => {
     setEditingId(null)
     setFormData(initialForm)
+    setSelectedCategory('all')
+    setSelectedBrand('all')
     setHasSubmitted(false)
     setShowForm(false)
   }
@@ -414,6 +456,10 @@ export default function AdminProductsPage() {
                               product.id.toLowerCase().includes(query)
         if (!matchesSearch) return false
 
+        if (selectedCategory !== 'all' && product.category?.id !== selectedCategory && product.category?.name !== selectedCategory) {
+          return false
+        }
+
         const salesStatus = getSalesStatus(product)
         const inventoryStatus = getInventoryStatus(product.stock)
 
@@ -429,7 +475,7 @@ export default function AdminProductsPage() {
         if (selectedBrand === 'all') return true
         return getProductBrand(product.name, resolvedBrands) === selectedBrand
       })
-  }, [products, searchQuery, filterTab, selectedBrand, resolvedBrands])
+  }, [products, searchQuery, selectedCategory, filterTab, selectedBrand, resolvedBrands])
 
   const existingCategories = useMemo(() => {
     return categories.map((c) => c.name) as string[]
@@ -466,6 +512,8 @@ export default function AdminProductsPage() {
                 if (!showForm) {
                   setFormData(initialForm)
                   setHasSubmitted(false)
+                  setSelectedCategory('all')
+                  setSelectedBrand('all')
                 }
                 setShowForm(!showForm)
                 if (editingId) handleCancelEdit()
@@ -519,31 +567,33 @@ export default function AdminProductsPage() {
                     ))}
                   </datalist>
                 </div>
-                <Input
-                  label="Ảnh sản phẩm"
-                  value={formData.imageUrl}
-                  onChange={(event) => setFormData({ ...formData, imageUrl: event.target.value })}
-                  placeholder="VD: link_anh_1|link_anh_2"
-                  className="md:col-span-2"
-                />
                 <div className="md:col-span-2">
-                  <p className="block text-sm font-medium text-muted-foreground mb-1.5">Chọn tệp ảnh (Tối đa 5MB)</p>
-                  <div className="flex flex-col sm:flex-row gap-3">
+                  <AdminImageGallery
+                    imageUrl={formData.imageUrl}
+                    onChange={(val) => setFormData({ ...formData, imageUrl: val })}
+                    onUpload={handleImageUpload}
+                    isUploading={isUploading}
+                    disabled={isSaving}
+                  />
+                  <div className="mt-2">
                     <input
-                      type="file"
-                      aria-label="Chọn tệp ảnh"
-                      multiple
-                      accept="image/png,image/jpeg,image/webp,image/gif"
-                      onChange={handleImageUpload}
-                      disabled={isUploading}
-                      className="block w-full text-sm text-muted-foreground file:mr-4 file:h-10 file:rounded-xl file:border-0 file:bg-slate-800 file:px-4 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-700 disabled:opacity-50"
+                      aria-label="Thêm ảnh bằng URL"
+                      placeholder="Hoặc dán URL ảnh vào đây và nhấn Enter"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          const url = (e.target as HTMLInputElement).value.trim()
+                          if (url) {
+                            const next = formData.imageUrl
+                              ? formData.imageUrl + '\n' + url
+                              : url
+                            setFormData({ ...formData, imageUrl: next })
+                            ;(e.target as HTMLInputElement).value = ''
+                          }
+                        }
+                      }}
+                      className="w-full rounded-lg border border-white/[0.06] bg-slate-950/60 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     />
-                    {isUploading && (
-                      <div className="flex items-center gap-2 text-sm text-blue-400">
-                        <Loader2 className="size-4 animate-spin" />
-                        Đang tải các ảnh…
-                      </div>
-                    )}
                   </div>
                 </div>
                 <div>
@@ -584,18 +634,69 @@ export default function AdminProductsPage() {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <p className="block text-sm font-medium text-indigo-400 mb-1.5 font-bold flex items-center gap-1.5">
-                    <span className="inline-block size-1.5 bg-indigo-400 rounded-full"></span>
-                    Thông số kỹ thuật
-                  </p>
-                  <textarea
-                    aria-label="Thông số kỹ thuật"
-                    value={formData.specs}
-                    onChange={(event) => setFormData({ ...formData, specs: event.target.value })}
-                    placeholder="Thương hiệu: Akko&#10;Kết nối: Bluetooth 5.0"
-                    rows={4}
-                    className="w-full rounded-xl border border-indigo-500/20 bg-slate-950/60 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                  />
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="block text-sm font-medium text-indigo-400 font-bold flex items-center gap-1.5">
+                      <span className="inline-block size-1.5 bg-indigo-400 rounded-full"></span>
+                      Thông số kỹ thuật
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData({
+                          ...formData,
+                          specRows: [...formData.specRows, { name: '', value: '' }],
+                        })
+                      }
+                      className="text-xs flex items-center gap-1 text-indigo-400 hover:text-indigo-300"
+                    >
+                      <Plus className="size-3" /> Thêm dòng
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {formData.specRows.map((row, i) => (
+                      <div key={i} className="flex gap-2 items-start">
+                        <div className="flex-1">
+                          <input
+                            aria-label="Tên thông số"
+                            value={row.name}
+                            onChange={(e) => {
+                              const next = [...formData.specRows]
+                              next[i] = { ...next[i], name: e.target.value }
+                              setFormData({ ...formData, specRows: next })
+                            }}
+                            placeholder="VD: Thương hiệu"
+                            className="w-full rounded-lg border border-white/[0.06] bg-slate-950/60 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            aria-label="Giá trị thông số"
+                            value={row.value}
+                            onChange={(e) => {
+                              const next = [...formData.specRows]
+                              next[i] = { ...next[i], value: e.target.value }
+                              setFormData({ ...formData, specRows: next })
+                            }}
+                            placeholder="VD: Akko"
+                            className="w-full rounded-lg border border-white/[0.06] bg-slate-950/60 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = formData.specRows.filter((_, idx) => idx !== i)
+                            setFormData({ ...formData, specRows: next })
+                          }}
+                          className="p-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      </div>
+                    ))}
+                    {formData.specRows.length === 0 && (
+                      <p className="text-xs text-slate-500 italic">Chưa có thông số kỹ thuật. Nhấn &ldquo;Thêm dòng&rdquo; để bắt đầu.</p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -607,6 +708,7 @@ export default function AdminProductsPage() {
                       src={getPrimaryLegacyImageUrl(formData.imageUrl)}
                       alt={formData.name || 'Preview'}
                       aspectRatio="aspect-square"
+                      galleryImages={formData.imageUrl.split(/\r?\n/).filter(Boolean)}
                     />
                   </div>
 
@@ -663,18 +765,62 @@ export default function AdminProductsPage() {
           </form>
         )}
 
-        {/* Brand Quick Filters */}
+        {/* Category Filter Section */}
+        <div className="mb-4 p-1.5 rounded-[1.25rem] bg-white/[0.02] ring-1 ring-white/[0.04] shadow-xl">
+          <div className="rounded-[calc(1.25rem-6px)] bg-[#070707] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3.5 flex items-center gap-2 select-none">
+              <ListFilter className="size-4 text-blue-400 animate-pulse" />
+              Khu vực quản lý sản phẩm
+            </div>
+            <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
+              <button
+                type="button"
+                onClick={() => setSelectedCategory('all')}
+                className={`px-4 h-10 text-xs font-bold rounded-xl border transition-all flex items-center gap-2 cursor-pointer outline-none whitespace-nowrap ${
+                  selectedCategory === 'all'
+                    ? 'bg-blue-600/10 border-blue-500/50 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
+                    : 'bg-[#0a0a0a] border-white/[0.06] text-slate-400 hover:border-white/10 hover:text-white hover:-translate-y-[1px]'
+                }`}
+              >
+                <span>Tất cả</span>
+                <span className="px-1.5 py-0.5 rounded-md bg-white/5 text-[10px] text-slate-300">
+                  {products.length}
+                </span>
+              </button>
+
+              {categoryStats.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-4 h-10 text-xs font-bold rounded-xl border transition-all flex items-center gap-2 cursor-pointer outline-none whitespace-nowrap ${
+                    selectedCategory === cat.id
+                      ? 'bg-blue-600/10 border-blue-500/50 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
+                      : 'bg-[#0a0a0a] border-white/[0.06] text-slate-400 hover:border-white/10 hover:text-white hover:-translate-y-[1px]'
+                  }`}
+                >
+                  <span>{cat.name}</span>
+                  <span className="px-1.5 py-0.5 rounded-md bg-white/5 text-[10px] text-slate-300">
+                    {cat.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Brand Filter Section */}
         <div className="mb-6 p-1.5 rounded-[1.25rem] bg-white/[0.02] ring-1 ring-white/[0.04] shadow-xl">
           <div className="rounded-[calc(1.25rem-6px)] bg-[#070707] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]">
             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3.5 flex items-center gap-2 select-none">
               <Boxes className="size-4 text-blue-400 animate-pulse" />
-              Khu vực quản lý theo Nhãn Hàng / Thương Hiệu
+              Lọc theo thương hiệu
             </div>
             <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
               <button
                 type="button"
                 onClick={() => setSelectedBrand('all')}
-                className={`px-4 h-10 text-xs font-bold rounded-xl border transition-all flex items-center gap-2 cursor-pointer outline-none ${
+                className={`px-4 h-10 text-xs font-bold rounded-xl border transition-all flex items-center gap-2 cursor-pointer outline-none whitespace-nowrap ${
                   selectedBrand === 'all'
                     ? 'bg-blue-600/10 border-blue-500/50 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
                     : 'bg-[#0a0a0a] border-white/[0.06] text-slate-400 hover:border-white/10 hover:text-white hover:-translate-y-[1px]'
@@ -682,7 +828,7 @@ export default function AdminProductsPage() {
               >
                 <span>Tất cả hãng</span>
                 <span className="px-1.5 py-0.5 rounded-md bg-white/5 text-[10px] text-slate-300">
-                  {products.length}
+                  {Object.keys(brandStats).length}
                 </span>
               </button>
 
@@ -691,7 +837,7 @@ export default function AdminProductsPage() {
                   key={brand}
                   type="button"
                   onClick={() => setSelectedBrand(brand)}
-                  className={`px-4 h-10 text-xs font-bold rounded-xl border transition-all flex items-center gap-2 cursor-pointer outline-none ${
+                  className={`px-4 h-10 text-xs font-bold rounded-xl border transition-all flex items-center gap-2 cursor-pointer outline-none whitespace-nowrap ${
                     selectedBrand === brand
                       ? 'bg-blue-600/10 border-blue-500/50 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
                       : 'bg-[#0a0a0a] border-white/[0.06] text-slate-400 hover:border-white/10 hover:text-white hover:-translate-y-[1px]'
