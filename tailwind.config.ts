@@ -53,7 +53,7 @@ const config: Config = {
         '4xl': '2rem',
       },
       fontFamily: {
-        sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-geist-mono)', 'Consolas', 'monospace'],
       },
       transitionTimingFunction: {

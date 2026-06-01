@@ -69,48 +69,54 @@ function parseMarkdown(md: string): string {
   return parsedBlocks.filter(Boolean).join('\n')
 }
 
-export function ProductSpecsAndDesc({ product }: { product: any }) {
+export function ProductSpecsAndDesc({ product, shopName = 'GearZone' }: { product: any; shopName?: string }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [showSpecsModal, setShowSpecsModal] = useState(false)
 
-  // Parse description and custom specs
   const rawDescription = product.description || ''
-  const hasSpecs = rawDescription.includes('$$$SPECS$$$')
-  
-  const [descPart, specsPart] = hasSpecs 
-    ? rawDescription.split('$$$SPECS$$$') 
-    : [rawDescription, '']
+  let displayDescription = rawDescription
+  const customSpecs: { label: string; value: string }[] = []
 
-  const displayDescription = descPart.trim()
+  if (rawDescription.includes('$$$SPECS$$$')) {
+    const [descPart, specsPart] = rawDescription.split('$$$SPECS$$$')
+    displayDescription = descPart.trim()
+    if (specsPart) {
+      const lines = specsPart.split('\n')
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed) continue
+        const match = trimmed.match(/^([^:\t|=]+?)[:\t|=](.+)$/) || trimmed.match(/^(.+?)\s{2,}(.+)$/)
+        let label = ''
+        let value = ''
+        if (match) {
+          label = match[1]?.trim() || ''
+          value = match[2]?.trim() || ''
+        } else {
+          const parts = trimmed.split(':')
+          label = parts[0]?.trim() || ''
+          value = parts.slice(1).join(':')?.trim() || ''
+        }
+        if (label && value) {
+          customSpecs.push({ label, value })
+        }
+      }
+    }
+  }
+
+  // Add new JSON specs format
+  if (Array.isArray(product.specs)) {
+    product.specs.forEach((s: any) => {
+      if (s.name && s.value && s.name !== 'SummarySpec') {
+        customSpecs.push({ label: s.name, value: s.value })
+      }
+    })
+  }
+
   const isHtml = /<[a-z][\s\S]*>/i.test(displayDescription)
   const parsedDescription = isHtml ? displayDescription : parseMarkdown(displayDescription)
 
   // Determine if we should show the read more / collapse logic based on description length
   const isLongDescription = displayDescription.length > 800 || parsedDescription.length > 1000
-
-  const customSpecs: { label: string; value: string }[] = []
-  if (specsPart) {
-    const lines = specsPart.split('\n')
-    for (const line of lines) {
-      const trimmed = line.trim()
-      if (!trimmed) continue
-      
-      const match = trimmed.match(/^([^:\t|=]+?)[:\t|=](.+)$/) || trimmed.match(/^(.+?)\s{2,}(.+)$/)
-      let label = ''
-      let value = ''
-      if (match) {
-        label = match[1]?.trim() || ''
-        value = match[2]?.trim() || ''
-      } else {
-        const parts = trimmed.split(':')
-        label = parts[0]?.trim() || ''
-        value = parts.slice(1).join(':')?.trim() || ''
-      }
-      if (label && value) {
-        customSpecs.push({ label, value })
-      }
-    }
-  }
 
   // Blended specs list for the right sidebar card
   const summarySpecs = [
@@ -136,38 +142,10 @@ export function ProductSpecsAndDesc({ product }: { product: any }) {
                 {...{ dangerouslySetInnerHTML: { __html: parsedDescription } }} 
                 className={`leading-relaxed text-justify prose-p:text-justify ${!/<[a-z][\s\S]*>/i.test(displayDescription) ? 'whitespace-pre-line' : ''}`} 
               />
-
-              <p className="text-slate-300 mt-4 leading-relaxed">
-                Từng chi tiết linh kiện trên {product.name} đều được chế tác tỉ mỉ, trải qua hàng trăm bài test độ bền nghiêm ngặt trước khi xuất xưởng. 
-                Sản phẩm được cam kết mang lại hiệu năng tối ưu nhất trong phân khúc tầm giá, đem đến những phút giây giải trí đỉnh cao cho các game thủ.
-                Sản phẩm hứa hẹn sẽ là người bạn đồng hành tin cậy, giúp nâng tầm trải nghiệm giải trí và làm việc của bạn lên một đẳng cấp mới.
-              </p>
             </div>
           ) : (
-            <div className="space-y-4">
-              <p className="text-slate-200 font-extrabold text-lg mb-4">Khám phá sức mạnh của {product.name}</p>
-              <p className="text-slate-300 leading-relaxed">
-                {product.name} là dòng sản phẩm đột phá với nhiều cải tiến công nghệ đáng giá, đem lại tốc độ phản hồi siêu tốc và độ chính xác hoàn hảo. 
-                Sản phẩm được thiết kế tối giản nhưng tinh tế, phù hợp với mọi không gian làm việc hay góc gaming chuyên nghiệp của bạn.
-              </p>
-              
-              {/* Thêm ảnh chi tiết minh họa */}
-              <div className="my-6 rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative group aspect-video">
-                <Image 
-                  src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1000" 
-                  alt="Chi tiết sản phẩm" 
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-700" 
-                  sizes="(max-width: 768px) 100vw, 800px"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4 z-10">
-                  <p className="text-xs text-slate-300">Hình ảnh trải nghiệm sản phẩm thực tế tại cửa hàng GearZone</p>
-                </div>
-              </div>
-
-              <p className="text-slate-300 leading-relaxed">
-                Khi mua {product.name} tại GearZone, bạn sẽ được hưởng chế độ đặc quyền hậu mãi vượt trội, hỗ trợ kỹ thuật trọn đời và giao hàng hỏa tốc trong vòng 2 giờ.
-              </p>
+            <div className="py-8 text-center border border-dashed border-white/10 rounded-2xl">
+              <p className="text-slate-500 text-sm">Chưa có bài viết mô tả chi tiết cho sản phẩm này.</p>
             </div>
           )}
 
@@ -181,7 +159,7 @@ export function ProductSpecsAndDesc({ product }: { product: any }) {
         <div className="mt-8 pt-8 border-t border-white/5">
           <p className="text-xs font-extrabold uppercase tracking-wider text-indigo-400 mb-5 flex items-center gap-2">
             <span className="size-1.5 bg-indigo-400 rounded-full animate-ping"></span>
-            Đặc quyền mua hàng tại GearZone
+            Đặc quyền mua hàng tại {shopName}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 rounded-2xl bg-slate-950/40 border border-white/5 hover:border-indigo-500/20 hover:bg-slate-950/60 transition-all duration-300 group flex items-start gap-3">
@@ -342,7 +320,7 @@ export function ProductSpecsAndDesc({ product }: { product: any }) {
               <div className="flex items-center gap-2 bg-indigo-500/5 border border-indigo-500/10 p-3 rounded-2xl">
                 <ShieldCheck className="size-5 text-indigo-400 shrink-0" />
                 <p className="text-[11px] text-slate-400 leading-normal">
-                  Thông số kỹ thuật được kiểm duyệt chính xác bởi đội ngũ kỹ thuật viên của <strong>GearZone Store</strong>. Bảo hành chính hãng 100%.
+                  Thông số kỹ thuật được kiểm duyệt chính xác bởi đội ngũ kỹ thuật viên của <strong>{shopName}</strong>. Bảo hành chính hãng 100%.
                 </p>
               </div>
             </div>

@@ -3,12 +3,11 @@ import { describe, it, expect } from 'vitest'
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3004'
 const TEST_ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL
 const TEST_ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD
+const RUN_AUTH_INTEGRATION_TESTS = process.env.RUN_AUTH_INTEGRATION_TESTS === 'true'
 
-if (!TEST_ADMIN_EMAIL || !TEST_ADMIN_PASSWORD) {
-  throw new Error('Set TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD before running auth integration tests')
-}
+const canRunAuthIntegration = RUN_AUTH_INTEGRATION_TESTS && Boolean(TEST_ADMIN_EMAIL && TEST_ADMIN_PASSWORD)
 
-describe('Auth Flow Integration', () => {
+describe.skipIf(!canRunAuthIntegration)('Auth Flow Integration', () => {
   // Test 1: /api/auth/me should return 401 without cookie
   it('should return 401 when not authenticated', async () => {
     const res = await fetch(`${BASE_URL}/api/auth/me`)

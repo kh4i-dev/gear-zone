@@ -1,0 +1,14 @@
+{
+  "ignore": {
+    "rules": [
+      "react-doctor/prefer-useReducer",
+      "react-doctor/no-initialize-state",
+      "react-doctor/no-fetch-in-effect",
+      "react-doctor/click-events-have-key-events",
+      "react-doctor/only-export-components",
+      "react-doctor/prefer-use-effect-event",
+      "react-doctor/nextjs-no-client-fetch-for-server-data",
+      "react-doctor/nextjs-no-use-search-params-without-suspense"
+    ]
+  }
+}

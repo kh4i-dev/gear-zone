@@ -14,6 +14,7 @@ Nen tang thuong mai dien tu cho thiet bi gaming gear.
 ## Tai Lieu Chinh
 
 - [Bao cao phan tich va thiet ke he thong](docs/gearzone_system_design.md)
+- [Azure Ubuntu + Neon PostgreSQL deployment](docs/azure-ubuntu-neon-deploy.md)
 
 ## So Do
 
@@ -33,7 +34,7 @@ Nen tang thuong mai dien tu cho thiet bi gaming gear.
 
 ```bash
 npm install
-npx prisma db push
+npx prisma migrate deploy
 npm run db:seed
 npm run dev
 ```

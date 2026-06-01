@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { success, fail, forbidden, badRequest } from '@/lib/api'
 
+const validRoles = ['ADMIN', 'USER', 'CUSTOMER', 'WAREHOUSE']
+
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser(request)
   if (!user || user.role !== 'ADMIN') {
@@ -48,7 +50,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json(badRequest('Vui lòng cung cấp userId và role'), { status: 400 })
     }
 
-    const validRoles = ['ADMIN', 'USER', 'CUSTOMER', 'WAREHOUSE']
+
     if (!validRoles.includes(role)) {
       return NextResponse.json(badRequest('Role không hợp lệ'), { status: 400 })
     }

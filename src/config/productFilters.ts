@@ -38,6 +38,9 @@ export const CATEGORY_NAME_TO_SLUG: Record<string, string> = {
   'Phụ kiện': 'accessory',
   'Ghế': 'chair',
   'Phụ kiện (Hub, sạc, cáp..)': 'accessory',
+  'Lót chuột (Mousepad)': 'accessory',
+  'Giá đỡ màn hình (Arm)': 'accessory',
+  'Bàn chơi game': 'chair',
 }
 
 export const productFilters: FilterDefinition[] = [

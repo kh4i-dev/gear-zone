@@ -12,7 +12,8 @@ import {
   normalizeOldQueryParam,
   getProductCategorySlug,
 } from '@/lib/products/normalizeProductFilters'
-import { getFilterLabel, parseFilterValue } from '@/config/productFilters'
+import { getFilterLabel, parseFilterValue, CATEGORY_NAME_TO_SLUG } from '@/config/productFilters'
+import { selectCategoryBestSellingProducts } from '@/lib/products/publicProductSections'
 
 type SortKey = 'featured' | 'name-asc' | 'price-asc' | 'price-desc' | 'stock-desc'
 
@@ -22,6 +23,12 @@ interface ProductCatalogProps {
 }
 
 const FILTER_KEYS = ['brand', 'resolution', 'refreshRate', 'connection', 'switch', 'size', 'shape', 'panel', 'layout', 'weight', 'sensor']
+
+const accent = {
+  primary: 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/25 text-white',
+  glow: 'bg-emerald-500/10',
+  text: 'text-emerald-400',
+}
 
 function ProductCatalogInner({ products, compact = false }: ProductCatalogProps) {
   const searchParams = useSearchParams()
@@ -211,11 +218,7 @@ function ProductCatalogInner({ products, compact = false }: ProductCatalogProps)
     return groups
   }, [products])
 
-  const accent = {
-    primary: 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/25 text-white',
-    glow: 'bg-emerald-500/10',
-    text: 'text-emerald-400',
-  }
+
 
   return (
     <div className="space-y-6">
@@ -226,6 +229,7 @@ function ProductCatalogInner({ products, compact = false }: ProductCatalogProps)
           <span className="text-xs font-medium text-slate-400">Bộ lọc:</span>
           {activeFilters.map((filter) => (
             <button
+              type="button"
               key={`${filter.key}-${filter.value}`}
               onClick={() => removeFilter(filter.key, filter.value)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-colors"
@@ -235,6 +239,7 @@ function ProductCatalogInner({ products, compact = false }: ProductCatalogProps)
             </button>
           ))}
           <button
+            type="button"
             onClick={clearAllFilters}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-700/50 border border-slate-600 text-slate-300 text-xs font-medium hover:bg-slate-700 transition-colors"
           >
@@ -315,11 +320,11 @@ function ProductCatalogInner({ products, compact = false }: ProductCatalogProps)
             <ProductCategoryCarousel
               key={name}
               categoryName={name}
-              products={catProducts}
+              products={selectCategoryBestSellingProducts(catProducts)}
               accent={accent}
-              onViewAll={() => setCategory(name)}
+              onViewAll={() => setCategory(CATEGORY_NAME_TO_SLUG[name] || name)}
               onBrandClick={(brand) => {
-                setCategory(name)
+                setCategory(CATEGORY_NAME_TO_SLUG[name] || name)
                 setSearchQuery(brand)
               }}
               brands={brands}
@@ -328,8 +333,8 @@ function ProductCatalogInner({ products, compact = false }: ProductCatalogProps)
         </div>
       ) : filteredProducts.length > 0 ? (
         <div className={compact ? 'grid grid-cols-1 gap-5 lg:gap-6 sm:grid-cols-2 lg:grid-cols-4' : 'grid grid-cols-1 gap-5 lg:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}>
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} accent={accent} />
+          {filteredProducts.map((product, idx) => (
+            <ProductCard key={product.id} product={product} accent={accent} priority={idx < 4} />
           ))}
         </div>
       ) : (
@@ -341,6 +346,7 @@ function ProductCatalogInner({ products, compact = false }: ProductCatalogProps)
           </p>
           {activeFilters.length > 0 && (
             <button
+              type="button"
               onClick={clearAllFilters}
               className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors"
             >

@@ -24,6 +24,11 @@ interface Product {
   category: { name: string } | null
 }
 
+const isDiscontinued = (product: Product) => {
+  // TODO: Connect to backend. For now mock based on a fake condition or just assume false for demo
+  return false
+}
+
 export default function AdminInventoryPage() {
   const { replace } = useRouter()
   const { user, isLoading: authLoading } = useAuth()
@@ -217,11 +222,7 @@ export default function AdminInventoryPage() {
     setIsBulkSaving(false)
   }
 
-  // Derive mock sales status
-  const isDiscontinued = (product: Product) => {
-    // TODO: Connect to backend. For now mock based on a fake condition or just assume false for demo
-    return false
-  }
+
 
   const categoryGroups = useMemo(() => {
     const groups: Record<string, { total: number, name: string }> = {
@@ -459,7 +460,7 @@ export default function AdminInventoryPage() {
                         <td className="p-4 pl-6">
                           <div className="flex gap-4 items-center">
                             {product.imageUrl ? (
-                              <Image src={product.imageUrl.split('|')[0] || '/placeholder.png'} alt={product.name} width={48} height={48} className="size-12 rounded-xl object-contain bg-white border border-white/10 shrink-0" />
+                              <Image src={product.imageUrl.split('|')[0]?.trim() || '/placeholder.png'} alt={product.name} width={48} height={48} className="size-12 rounded-xl object-contain bg-white border border-white/10 shrink-0" />
                             ) : (
                               <div className="size-12 rounded-xl bg-slate-900 border border-white/10 flex items-center justify-center shrink-0">
                                 <Package className="size-5 text-slate-600" />

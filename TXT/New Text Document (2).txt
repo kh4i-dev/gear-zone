@@ -1,0 +1,260 @@
+Use /grill-the-docs and /tdd.
+
+Fix the Admin Product create/edit layout. The current form is too cluttered and hard to use.
+
+Current problem:
+The product edit form puts too many unrelated sections in one long vertical layout:
+- basic product info
+- image upload
+- gallery
+- short specs
+- price
+- stock
+- description editor
+- technical specs
+- purchase options / variants
+- product preview
+
+This makes the admin UI confusing and hard to manage.
+
+Goal:
+Reorganize the Admin Product form into a clean, production-ready ecommerce admin layout.
+
+Do not change business logic unless required.
+Do not remove existing fields.
+Do not break product create/edit.
+Do not rewrite unrelated admin pages.
+
+Required UX:
+
+1. Use a tabbed or sectioned layout.
+
+Preferred tabs:
+- Cơ bản
+- Hình ảnh
+- Giá & kho
+- Tùy chọn mua
+- Thông số kỹ thuật
+- Mô tả
+
+Each tab should contain only related fields.
+
+Tab 1: Cơ bản
+Fields:
+- Tên sản phẩm
+- Danh mục
+- Thương hiệu / hãng
+- Trạng thái bán
+- shortSpecs / Thông số phụ hiển thị trên card
+- SKU base if applicable
+
+Tab 2: Hình ảnh
+Fields:
+- Ảnh chính
+- Upload ảnh
+- Gallery images
+- Add URL
+- Remove image
+- Reorder images
+- Preview thumbnail
+Rules:
+- First image can be primary.
+- Gallery should be easy to scan.
+- Do not make admin enter raw JSON.
+
+Tab 3: Giá & kho
+Fields:
+- Giá cũ
+- Giá bán
+- Số lượng tồn base
+- Sold count if editable or read-only depending current logic
+- Sale/discount display preview if useful
+
+Tab 4: Tùy chọn mua
+This is for customer-selectable variants.
+
+Must support:
+- Add option group
+- Option group name, for example:
+  Màu sắc
+  Phiên bản
+  Switch
+  Layout
+- Add values inside group:
+  Black
+  White
+  Blaze Silver
+  Ultra Max
+  Ultimate
+
+Variant rows:
+- combination of option values
+- SKU
+- price override
+- sale price override
+- stock
+- image URL
+- active/inactive
+
+Important:
+- This section must be visually separated from "Thông số phụ".
+- Do not confuse shortSpecs with purchase options.
+- If there are no variants, product should still work with base price/stock.
+
+Tab 5: Thông số kỹ thuật
+This is for technical product specs table.
+
+Fields per row:
+- Tên thông số
+- Giá trị
+- Đơn vị optional
+- Nhóm optional
+- sortOrder/reorder
+
+Examples:
+- Kích thước: 140 x 60 x 75 cm
+- Khối lượng: 15,5 kg
+- Chịu tải: 100 kg
+
+Rules:
+- Only saved specs should appear on product detail.
+- Hide specs section on public detail if no specs exist.
+- Do not hardcode specs.
+
+Tab 6: Mô tả
+Fields:
+- Rich text product description
+- Optional SEO title/description if already exists
+- Preview HTML button if currently present
+
+2. Product Preview
+
+The preview should not make the form cramped.
+
+Required behavior:
+- Desktop:
+  - Preview panel is sticky on the right.
+  - Preview panel width around 360–420px.
+  - Form area remains comfortable.
+  - Preview can be collapsed.
+- Mobile/tablet:
+  - Preview moves below form or becomes collapsible.
+- Preview should update from current form state.
+- Preview should show:
+  - image
+  - category
+  - name
+  - price
+  - shortSpecs
+  - selected variant preview if possible
+
+3. Save / Cancel bar
+
+Use a sticky bottom action bar:
+- Hủy
+- Lưu nháp if supported
+- Cập nhật / Tạo sản phẩm
+
+The save buttons should always be easy to access.
+
+4. Visual hierarchy
+
+Improve spacing:
+- Each section has title + short helper text.
+- Use cards with clear boundaries.
+- Avoid huge dense blocks.
+- Avoid nested boxes inside nested boxes when not needed.
+- Keep current dark premium admin style.
+- Make labels readable.
+- Vietnamese text must keep accents.
+
+5. Data integrity
+
+Do not split form state into disconnected systems.
+
+The final submit payload must still include:
+- base product data
+- images
+- gallery
+- shortSpecs
+- specs
+- option groups
+- option values
+- variants
+
+Use existing Prisma transaction logic for save/update.
+Do not create partial writes.
+
+6. Validation
+
+Add clear validation messages:
+- Product name required
+- Category required
+- Price must be valid
+- Stock must be >= 0
+- Option group name required if group has values
+- Option value cannot be empty
+- Duplicate values in same option group should be blocked or warned
+- Variant combination must be unique
+- Spec name/value cannot be half-empty
+
+7. Tests
+
+Use /tdd.
+
+Add/update tests for:
+- form mapper preserves all fields
+- tab layout does not drop data when switching tabs
+- shortSpecs remains separate from variants
+- specs remain separate from variants
+- variant rows are generated/saved correctly
+- validation catches duplicate option values
+- submit payload includes images/specs/options/variants
+- product without variants still saves
+
+8. Verification
+
+Run:
+- npm run lint
+- npx tsc --noEmit
+- npm run build
+
+Manual proof:
+- Open admin product edit.
+- Form is organized into clear tabs/sections.
+- Add gallery image and it persists.
+- Add shortSpecs and it appears only as card/subtitle data.
+- Add option group "Màu sắc" with values Black, White, Red.
+- Add variant rows with stock/price/image.
+- Add technical specs.
+- Save product.
+- Reload admin page and verify data persists.
+- Open public product detail and verify:
+  - variant buttons appear
+  - specs section appears only when specs exist
+  - image/gallery works
+- Product with no variants still works.
+- Mobile admin layout does not overflow.
+
+Hard constraints:
+- Do not rewrite unrelated admin pages.
+- Do not remove existing functionality.
+- Do not mix shortSpecs, variants, and technical specs.
+- Do not use raw JSON textarea as main UX.
+- Do not mark complete until save/reload/public detail verification passes.
+
+Before editing, output:
+1. Root cause.
+2. Current form structure.
+3. Proposed layout.
+4. Files to change.
+5. State/data mapping plan.
+6. Test plan.
+
+After editing, output:
+1. What changed.
+2. What was intentionally not changed.
+3. PASS/FAIL verification table.
+4. Desktop proof.
+5. Mobile proof.
+6. Remaining risks.

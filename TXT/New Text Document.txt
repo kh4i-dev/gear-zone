@@ -1,0 +1,265 @@
+Use /grill-the-docs and /tdd.
+
+The current UI is functionally improving, but visually it still looks cluttered and AI-generated. Do not mark this as design-complete.
+
+Problem:
+The current product detail/admin verification UI looks visually weak:
+- layout is too narrow
+- too much dead space
+- product cards are cramped
+- typography hierarchy is poor
+- preview/product detail feels like a screenshot inside a page
+- sections do not feel like a premium ecommerce website
+- dark theme is too flat/heavy
+- spacing is inconsistent
+- UI does not yet feel like a modern gaming gear shop
+
+Goal:
+Improve GearZone UI/UX to feel like a premium technology/gaming gear ecommerce website while preserving all business logic.
+
+Design direction:
+- Premium dark ecommerce style
+- Inspired by Vercel / Linear / modern gaming gear sites
+- Clean typography
+- Strong spacing system
+- Better visual hierarchy
+- Soft borders, subtle glow, controlled gradients
+- Less clutter
+- More professional product presentation
+- Mobile responsive
+- No childish effects
+- No excessive glassmorphism
+- No random decorative elements
+
+Important:
+Do not rewrite business logic.
+Do not break product variants, cart, admin save, reviews, or APIs.
+Do not remove existing fields.
+This is a UI layout refinement task, not a logic rewrite.
+
+==================================================
+A. Product Detail UI
+==================================================
+
+Improve product detail layout.
+
+Desktop target layout:
+- Max width around 1180–1280px.
+- Product hero uses 2-column layout:
+  - Left: image gallery
+  - Right: product purchase panel
+- Main product image should feel premium:
+  - large
+  - centered
+  - stable aspect ratio
+  - clean border
+  - subtle shadow
+- Thumbnails should be clearly visible below or beside image.
+- Product title should have clear hierarchy.
+- Category badge should be subtle.
+- Price block should be strong but not oversized.
+- Variant options should look like real selectable chips/buttons.
+- Quantity and action buttons should be aligned cleanly.
+- Service cards should not dominate the page.
+
+Sections below:
+- Sản phẩm tương tự
+- Thông tin sản phẩm
+- Thông số kỹ thuật
+- Đánh giá
+
+Each section should have:
+- clear title
+- consistent vertical spacing
+- enough padding
+- not too many nested borders
+- no empty-looking giant blocks
+
+If section has no data:
+- show clean empty state or hide section where appropriate.
+
+==================================================
+B. Related Product Cards
+==================================================
+
+Current related product cards look cramped and small.
+
+Improve:
+- Card width should be consistent.
+- Image area should have clean fixed ratio.
+- Product name should be readable.
+- Price should be clear.
+- Old price/discount should be secondary.
+- Button should be aligned.
+- Avoid tiny text.
+- Keep 4 cards per row on desktop if enough width.
+- Responsive:
+  - desktop: 4 cards
+  - tablet: 2–3 cards
+  - mobile: horizontal swipe or 1–2 cards
+
+Maintain existing behavior:
+- Product row carousel auto-slides.
+- Card hover image slideshow works on desktop.
+- Mobile disables hover image slideshow.
+
+==================================================
+C. Admin Product Form UI
+==================================================
+
+The admin product form must not feel like a messy long technical form.
+
+Use a clean tabbed layout:
+- Cơ bản
+- Hình ảnh
+- Giá & kho
+- Tùy chọn mua
+- Thông số kỹ thuật
+- Mô tả
+
+Admin layout:
+- Left/main: form fields
+- Right: sticky product preview
+- Preview can collapse
+- Sticky bottom save bar:
+  - Hủy
+  - Lưu nháp if supported
+  - Cập nhật / Tạo sản phẩm
+
+Improve:
+- Better spacing between fields
+- Fewer nested cards
+- Clear section titles
+- Helper text should be subtle
+- Inputs must be readable
+- Avoid huge dense blocks
+- Avoid tiny text
+- Make tabs visually obvious
+- Keep dark premium admin style
+
+Do not remove:
+- gallery editor
+- shortSpecs
+- option groups
+- variant rows
+- technical specs
+- rich description
+- product preview
+
+==================================================
+D. Typography And Spacing
+==================================================
+
+Create consistent visual rhythm.
+
+Rules:
+- Use consistent text sizes:
+  - page title
+  - section title
+  - card title
+  - metadata
+  - helper text
+- Increase line-height for Vietnamese readability.
+- Use Vietnamese text with accents.
+- Avoid all-caps long labels unless short.
+- Letter spacing should be subtle.
+- Do not use unaccented Vietnamese labels.
+
+Spacing:
+- Use consistent spacing scale:
+  - 8 / 12 / 16 / 24 / 32 / 48
+- Avoid random margins.
+- Avoid huge empty space.
+- Avoid cramped product cards.
+
+==================================================
+E. Color And Contrast
+==================================================
+
+Current dark theme feels heavy.
+
+Improve:
+- Background should have subtle depth.
+- Cards should be distinguishable from background.
+- Borders should be soft, not too bright.
+- Primary action color should be consistent.
+- Green/blue accent should be used intentionally.
+- Danger/sale colors should be clear but not harsh.
+- Text contrast must be accessible.
+
+Do not:
+- Add too many gradients.
+- Add neon overload.
+- Add random colors.
+- Make it look like a game launcher instead of an ecommerce site.
+
+==================================================
+F. Mobile Responsiveness
+==================================================
+
+Verify mobile:
+- Product detail stacks cleanly.
+- Product image is not oversized.
+- Variant buttons wrap well.
+- Add to cart / Buy now buttons are easy to tap.
+- Cart page is usable.
+- Login/register is responsive.
+- Admin page should not horizontally overflow.
+- Product rows can swipe horizontally.
+
+==================================================
+G. Component Architecture
+==================================================
+
+Do not scatter styling hacks.
+
+Prefer reusable components:
+- SectionHeader
+- ProductCard
+- ProductRowCarousel
+- ProductImageGallery
+- ProductPurchasePanel
+- AdminFormTabs
+- AdminSectionCard
+- StickyPreviewPanel
+- EmptyState
+
+Keep components small and maintainable.
+
+==================================================
+H. Verification
+==================================================
+
+Before editing:
+Output:
+1. Visual root cause.
+2. Current layout problems.
+3. Components/files to change.
+4. UI redesign plan.
+5. What business logic must not change.
+
+After editing:
+Run:
+- npm run lint
+- npx tsc --noEmit
+- npm run build
+
+Manual proof:
+1. Product detail page desktop screenshot.
+2. Product detail page mobile screenshot.
+3. Related products section screenshot.
+4. Admin product form screenshot.
+5. Cart page screenshot.
+6. Login/register screenshot.
+7. Confirm variants/cart/reviews still work.
+8. Confirm no console errors.
+9. Confirm no hydration errors.
+
+Hard constraints:
+- Do not break business logic.
+- Do not remove working variant/cart/review/admin features.
+- Do not hardcode fake data.
+- Do not use unaccented Vietnamese.
+- Do not redesign unrelated pages randomly.
+- Do not mark complete just because Playwright clicked a button.
+- Visual quality must be reviewed with screenshots.

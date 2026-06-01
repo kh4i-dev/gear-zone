@@ -13,7 +13,7 @@ import { Navbar } from '@/components/domain/Navbar'
 import { Button, Input, MoneyInputVND } from '@/components/domain/ui'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { formatPrice, sanitizeProductExcerpt } from '@/lib/utils'
-import { getPrimaryLegacyImageUrl } from '@/lib/product-images'
+import { getPrimaryLegacyImageUrl, getSafeImageSrc } from '@/lib/product-images'
 import { toast } from 'sonner'
 import { getAdminPath } from '@/lib/adminPath'
 import { RichTextEditor } from '@/components/domain/RichTextEditor'
@@ -57,6 +57,18 @@ const COMMON_BRANDS = [
 function getProductBrand(name: string, brandsList: string[]): string {
   const match = brandsList.find(brand => name.toLowerCase().includes(brand.toLowerCase()))
   return match || 'Khác'
+}
+
+const getInventoryStatus = (stock: number): InventoryStatus => {
+  if (stock <= 0) return 'out_of_stock'
+  if (stock <= 5) return 'low_stock'
+  return 'in_stock'
+}
+
+const getSalesStatus = (product: AdminProduct): SalesStatus => {
+  if (product.status === 'DISCONTINUED') return 'discontinued'
+  if (!product.isVisible) return 'hidden'
+  return 'active'
 }
 
 export default function AdminProductsPage() {
@@ -391,18 +403,7 @@ export default function AdminProductsPage() {
     }
   }
 
-  // Derive statuses
-  const getInventoryStatus = (stock: number): InventoryStatus => {
-    if (stock <= 0) return 'out_of_stock'
-    if (stock <= 5) return 'low_stock'
-    return 'in_stock'
-  }
 
-  const getSalesStatus = (product: AdminProduct): SalesStatus => {
-    if (product.status === 'DISCONTINUED') return 'discontinued'
-    if (!product.isVisible) return 'hidden'
-    return 'active'
-  }
 
   const filteredProducts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
@@ -780,7 +781,7 @@ export default function AdminProductsPage() {
                             <div className="flex gap-4 items-start">
                               {product.imageUrl ? (
                                 <Image 
-                                  src={getPrimaryLegacyImageUrl(product.imageUrl) || ''} 
+                                  src={getSafeImageSrc(product.imageUrl)} 
                                   alt={product.name} 
                                   width={64} 
                                   height={64} 
@@ -927,7 +928,7 @@ export default function AdminProductsPage() {
                         <div className="flex gap-3 items-start min-w-0">
                           {product.imageUrl ? (
                             <Image 
-                              src={getPrimaryLegacyImageUrl(product.imageUrl) || ''} 
+                              src={getSafeImageSrc(product.imageUrl)} 
                               alt={product.name} 
                               width={56} 
                               height={56} 

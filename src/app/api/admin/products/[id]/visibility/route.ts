@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
-import { badRequest, fail, forbidden, success } from '@/lib/api'
+import { badRequest, createTraceId, fail, forbidden, logServerError, success } from '@/lib/api'
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const traceId = createTraceId()
   const user = await getCurrentUser(request)
   if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json(forbidden('Chỉ admin mới có quyền truy cập'), { status: 403 })
+    return NextResponse.json(forbidden('Admin access required', { traceId }), { status: 403 })
   }
 
   try {
@@ -15,12 +16,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const isVisible = body.isVisible
 
     if (typeof isVisible !== 'boolean') {
-      return NextResponse.json(badRequest('Trạng thái hiển thị (isVisible) phải là boolean'), { status: 400 })
+      return NextResponse.json(badRequest('isVisible must be a boolean', { traceId }), { status: 400 })
     }
 
     const existingProduct = await prisma.product.findUnique({ where: { id } })
     if (!existingProduct) {
-      return NextResponse.json(badRequest('Sản phẩm không tồn tại'), { status: 404 })
+      return NextResponse.json(fail('PRODUCT_NOT_FOUND', 'Product not found', { traceId }), { status: 404 })
     }
 
     const product = await prisma.product.update({
@@ -28,11 +29,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       data: { isVisible },
     })
 
-    console.log(`[AUDIT LOG] Admin "${user.username}" modified visibility of product "${product.name}" (${id}) to ${isVisible} at ${new Date().toISOString()}`)
-
-    return NextResponse.json(success({ id: product.id, isVisible: product.isVisible }))
+    return NextResponse.json(success({ id: product.id, isVisible: product.isVisible }, { traceId }))
   } catch (error) {
-    console.error('Error changing product visibility:', error)
-    return NextResponse.json(fail('UPDATE_VISIBILITY_ERROR', 'Lỗi khi cập nhật trạng thái hiển thị'), { status: 500 })
+    logServerError('api.admin.products.visibility', error, traceId)
+    return NextResponse.json(fail('UPDATE_VISIBILITY_ERROR', 'Could not update product visibility', { traceId }), { status: 500 })
   }
 }

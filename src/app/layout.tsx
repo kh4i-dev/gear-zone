@@ -1,6 +1,5 @@
 import { Suspense, type ReactNode } from 'react'
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
+import { Inter } from 'next/font/google'
 import { AuthProvider } from '@/components/providers/AuthProvider'
 import { CartProvider } from '@/components/providers/CartProvider'
 import { Footer } from '@/components/domain/Footer'
@@ -8,14 +7,28 @@ import { AuthModal } from '@/components/domain/AuthModal'
 import { Toaster } from 'sonner'
 import './globals.css'
 
-export const metadata = {
-  title: 'GearZone - Gaming Gear Store',
-  description: 'Cửa hàng thiết bị chơi game hàng đầu',
+const inter = Inter({ subsets: ['latin', 'vietnamese'], variable: '--font-sans' })
+
+import { getSiteSettings } from '@/lib/settings'
+
+export async function generateMetadata() {
+  const settings = await getSiteSettings()
+  return {
+    title: {
+      template: settings.seoTitleTemplate,
+      default: `${settings.shopName} - ${settings.shopTagline}`,
+    },
+    description: settings.seoDescription,
+    icons: {
+      icon: settings.faviconUrl || '/favicon.ico',
+    },
+  }
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const settings = await getSiteSettings()
   return (
-    <html lang="vi" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+    <html lang="vi" className={`${inter.variable}`}>
       <body className="bg-slate-950 text-white antialiased font-sans">
         <AuthProvider>
           <CartProvider>
@@ -27,7 +40,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </div>
             <Toaster position="top-right" richColors />
             <Suspense fallback={null}>
-              <AuthModal />
+              <AuthModal shopName={settings.shopName} />
             </Suspense>
           </CartProvider>
         </AuthProvider>

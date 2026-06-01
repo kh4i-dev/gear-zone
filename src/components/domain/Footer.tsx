@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/db'
+import Image from 'next/image'
 import Link from 'next/link'
 import { Gamepad2, Facebook } from 'lucide-react'
+import { getSiteSettings } from '@/lib/settings'
 
 export async function Footer() {
   let settingsMap: Record<string, string> = {}
@@ -11,16 +13,21 @@ export async function Footer() {
     // Fail silently in case prisma table is not ready during build
   }
 
+  const siteSettings = await getSiteSettings()
+  const shopName = siteSettings.shopName
+  const logoUrl = siteSettings.logoUrl
+  const shopDescription = siteSettings.shopDescription
+
   const address = settingsMap.contact_address || ''
   const hotline = settingsMap.contact_hotline || ''
   const email = settingsMap.contact_email || ''
   const facebook = settingsMap.contact_facebook || ''
   const zalo = settingsMap.contact_zalo || ''
   const openingHours = settingsMap.contact_opening_hours || ''
-  const guideBuy = settingsMap.guide_buy_link || ''
-  const warranty = settingsMap.warranty_link || ''
-  const returnPolicy = settingsMap.return_link || ''
-  const payment = settingsMap.payment_link || ''
+  const guideBuy = settingsMap.guide_buy_link || '/products'
+  const warranty = settingsMap.warranty_link || '/products'
+  const returnPolicy = settingsMap.return_link || '/products'
+  const payment = settingsMap.payment_link || '/products'
 
   // If no contact info and no social link is set, we don't need to render empty sections.
   const hasContactInfo = address || hotline || email || openingHours
@@ -32,13 +39,19 @@ export async function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div className="col-span-1 md:col-span-1">
             <Link href="/" className="flex items-center gap-3 mb-6">
-              <span className="flex size-10 items-center justify-center rounded-xl bg-indigo-600 text-white">
-                <Gamepad2 className="size-5" />
-              </span>
-              <span className="text-xl font-extrabold tracking-tight text-white">GearZone</span>
+              {logoUrl ? (
+                <Image src={logoUrl} alt={shopName} width={144} height={36} className="h-9 w-auto object-contain rounded-lg" />
+              ) : (
+                <>
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-indigo-600 text-white">
+                    <Gamepad2 className="size-5" />
+                  </span>
+                  <span className="text-xl font-extrabold tracking-tight text-white">{shopName}</span>
+                </>
+              )}
             </Link>
             <p className="text-sm leading-relaxed mb-6">
-              Cửa hàng chuyên cung cấp các thiết bị, phụ kiện Gaming chính hãng hàng đầu với giá cả cạnh tranh và dịch vụ bảo hành siêu tốc.
+              {shopDescription}
             </p>
             {hasSocial && (
               <div className="flex gap-4">
@@ -112,7 +125,7 @@ export async function Footer() {
         </div>
         
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© 2026 GearZone. All rights reserved.</p>
+          <p>© 2026 {shopName}. All rights reserved.</p>
           <div className="flex gap-6">
             <Link href="/" className="hover:text-white transition-colors">Điều khoản dịch vụ</Link>
             <Link href="/" className="hover:text-white transition-colors">Chính sách bảo mật</Link>

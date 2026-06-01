@@ -12,6 +12,8 @@ interface ProductImageFrameProps {
   className?: string
   innerClassName?: string
   priority?: boolean
+  galleryImages?: string[]
+  activeIndex?: number
 }
 
 export function ProductImageFrame({
@@ -20,10 +22,13 @@ export function ProductImageFrame({
   aspectRatio = 'aspect-square',
   className = '',
   innerClassName = '',
-  priority = false
+  priority = false,
+  galleryImages,
+  activeIndex = 0,
 }: ProductImageFrameProps) {
-  const [hasError, setHasError] = useState(false)
   const safeSrc = getSafeImageSrc(src)
+  const [failedSrc, setFailedSrc] = useState<string | null>(null)
+  const hasError = failedSrc === safeSrc
 
   if (hasError) {
     return (
@@ -32,6 +37,46 @@ export function ProductImageFrame({
           <ImageIcon className="size-6 text-slate-500/80" />
         </div>
         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Ảnh đang cập nhật</span>
+      </div>
+    )
+  }
+
+  const hasMultipleImages = galleryImages && galleryImages.length >= 2
+
+  if (hasMultipleImages) {
+    return (
+      <div className={`relative ${aspectRatio} w-full overflow-hidden bg-white rounded-xl border border-white/[0.06] shadow-[0_4px_16px_rgba(0,0,0,0.3)] ${className}`}>
+        {/* Premium white stage background */}
+        <div className="absolute inset-0 bg-[#ffffff]" />
+
+        {/* Sliding flex container */}
+        <div 
+          className="absolute inset-0 flex transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
+          style={{ 
+            transform: `translateX(-${activeIndex * 100}%)`, 
+            width: `${galleryImages.length * 100}%` 
+          }}
+        >
+          {galleryImages.map((imgSrc, idx) => {
+            const safeImg = getSafeImageSrc(imgSrc)
+            return (
+              <div 
+                key={`${imgSrc}-${idx}`} 
+                style={{ width: `${100 / galleryImages.length}%` }} 
+                className="relative h-full flex items-center justify-center p-3 sm:p-4 z-0"
+              >
+                <Image
+                  src={safeImg}
+                  alt={`${alt} image ${idx + 1}`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  priority={priority && idx === 0}
+                  className={`object-contain transition-transform duration-500 ease-out-expo ${innerClassName}`}
+                />
+              </div>
+            )
+          })}
+        </div>
       </div>
     )
   }
@@ -50,7 +95,7 @@ export function ProductImageFrame({
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           priority={priority}
           className={`object-contain transition-transform duration-500 ease-out-expo ${innerClassName}`}
-          onError={() => setHasError(true)}
+          onError={() => setFailedSrc(safeSrc)}
         />
       </div>
     </div>

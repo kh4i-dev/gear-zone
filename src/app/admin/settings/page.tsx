@@ -1,7 +1,8 @@
 'use client'
-
+ 
 import { useEffect, useReducer } from 'react'
 import { useRouter } from 'next/navigation'
+import { categoryMegaMenu } from '@/config/categoryMegaMenu'
 import { 
   Loader2, 
   Settings, 
@@ -28,14 +29,18 @@ import {
   KeyRound, 
   Search,
   Check,
-  Boxes
+  Boxes,
+  Truck,
+  RotateCcw,
+  Cpu,
+  Gamepad2
 } from 'lucide-react'
 import { Navbar } from '@/components/domain/Navbar'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { toast } from 'sonner'
 import { Input, Button } from '@/components/domain/ui'
 import { getAdminPath } from '@/lib/adminPath'
-
+ 
 type SettingsStatus = {
   isLoading: boolean
   isSaving: boolean
@@ -43,7 +48,7 @@ type SettingsStatus = {
   isCatLoading: boolean
   isChangingPass: boolean
 }
-
+ 
 type SettingsPageState = {
   videoUrl: string
   themeAccent: string
@@ -71,14 +76,21 @@ type SettingsPageState = {
   seoKeywords: string
   categories: any[]
   newCatName: string
+  categoryMegaMenuJson: string
   shopBrands: string[]
   newBrandName: string
   currentPassword: string
   newPassword: string
   confirmPassword: string
   activeSection: string
+  shopName: string
+  shopTagline: string
+  shopDescription: string
+  logoUrl: string
+  faviconUrl: string
+  seoTitleTemplate: string
 }
-
+ 
 const initialSettingsPageState: SettingsPageState = {
   videoUrl: '',
   themeAccent: 'indigo',
@@ -106,13 +118,40 @@ const initialSettingsPageState: SettingsPageState = {
   seoKeywords: '',
   categories: [],
   newCatName: '',
+  categoryMegaMenuJson: '',
   shopBrands: [],
   newBrandName: '',
   currentPassword: '',
   newPassword: '',
   confirmPassword: '',
   activeSection: 'video',
+  shopName: '',
+  shopTagline: '',
+  shopDescription: '',
+  logoUrl: '',
+  faviconUrl: '',
+  seoTitleTemplate: '',
 }
+ 
+const menuSections = [
+  { id: 'video', label: 'Giao diện & Video', icon: Film },
+  { id: 'banner', label: 'Banner Trang Chủ', icon: ImageIcon },
+  { id: 'ticker', label: 'Ticker Khuyến Mãi', icon: Zap },
+  { id: 'menu', label: 'Cấu hình Menu', icon: Settings },
+  { id: 'contact', label: 'Thông tin liên hệ', icon: Globe },
+  { id: 'policy', label: 'Chính sách & HD', icon: BookOpen },
+  { id: 'seo', label: 'Cấu hình SEO', icon: Search },
+  { id: 'category', label: 'Quản lý danh mục', icon: Tag },
+  { id: 'brand', label: 'Quản lý nhãn hàng', icon: Boxes },
+  { id: 'security', label: 'Bảo mật & Mật khẩu', icon: KeyRound },
+]
+
+const accentColors: Array<{ id: string; name: string; class: string; shadow?: string; border?: string; check?: string }> = [
+  { id: 'violet', name: 'Violet (Tím)', class: 'bg-violet-600', shadow: 'shadow-violet-500/20' },
+  { id: 'amber', name: 'Amber (Vàng)', class: 'bg-amber-500', shadow: 'shadow-amber-500/20' },
+  { id: 'rose', name: 'Rose (Hồng hồng)', class: 'bg-rose-600', shadow: 'shadow-rose-500/20' },
+  { id: 'blue', name: 'Blue (Xanh dương)', class: 'bg-blue-600', shadow: 'shadow-blue-500/20' },
+]
 
 export default function AdminSettingsPage() {
   const { replace } = useRouter()
@@ -166,12 +205,19 @@ export default function AdminSettingsPage() {
     seoKeywords,
     categories,
     newCatName,
+    categoryMegaMenuJson,
     shopBrands,
     newBrandName,
     currentPassword,
     newPassword,
     confirmPassword,
     activeSection,
+    shopName,
+    shopTagline,
+    shopDescription,
+    logoUrl,
+    faviconUrl,
+    seoTitleTemplate,
   } = pageState
   const setVideoUrl = (videoUrl: string) => updatePageState({ videoUrl })
   const setThemeAccent = (themeAccent: string) => updatePageState({ themeAccent })
@@ -181,6 +227,7 @@ export default function AdminSettingsPage() {
   const setBannerSubtitle = (bannerSubtitle: string) => updatePageState({ bannerSubtitle })
   const setBannerCtaText = (bannerCtaText: string) => updatePageState({ bannerCtaText })
   const setBannerCtaLink = (bannerCtaLink: string) => updatePageState({ bannerCtaLink })
+  const setThemeAccentField = (themeAccent: string) => updatePageState({ themeAccent })
   const setTickerSpeed = (tickerSpeed: string) => updatePageState({ tickerSpeed })
   const setTickerMessages = (tickerMessages: string[]) => updatePageState({ tickerMessages })
   const setNewTickerMsg = (newTickerMsg: string) => updatePageState({ newTickerMsg })
@@ -198,7 +245,14 @@ export default function AdminSettingsPage() {
   const setSeoDescription = (seoDescription: string) => updatePageState({ seoDescription })
   const setSeoKeywords = (seoKeywords: string) => updatePageState({ seoKeywords })
   const setCategories = (categories: any[]) => updatePageState({ categories })
+  const setShopName = (shopName: string) => updatePageState({ shopName })
+  const setShopTagline = (shopTagline: string) => updatePageState({ shopTagline })
+  const setShopDescription = (shopDescription: string) => updatePageState({ shopDescription })
+  const setLogoUrl = (logoUrl: string) => updatePageState({ logoUrl })
+  const setFaviconUrl = (faviconUrl: string) => updatePageState({ faviconUrl })
+  const setSeoTitleTemplate = (seoTitleTemplate: string) => updatePageState({ seoTitleTemplate })
   const setNewCatName = (newCatName: string) => updatePageState({ newCatName })
+  const setCategoryMegaMenuJson = (categoryMegaMenuJson: string) => updatePageState({ categoryMegaMenuJson })
   const setCurrentPassword = (currentPassword: string) => updatePageState({ currentPassword })
   const setNewPassword = (newPassword: string) => updatePageState({ newPassword })
   const setConfirmPassword = (confirmPassword: string) => updatePageState({ confirmPassword })
@@ -260,6 +314,26 @@ export default function AdminSettingsPage() {
         setSeoTitle(result.data.seo_title || '')
         setSeoDescription(result.data.seo_description || '')
         setSeoKeywords(result.data.seo_keywords || '')
+        setShopName(result.data.shop_name || '')
+        setShopTagline(result.data.shop_tagline || '')
+        setShopDescription(result.data.shop_description || '')
+        setLogoUrl(result.data.logo_url || '')
+        setFaviconUrl(result.data.favicon_url || '')
+        setSeoTitleTemplate(result.data.seo_title_template || '')
+        
+        const defaultMegaMenuJson = JSON.stringify(
+          categoryMegaMenu.map(cat => ({
+            ...cat,
+            icon: cat.id === 'monitor' ? 'Monitor' :
+                  cat.id === 'keyboard' ? 'Keyboard' :
+                  cat.id === 'mouse' ? 'Mouse' :
+                  cat.id === 'headphone' ? 'Headphones' :
+                  cat.id === 'chair' ? 'Armchair' : 'Sliders'
+          })),
+          null,
+          2
+        )
+        setCategoryMegaMenuJson(result.data.category_megamenu_json || defaultMegaMenuJson)
 
         if (result.data.shop_brands) {
           try {
@@ -331,6 +405,13 @@ export default function AdminSettingsPage() {
             seo_description: seoDescription,
             seo_keywords: seoKeywords,
             shop_brands: JSON.stringify(shopBrands),
+            category_megamenu_json: categoryMegaMenuJson,
+            shop_name: shopName,
+            shop_tagline: shopTagline,
+            shop_description: shopDescription,
+            logo_url: logoUrl,
+            favicon_url: faviconUrl,
+            seo_title_template: seoTitleTemplate,
           }
         })
       })
@@ -509,24 +590,7 @@ export default function AdminSettingsPage() {
     )
   }
 
-  const menuSections = [
-    { id: 'video', label: 'Giao diện & Video', icon: Film },
-    { id: 'banner', label: 'Banner Trang Chủ', icon: ImageIcon },
-    { id: 'ticker', label: 'Ticker Khuyến Mãi', icon: Zap },
-    { id: 'contact', label: 'Thông tin liên hệ', icon: Globe },
-    { id: 'policy', label: 'Chính sách & HD', icon: BookOpen },
-    { id: 'seo', label: 'Cấu hình SEO', icon: Search },
-    { id: 'category', label: 'Quản lý danh mục', icon: Tag },
-    { id: 'brand', label: 'Quản lý nhãn hàng', icon: Boxes },
-    { id: 'security', label: 'Bảo mật & Mật khẩu', icon: KeyRound },
-  ]
 
-  const accentColors: Array<{ id: string; name: string; class: string; shadow?: string; border?: string; check?: string }> = [
-    { id: 'violet', name: 'Violet (Tím)', class: 'bg-violet-600', shadow: 'shadow-violet-500/20' },
-    { id: 'amber', name: 'Amber (Vàng)', class: 'bg-amber-500', shadow: 'shadow-amber-500/20' },
-    { id: 'rose', name: 'Rose (Hồng hồng)', class: 'bg-rose-600', shadow: 'shadow-rose-500/20' },
-    { id: 'blue', name: 'Blue (Xanh dương)', class: 'bg-blue-600', shadow: 'shadow-blue-500/20' },
-  ]
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -671,9 +735,7 @@ export default function AdminSettingsPage() {
                         controls 
                         aria-label="Video giới thiệu cửa hàng"
                         className="size-full object-cover"
-                      >
-                        <track kind="captions" src="" label="Vietnamese" />
-                      </video>
+                      />
                     </div>
                   )}
                 </div>
@@ -780,22 +842,45 @@ export default function AdminSettingsPage() {
                       
                       {tickerMessages.length > 0 ? (
                         <div className="space-y-2 mb-4">
-                          {tickerMessages.map((msg, idx) => (
-                            <div 
-                              key={msg} 
-                              className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-white/5 text-sm"
-                            >
-                              <span className="font-semibold text-slate-200">{msg}</span>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveTickerMsg(idx)}
-                                className="p-1 rounded-lg hover:bg-rose-500/10 text-white/60 hover:text-rose-400 transition"
-                                title="Xóa thông điệp"
+                          {tickerMessages.map((msg, idx) => {
+                            const tickerIconMap: { [key: string]: any } = {
+                              'Giao hàng siêu tốc 2h nội thành': Truck,
+                              'Bảo hành chính hãng 12-24 tháng': ShieldCheck,
+                              'Đổi trả miễn phí trong 7 ngày': RotateCcw,
+                              'Build PC Gaming giá siêu ưu đãi': Cpu,
+                              'Gear xịn - Skill đỉnh': Gamepad2,
+                            }
+
+                            const cleanMsg = msg
+                              .replace(/\p{Extended_Pictographic}/gu, '')
+                              .replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '')
+                              .trim()
+
+                            const match = Object.keys(tickerIconMap).find(k => 
+                              cleanMsg.toLowerCase().includes(k.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().slice(0, 10))
+                            )
+                            const IconComp = match ? tickerIconMap[match] : Zap
+
+                            return (
+                              <div 
+                                key={msg} 
+                                className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-white/5 text-sm"
                               >
-                                <X className="size-4" />
-                              </button>
-                            </div>
-                          ))}
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <IconComp className="size-4 text-indigo-400 shrink-0" strokeWidth={2.5} />
+                                  <span className="font-semibold text-slate-200 truncate">{cleanMsg}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveTickerMsg(idx)}
+                                  className="p-1 rounded-lg hover:bg-rose-500/10 text-white/60 hover:text-rose-400 transition shrink-0 ml-2"
+                                  title="Xóa thông điệp"
+                                >
+                                  <X className="size-4" />
+                                </button>
+                              </div>
+                            )
+                          })}
                         </div>
                       ) : (
                         <p className="text-sm text-slate-500 italic mb-4">Chưa có tin nhắn nào. Ticker trang chủ sẽ trống.</p>
@@ -805,7 +890,7 @@ export default function AdminSettingsPage() {
                         <Input
                           value={newTickerMsg}
                           onChange={(e) => setNewTickerMsg(e.target.value)}
-                          placeholder="Nhập thông điệp mới (VD: 🎁 Tặng lót chuột khi mua bàn phím)..."
+                          placeholder="Nhập thông điệp mới (VD: Tặng lót chuột khi mua bàn phím)..."
                           className="flex-1 bg-slate-900 border-white/10"
                         />
                         <Button 
@@ -824,6 +909,102 @@ export default function AdminSettingsPage() {
                   <Button type="button" onClick={() => handleSave('Ticker')} isLoading={isSaving} className="gap-2 bg-indigo-600 hover:bg-indigo-700 px-8 rounded-xl shadow-lg">
                     <Save className="size-4" />
                     Lưu cấu hình Ticker
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Section: Menu Config */}
+            {activeSection === 'menu' && (
+              <div className="bg-slate-900/40 border border-white/5 p-6 rounded-3xl backdrop-blur-md shadow-xl animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 text-xl font-bold mb-6 border-b border-white/5 pb-4 text-slate-200">
+                  <Settings className="size-5 text-indigo-400" />
+                  Cấu hình Menu Danh mục (Mega Menu)
+                </div>
+
+                <div className="space-y-6">
+                  <div className="bg-slate-950/50 p-6 rounded-2xl border border-white/5 space-y-4">
+                    <p className="block text-sm font-semibold text-slate-200">Bộ soạn thảo cấu hình Menu (JSON Editor)</p>
+                    <p className="text-xs text-slate-400">
+                      Cấu hình này định nghĩa các tab, cột, hãng sản xuất, khoảng giá, và liên kết lọc nhanh khi rê chuột vào mục <strong>Danh mục</strong> ở trang chủ.
+                    </p>
+
+                    <div className="relative">
+                      <textarea
+                        value={categoryMegaMenuJson}
+                        onChange={(e) => setCategoryMegaMenuJson(e.target.value)}
+                        placeholder="Nhập cấu hình JSON của Mega Menu..."
+                        aria-label="Cấu hình JSON của Mega Menu"
+                        rows={18}
+                        className="w-full font-mono text-xs rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-emerald-400 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 resize-y"
+                      />
+                    </div>
+
+                    {/* Validate JSON client-side */}
+                    {(() => {
+                      try {
+                        if (categoryMegaMenuJson.trim()) {
+                          JSON.parse(categoryMegaMenuJson)
+                        }
+                        return null
+                      } catch (err: any) {
+                        return (
+                          <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold flex items-center gap-2">
+                            <span className="size-1.5 rounded-full bg-rose-500 shrink-0" />
+                            <span>JSON không hợp lệ: {err.message}</span>
+                          </div>
+                        )
+                      }
+                    })()}
+
+                    <div className="flex flex-wrap items-center gap-3 mt-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm('Bạn có chắc chắn muốn khôi phục cấu hình Menu về mặc định ban đầu không?')) {
+                            const defaultMenuJson = JSON.stringify(
+                              categoryMegaMenu.map(cat => ({
+                                ...cat,
+                                icon: cat.id === 'monitor' ? 'Monitor' :
+                                      cat.id === 'keyboard' ? 'Keyboard' :
+                                      cat.id === 'mouse' ? 'Mouse' :
+                                      cat.id === 'headphone' ? 'Headphones' :
+                                      cat.id === 'chair' ? 'Armchair' : 'Sliders'
+                              })),
+                              null,
+                              2
+                            )
+                            setCategoryMegaMenuJson(defaultMenuJson)
+                            toast.success('Đã nạp lại cấu hình Menu mặc định, hãy ấn Lưu cấu hình để áp dụng.')
+                          }
+                        }}
+                        className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold transition duration-200 text-slate-300"
+                      >
+                        Khôi phục mặc định
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 flex justify-end border-t border-white/5 pt-6">
+                  <Button
+                    type="button"
+                    onClick={() => handleSave('Cấu hình Menu')}
+                    isLoading={isSaving}
+                    disabled={(() => {
+                      try {
+                        if (categoryMegaMenuJson.trim()) {
+                          JSON.parse(categoryMegaMenuJson)
+                        }
+                        return false
+                      } catch {
+                        return true
+                      }
+                    })()}
+                    className="gap-2 bg-indigo-600 hover:bg-indigo-700 px-8 rounded-xl shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Save className="size-4" />
+                    Lưu cấu hình Menu
                   </Button>
                 </div>
               </div>
@@ -1000,57 +1181,147 @@ export default function AdminSettingsPage() {
             )}
 
             {/* Section 6: SEO */}
-            {activeSection === 'seo' && (
-              <div className="bg-slate-900/40 border border-white/5 p-6 rounded-3xl backdrop-blur-md shadow-xl animate-in fade-in duration-200">
-                <div className="flex items-center gap-2 text-xl font-bold mb-6 border-b border-white/5 pb-4 text-slate-200">
-                  <Search className="size-5 text-indigo-400" />
-                  Cấu hình SEO & Metadata
-                </div>
+            {activeSection === 'seo' && (() => {
+              const samplePageName = "Bàn phím cơ AKKO"
+              const previewTitle = seoTitleTemplate
+                ? seoTitleTemplate.replace('%s', samplePageName)
+                : `${samplePageName} | ${shopName || 'GearZone'}`
 
-                <div className="space-y-6">
-                  <div className="bg-slate-950/50 p-6 rounded-2xl border border-white/5 space-y-4">
-                    <div>
-                      <p className="block text-sm font-semibold mb-2">Tiêu đề Website (Meta Title)</p>
-                      <Input
-                        value={seoTitle}
-                        onChange={(e) => setSeoTitle(e.target.value)}
-                        placeholder="VD: GearZone - Shop Gaming Gear Cao Cấp Chính Hãng"
-                        className="bg-slate-900 border-white/10"
-                      />
+              return (
+                <div className="bg-slate-900/40 border border-white/5 p-6 rounded-3xl backdrop-blur-md shadow-xl animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2 text-xl font-bold mb-6 border-b border-white/5 pb-4 text-slate-200">
+                    <Search className="size-5 text-indigo-400" />
+                    Cấu hình Thương hiệu & SEO
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Block 1: Shop Branding */}
+                    <div className="bg-slate-950/50 p-6 rounded-2xl border border-white/5 space-y-4">
+                      <h3 className="text-base font-bold text-indigo-400 border-b border-white/5 pb-2">1. Thông tin Thương hiệu</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="block text-sm font-semibold mb-2">Tên cửa hàng (Shop Name)</p>
+                          <Input
+                            value={shopName}
+                            onChange={(e) => setShopName(e.target.value)}
+                            placeholder="VD: GearZone"
+                            className="bg-slate-900 border-white/10"
+                          />
+                        </div>
+
+                        <div>
+                          <p className="block text-sm font-semibold mb-2">Tagline / Slogan</p>
+                          <Input
+                            value={shopTagline}
+                            onChange={(e) => setShopTagline(e.target.value)}
+                            placeholder="VD: Gaming Gear Store"
+                            className="bg-slate-900 border-white/10"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="block text-sm font-semibold mb-2">Mô tả ngắn cửa hàng (Shop Description)</p>
+                        <textarea
+                          value={shopDescription}
+                          onChange={(e) => setShopDescription(e.target.value)}
+                          placeholder="VD: Cửa hàng chuyên cung cấp bàn phím cơ, chuột gaming..."
+                          aria-label="Mô tả ngắn cửa hàng"
+                          className="w-full h-20 rounded-xl border border-white/10 bg-slate-900 p-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="block text-sm font-semibold mb-2">Đường dẫn Logo (Logo URL)</p>
+                          <Input
+                            value={logoUrl}
+                            onChange={(e) => setLogoUrl(e.target.value)}
+                            placeholder="VD: /images/logo.png hoặc link URL ảnh"
+                            className="bg-slate-900 border-white/10"
+                          />
+                        </div>
+
+                        <div>
+                          <p className="block text-sm font-semibold mb-2">Đường dẫn Favicon (Favicon URL)</p>
+                          <Input
+                            value={faviconUrl}
+                            onChange={(e) => setFaviconUrl(e.target.value)}
+                            placeholder="VD: /favicon.ico"
+                            className="bg-slate-900 border-white/10"
+                          />
+                        </div>
+                      </div>
                     </div>
 
-                    <div>
-                      <p className="block text-sm font-semibold mb-2">Mô tả Website (Meta Description)</p>
-                      <textarea
-                        value={seoDescription}
-                        onChange={(e) => setSeoDescription(e.target.value)}
-                        placeholder="VD: GearZone chuyên phân phối bàn phím cơ, chuột gaming, giá đỡ màn hình (arm) chính hãng 100% với giá tốt nhất thị trường."
-                        aria-label="Mô tả Website (Meta Description)"
-                        className="w-full h-24 rounded-xl border border-white/10 bg-slate-900 p-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-                      />
-                    </div>
+                    {/* Block 2: SEO Settings */}
+                    <div className="bg-slate-950/50 p-6 rounded-2xl border border-white/5 space-y-4">
+                      <h3 className="text-base font-bold text-indigo-400 border-b border-white/5 pb-2">2. Cấu hình SEO & Metadata</h3>
+                      
+                      <div>
+                        <p className="block text-sm font-semibold mb-2">Mẫu tiêu đề trang con (SEO Title Template)</p>
+                        <Input
+                          value={seoTitleTemplate}
+                          onChange={(e) => setSeoTitleTemplate(e.target.value)}
+                          placeholder="VD: %s | GearZone"
+                          className="bg-slate-900 border-white/10 font-mono"
+                        />
+                        <p className="text-xs text-slate-500 mt-1">Sử dụng ký tự `%s` làm placeholder đại diện cho tiêu đề trang con (ví dụ: Tên sản phẩm).</p>
+                      </div>
 
-                    <div>
-                      <p className="block text-sm font-semibold mb-2">Từ khóa SEO (Keywords)</p>
-                      <Input
-                        value={seoKeywords}
-                        onChange={(e) => setSeoKeywords(e.target.value)}
-                        placeholder="VD: gearzone, ban phim co, chuot gaming, arm man hinh"
-                        className="bg-slate-900 border-white/10"
-                      />
-                      <p className="text-xs text-slate-500 mt-1">Ngăn cách các từ khóa bằng dấu phẩy ( , )</p>
+                      {/* Title Realtime Preview Widget */}
+                      <div className="bg-slate-900 p-4 rounded-xl border border-white/5">
+                        <p className="text-xs text-slate-500 font-bold tracking-wider uppercase mb-2">Giao diện Tab Browser của trang chi tiết sản phẩm (Xem trước)</p>
+                        <div className="flex items-center gap-1.5 bg-slate-950 px-3 py-2 rounded-lg border border-white/5 w-full max-w-md shadow-inner select-none">
+                          <span className="size-3.5 rounded-full bg-slate-800 flex items-center justify-center text-[7px] border border-white/5 font-bold">🌐</span>
+                          <span className="text-xs font-semibold text-slate-200 truncate font-mono">{previewTitle}</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="block text-sm font-semibold mb-2">Tiêu đề mặc định Website (Meta Title)</p>
+                        <Input
+                          value={seoTitle}
+                          onChange={(e) => setSeoTitle(e.target.value)}
+                          placeholder="VD: GearZone - Shop Gaming Gear Cao Cấp Chính Hãng"
+                          className="bg-slate-900 border-white/10"
+                        />
+                      </div>
+
+                      <div>
+                        <p className="block text-sm font-semibold mb-2">Mô tả mặc định Website (Meta Description)</p>
+                        <textarea
+                          value={seoDescription}
+                          onChange={(e) => setSeoDescription(e.target.value)}
+                          placeholder="VD: GearZone chuyên phân phối bàn phím cơ, chuột gaming..."
+                          aria-label="Mô tả mặc định Website"
+                          className="w-full h-20 rounded-xl border border-white/10 bg-slate-900 p-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                      </div>
+
+                      <div>
+                        <p className="block text-sm font-semibold mb-2">Từ khóa SEO (Keywords)</p>
+                        <Input
+                          value={seoKeywords}
+                          onChange={(e) => setSeoKeywords(e.target.value)}
+                          placeholder="VD: gearzone, ban phim co, chuot gaming, arm man hinh"
+                          className="bg-slate-900 border-white/10"
+                        />
+                        <p className="text-xs text-slate-500 mt-1">Ngăn cách các từ khóa bằng dấu phẩy ( , )</p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="mt-8 flex justify-end border-t border-white/5 pt-6">
-                  <Button type="button" onClick={() => handleSave('SEO')} isLoading={isSaving} className="gap-2 bg-indigo-600 hover:bg-indigo-700 px-8 rounded-xl shadow-lg">
-                    <Save className="size-4" />
-                    Lưu cấu hình SEO
-                  </Button>
+                  <div className="mt-8 flex justify-end border-t border-white/5 pt-6">
+                    <Button type="button" onClick={() => handleSave('Thương hiệu & SEO')} isLoading={isSaving} className="gap-2 bg-indigo-600 hover:bg-indigo-700 px-8 rounded-xl shadow-lg">
+                      <Save className="size-4" />
+                      Lưu cấu hình
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )
+            })()}
 
             {/* Section 7: Category list */}
             {activeSection === 'category' && (

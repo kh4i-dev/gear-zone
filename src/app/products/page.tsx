@@ -3,15 +3,28 @@ import { Suspense } from 'react'
 import { ProductCatalog } from '@/components/domain/ProductCatalog'
 import { prisma } from '@/lib/db'
 
-export const metadata: Metadata = {
-  title: 'Sản phẩm - GearZone',
-  description: 'Khám phá tất cả sản phẩm gaming gear, linh kiện máy tính chính hãng tại GearZone.',
+export const dynamic = 'force-dynamic'
+
+import { getSiteSettings } from '@/lib/settings'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings()
+  return {
+    title: 'Sản phẩm',
+    description: `Khám phá tất cả sản phẩm gaming gear, linh kiện máy tính chính hãng tại ${settings.shopName}.`,
+  }
 }
 
 export default async function ProductsPage() {
   const products = await prisma.product.findMany({
-    where: { isVisible: true },
-    include: { category: { select: { name: true } } },
+    where: { isVisible: true, status: 'ACTIVE' },
+    include: {
+      category: { select: { name: true } },
+      images: {
+        orderBy: { sortOrder: 'asc' },
+        select: { url: true, sortOrder: true, isPrimary: true },
+      },
+    },
     orderBy: [
       { soldCount: 'desc' },
       { updatedAt: 'desc' },

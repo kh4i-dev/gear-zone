@@ -212,7 +212,7 @@ export const categoryMegaMenu: MegaMenuCategory[] = [
   {
     id: 'mouse',
     slug: 'mouse',
-    label: 'Chuột + Lót chuột',
+    label: 'Chuột',
     icon: Mouse,
     queryName: 'Chuột',
     href: '/products?category=mouse',
@@ -270,35 +270,6 @@ export const categoryMegaMenu: MegaMenuCategory[] = [
         items: [
           { label: 'Logitech Gaming', href: '/products?category=mouse&brand=logitech&type=game' },
           { label: 'Logitech Văn phòng', href: '/products?category=mouse&brand=logitech&type=office' },
-        ],
-      },
-      {
-        title: 'Thương hiệu lót chuột',
-        items: [
-          { label: 'GEARVN', href: '/products?category=accessory&brand=gearvn' },
-          { label: 'ASUS', href: '/products?category=accessory&brand=asus' },
-          { label: 'Steelseries', href: '/products?category=accessory&brand=steelseries' },
-          { label: 'Dare-U', href: '/products?category=accessory&brand=dare-u' },
-          { label: 'Razer', href: '/products?category=accessory&brand=razer' },
-          { label: 'SKYLOONG', href: '/products?category=accessory&brand=skyloong' },
-        ],
-      },
-      {
-        title: 'Các loại lót chuột',
-        items: [
-          { label: 'Mềm', href: '/products?category=accessory&material=soft' },
-          { label: 'Cứng', href: '/products?category=accessory&material=hard' },
-          { label: 'Dày', href: '/products?category=accessory&material=thick' },
-          { label: 'Mỏng', href: '/products?category=accessory&material=thin' },
-          { label: 'Viền có led', href: '/products?category=accessory&led=true' },
-        ],
-      },
-      {
-        title: 'Lót chuột theo size',
-        items: [
-          { label: 'Nhỏ', href: '/products?category=accessory&size=small' },
-          { label: 'Vừa', href: '/products?category=accessory&size=medium' },
-          { label: 'Lớn', href: '/products?category=accessory&size=large' },
         ],
       },
     ],
@@ -437,6 +408,35 @@ export const categoryMegaMenu: MegaMenuCategory[] = [
           { label: 'Mousepad cỡ lớn', href: '/products?category=accessory&search=lót+chuột' },
           { label: 'Giá treo tai nghe', href: '/products?category=accessory&search=giá+treo' },
           { label: 'Đèn treo màn hình', href: '/products?category=accessory&search=đèn' },
+        ],
+      },
+      {
+        title: 'Thương hiệu lót chuột',
+        items: [
+          { label: 'GEARVN', href: '/products?category=accessory&brand=gearvn' },
+          { label: 'ASUS', href: '/products?category=accessory&brand=asus' },
+          { label: 'Steelseries', href: '/products?category=accessory&brand=steelseries' },
+          { label: 'Dare-U', href: '/products?category=accessory&brand=dare-u' },
+          { label: 'Razer', href: '/products?category=accessory&brand=razer' },
+          { label: 'SKYLOONG', href: '/products?category=accessory&brand=skyloong' },
+        ],
+      },
+      {
+        title: 'Các loại lót chuột',
+        items: [
+          { label: 'Mềm', href: '/products?category=accessory&material=soft' },
+          { label: 'Cứng', href: '/products?category=accessory&material=hard' },
+          { label: 'Dày', href: '/products?category=accessory&material=thick' },
+          { label: 'Mỏng', href: '/products?category=accessory&material=thin' },
+          { label: 'Viền có led', href: '/products?category=accessory&led=true' },
+        ],
+      },
+      {
+        title: 'Lót chuột theo size',
+        items: [
+          { label: 'Nhỏ', href: '/products?category=accessory&size=small' },
+          { label: 'Vừa', href: '/products?category=accessory&size=medium' },
+          { label: 'Lớn', href: '/products?category=accessory&size=large' },
         ],
       },
     ],

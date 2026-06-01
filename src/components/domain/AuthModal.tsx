@@ -10,6 +10,7 @@ import { useAuth } from '@/components/providers/AuthProvider'
 interface AuthModalContentProps {
   authType: string
   redirectPath: string | null
+  shopName: string
 }
 
 const clientLoadedStore = {
@@ -18,7 +19,7 @@ const clientLoadedStore = {
   getServerSnapshot: () => false,
 }
 
-function AuthModalContent({ authType, redirectPath }: AuthModalContentProps) {
+function AuthModalContent({ authType, redirectPath, shopName }: AuthModalContentProps) {
   const { push, replace, refresh } = useRouter()
   const pathname = usePathname()
   const { refreshUser } = useAuth()
@@ -136,7 +137,7 @@ function AuthModalContent({ authType, redirectPath }: AuthModalContentProps) {
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/90 p-8 shadow-2xl shadow-indigo-500/10 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200 z-10">
+      <div className="relative w-full max-w-lg overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/90 p-8 md:p-10 shadow-2xl shadow-indigo-500/10 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200 z-10">
         
         {/* Glow decoration */}
         <div className="absolute -top-24 -left-24 size-48 rounded-full bg-indigo-500/10 blur-3xl" />
@@ -152,23 +153,25 @@ function AuthModalContent({ authType, redirectPath }: AuthModalContentProps) {
         </button>
 
         {/* Logo / Header */}
-        <div className="text-center mb-6">
-          <div className="inline-flex size-11 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 mb-3">
-            <Gamepad2 className="size-5" />
+        <div className="text-center mb-8">
+          <div className="inline-flex size-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-xl shadow-indigo-600/30 mb-4">
+            <Gamepad2 className="size-6" />
           </div>
-          <h2 className="text-2xl font-semibold tracking-tight text-white">
-            {authType === 'login' ? 'Chào Mừng Trở Lại' : 'Tạo Tài Khoản Mới'}
+          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
+            {authType === 'login' ? `Đăng nhập ${shopName}` : 'Tạo tài khoản'}
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            {authType === 'login' ? 'Đăng nhập để nhận ưu đãi từ GearZone' : 'Trở thành thành viên GearZone ngay hôm nay'}
+          <p className="text-sm text-slate-400 mt-1.5 max-w-sm mx-auto leading-relaxed">
+            {authType === 'login' 
+              ? 'Quản lý đơn hàng, lưu giỏ hàng và nhận ưu đãi dành riêng cho bạn.' 
+              : `Trở thành thành viên ${shopName} ngay hôm nay để nhận nhiều ưu đãi độc quyền.`}
           </p>
         </div>
 
-        {/* Custom Tabs (Lazada / Shopee style) */}
-        <div className="flex border-b border-white/5 mb-6">
+        {/* Tab Switcher */}
+        <div className="flex border-b border-white/5 mb-7">
           <button type="button"
             onClick={() => switchTab('login')}
-            className={`flex-1 pb-3 text-sm font-extrabold transition-all relative ${
+            className={`flex-1 pb-3.5 text-sm font-extrabold tracking-tight transition-all relative ${
               authType === 'login' ? 'text-white' : 'text-slate-500 hover:text-slate-300'
             }`}
           >
@@ -179,7 +182,7 @@ function AuthModalContent({ authType, redirectPath }: AuthModalContentProps) {
           </button>
           <button type="button"
             onClick={() => switchTab('register')}
-            className={`flex-1 pb-3 text-sm font-extrabold transition-all relative ${
+            className={`flex-1 pb-3.5 text-sm font-extrabold tracking-tight transition-all relative ${
               authType === 'register' ? 'text-white' : 'text-slate-500 hover:text-slate-300'
             }`}
           >
@@ -191,122 +194,110 @@ function AuthModalContent({ authType, redirectPath }: AuthModalContentProps) {
         </div>
 
         {/* Auth Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 relative">
+        <form onSubmit={handleSubmit} className="space-y-5 relative">
           {authType === 'register' && (
-            <div className="relative">
-              <Input
-                label="Họ và tên"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Nguyễn Văn A"
-                error={errors.name}
-                className="bg-slate-950/40 border-white/5 focus:ring-indigo-500/20 focus:border-indigo-500 pl-10"
-                required
-              />
-              <User className="absolute left-3 bottom-3 size-4.5 text-slate-500" />
-            </div>
+            <Input
+              label="Họ và tên"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Nhập họ và tên đầy đủ"
+              error={errors.name}
+              className="bg-slate-950/40 border-white/5 focus:ring-indigo-500/20 focus:border-indigo-500"
+              startAdornment={<User className="size-4.5 text-slate-500" />}
+              required
+            />
           )}
 
           {authType === 'register' ? (
             <>
               {/* Register Username field */}
-              <div className="relative">
-                <Input
-                  label="Tài khoản (Username)"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  placeholder="VD: nguyenvana123"
-                  error={errors.username}
-                  className="bg-slate-950/40 border-white/5 focus:ring-indigo-500/20 focus:border-indigo-500 pl-10"
-                  required
-                />
-                <User className="absolute left-3 bottom-3 size-4.5 text-slate-500" />
-              </div>
+              <Input
+                label="Tài khoản (Username)"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                placeholder="Nhập tên đăng nhập"
+                error={errors.username}
+                className="bg-slate-950/40 border-white/5 focus:ring-indigo-500/20 focus:border-indigo-500"
+                startAdornment={<User className="size-4.5 text-slate-500" />}
+                required
+              />
 
               {/* Register Phone field (Mandatory) */}
-              <div className="relative">
-                <Input
-                  label="Số điện thoại (Bắt buộc, không trùng)"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="VD: 0912345678"
-                  error={errors.phone}
-                  className="bg-slate-950/40 border-white/5 focus:ring-indigo-500/20 focus:border-indigo-500 pl-10"
-                  required
-                />
-                <Phone className="absolute left-3 bottom-3 size-4.5 text-slate-500" />
-              </div>
+              <Input
+                label="Số điện thoại"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="Nhập số điện thoại"
+                error={errors.phone}
+                className="bg-slate-950/40 border-white/5 focus:ring-indigo-500/20 focus:border-indigo-500"
+                startAdornment={<Phone className="size-4.5 text-slate-500" />}
+                required
+              />
 
               {/* Register Email field (Optional) */}
-              <div className="relative">
-                <Input
-                  label="Email (Không bắt buộc)"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="example@gmail.com (tùy chọn)"
-                  error={errors.email}
-                  className="bg-slate-950/40 border-white/5 focus:ring-indigo-500/20 focus:border-indigo-500 pl-10"
-                />
-                <Mail className="absolute left-3 bottom-3 size-4.5 text-slate-500" />
-              </div>
+              <Input
+                label="Email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="email@example.com"
+                error={errors.email}
+                className="bg-slate-950/40 border-white/5 focus:ring-indigo-500/20 focus:border-indigo-500"
+                startAdornment={<Mail className="size-4.5 text-slate-500" />}
+              />
             </>
           ) : (
             /* Login Username field (can accept username or phone) */
-            <div className="relative">
-              <Input
-                label="Tài khoản hoặc Số điện thoại"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                placeholder="Nhập tên tài khoản hoặc số điện thoại"
-                error={errors.username}
-                className="bg-slate-950/40 border-white/5 focus:ring-indigo-500/20 focus:border-indigo-500 pl-10"
-                required
-              />
-              <User className="absolute left-3 bottom-3 size-4.5 text-slate-500" />
-            </div>
-          )}
-
-          <div className="relative">
             <Input
-              label="Mật khẩu"
-              type={showPassword ? 'text' : 'password'}
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              placeholder="••••••••"
-              error={errors.password}
-              className="bg-slate-950/40 border-white/5 focus:ring-indigo-500/20 focus:border-indigo-500 pl-10 pr-10"
+              label="Tài khoản hoặc Số điện thoại"
+              value={formData.username}
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              placeholder="Nhập tên tài khoản hoặc số điện thoại"
+              error={errors.username}
+              className="bg-slate-950/40 border-white/5 focus:ring-indigo-500/20 focus:border-indigo-500"
+              startAdornment={<User className="size-4.5 text-slate-500" />}
               required
             />
-            <Lock className="absolute left-3 bottom-3 size-4.5 text-slate-500" />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 bottom-3 text-slate-500 hover:text-slate-300"
-            >
-              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-            </button>
-          </div>
+          )}
+
+          <Input
+            label="Mật khẩu"
+            type={showPassword ? 'text' : 'password'}
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            placeholder="Nhập mật khẩu"
+            error={errors.password}
+            className="bg-slate-950/40 border-white/5 focus:ring-indigo-500/20 focus:border-indigo-500"
+            startAdornment={<Lock className="size-4.5 text-slate-500" />}
+            endAdornment={
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-slate-500 hover:text-slate-300 cursor-pointer border-0 bg-transparent p-0 flex items-center"
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            }
+            required
+          />
 
           {authType === 'register' && (
-            <div className="relative">
-              <Input
-                label="Xác nhận mật khẩu"
-                type={showPassword ? 'text' : 'password'}
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                placeholder="••••••••"
-                error={errors.confirmPassword}
-                className="bg-slate-950/40 border-white/5 focus:ring-indigo-500/20 focus:border-indigo-500 pl-10"
-                required
-              />
-              <Lock className="absolute left-3 bottom-3 size-4.5 text-slate-500" />
-            </div>
+            <Input
+              label="Xác nhận mật khẩu"
+              type={showPassword ? 'text' : 'password'}
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              placeholder="Nhập lại mật khẩu"
+              error={errors.confirmPassword}
+              className="bg-slate-950/40 border-white/5 focus:ring-indigo-500/20 focus:border-indigo-500"
+              startAdornment={<Lock className="size-4.5 text-slate-500" />}
+              required
+            />
           )}
 
           <Button
             type="submit"
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 border-0 shadow-lg shadow-indigo-600/20 py-2.5 rounded-xl font-bold mt-2 h-11"
+            className="w-full bg-indigo-600 hover:bg-indigo-500 border-0 shadow-lg shadow-indigo-600/25 rounded-2xl font-bold mt-2 h-12 active:scale-[0.98] transition-all"
             size="lg"
             isLoading={isLoading}
           >
@@ -315,33 +306,33 @@ function AuthModalContent({ authType, redirectPath }: AuthModalContentProps) {
         </form>
 
         {/* Divider */}
-        <div className="relative flex items-center justify-center my-6">
+        <div className="relative flex items-center justify-center my-7">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-white/5" />
           </div>
-          <span className="relative px-3 bg-slate-900/90 text-[10px] text-slate-500 uppercase tracking-widest font-semibold">
+          <span className="relative px-4 bg-slate-900 text-xs text-slate-500 uppercase tracking-widest font-semibold">
             Hoặc đăng nhập bằng
           </span>
         </div>
 
-        {/* Mock Social Logins (Premium look) */}
+        {/* Social Login Buttons */}
         <div className="grid grid-cols-2 gap-3">
           <button 
             type="button" 
-            onClick={() => toast.info('Tính năng đang được phát triển')}
-            className="flex items-center justify-center gap-2 py-2 rounded-xl border border-white/5 bg-slate-950/20 hover:bg-slate-950/50 text-slate-300 hover:text-white transition text-xs font-semibold"
+            onClick={() => toast.info('Đăng nhập bằng Google sắp ra mắt!')}
+            className="flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-white/5 bg-slate-950/20 hover:bg-slate-950/50 text-slate-400 hover:text-white transition-all text-xs font-bold"
           >
-            <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="size-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12.24 10.285V13.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.859-3.578-7.859-8s3.529-8 7.859-8c2.46 0 4.105 1.025 5.047 1.926l2.427-2.334C17.955 2.192 15.34 1 12.24 1 6.033 1 1 6.033 1 12.24s5.033 11.24 11.24 11.24c6.478 0 10.793-4.537 10.793-10.985 0-.746-.08-1.32-.176-1.887H12.24z"/>
             </svg>
             Google
           </button>
           <button 
             type="button" 
-            onClick={() => toast.info('Tính năng đang được phát triển')}
-            className="flex items-center justify-center gap-2 py-2 rounded-xl border border-white/5 bg-slate-950/20 hover:bg-slate-950/50 text-slate-300 hover:text-white transition text-xs font-semibold"
+            onClick={() => toast.info('Đăng nhập bằng Facebook sắp ra mắt!')}
+            className="flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-white/5 bg-slate-950/20 hover:bg-slate-950/50 text-slate-400 hover:text-white transition-all text-xs font-bold"
           >
-            <svg className="size-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="size-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
               <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/>
             </svg>
             Facebook
@@ -352,7 +343,7 @@ function AuthModalContent({ authType, redirectPath }: AuthModalContentProps) {
   )
 }
 
-function AuthModalWrapper() {
+function AuthModalWrapper({ shopName }: { shopName: string }) {
   const searchParams = useSearchParams()
   const { get } = searchParams
   const authType = get.call(searchParams, 'auth')
@@ -365,14 +356,15 @@ function AuthModalWrapper() {
       key={authType} 
       authType={authType} 
       redirectPath={redirectPath} 
+      shopName={shopName}
     />
   )
 }
 
-export function AuthModal() {
+export function AuthModal({ shopName = 'GearZone' }: { shopName?: string }) {
   return (
     <Suspense fallback={null}>
-      <AuthModalWrapper />
+      <AuthModalWrapper shopName={shopName} />
     </Suspense>
   )
 }

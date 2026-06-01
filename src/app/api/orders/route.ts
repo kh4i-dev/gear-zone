@@ -1,63 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
-import { fail, success, unauthorized, badRequest } from '@/lib/api'
+import { badRequest, createTraceId, fail, logServerError, success } from '@/lib/api'
+
+type CheckoutItem = {
+  productId: string
+  variantId?: string | null
+  quantity: number
+  price: number
+}
+
+function cartKey(item: Pick<CheckoutItem, 'productId' | 'variantId'>) {
+  return `${item.productId}:${item.variantId ?? 'base'}`
+}
 
 async function cancelExpiredOrders() {
+  const traceId = createTraceId()
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
+
   try {
     await prisma.$transaction(async (tx) => {
-      // Find all orders that are still awaiting payment and created > 5 minutes ago
       const expiredOrders = await tx.order.findMany({
         where: {
           status: 'AWAITING_PAYMENT',
-          createdAt: {
-            lt: fiveMinutesAgo
-          }
+          createdAt: { lt: fiveMinutesAgo },
         },
-        include: {
-          items: true
-        }
+        include: { items: true },
       })
 
-      const orderUpdates = expiredOrders.map(order => 
+      await Promise.all(expiredOrders.map((order) =>
         tx.order.update({
           where: { id: order.id },
-          data: { status: 'CANCELLED' }
+          data: { status: 'CANCELLED' },
         })
-      );
-      
-      const productUpdates = expiredOrders.flatMap(order => 
-        order.items.map(item => 
+      ))
+
+      const expiredItems = expiredOrders.flatMap((order) => order.items)
+      await Promise.all(expiredItems.flatMap((item) => {
+        const stockUpdate = item.variantId
+          ? tx.productVariant.update({
+              where: { id: item.variantId },
+              data: { stock: { increment: item.quantity } },
+            })
+          : tx.product.update({
+              where: { id: item.productId },
+              data: { stock: { increment: item.quantity } },
+            })
+
+        return [
+          stockUpdate,
           tx.product.update({
             where: { id: item.productId },
-            data: {
-              stock: { increment: item.quantity },
-              soldCount: { decrement: item.quantity }
-            }
-          })
-        )
-      );
-
-      await Promise.all([...orderUpdates, ...productUpdates]);
-      
-      expiredOrders.forEach(order => {
-        console.log(`[Auto-Cancel] Order ${order.id} automatically cancelled due to payment timeout (5 mins). Stock replenished.`);
-      });
+            data: { soldCount: { decrement: item.quantity } },
+          }),
+        ]
+      }))
     })
   } catch (error) {
-    console.error('Error during auto-cancelling expired orders:', error)
+    logServerError('api.orders.cancelExpired', error, traceId)
   }
 }
 
 export async function GET(request: NextRequest) {
+  const traceId = createTraceId()
+
   try {
     const user = await getCurrentUser(request)
     if (!user) {
-      return NextResponse.json(fail('UNAUTHORIZED', 'Vui lòng đăng nhập để xem đơn hàng'), { status: 401 })
+      return NextResponse.json(fail('UNAUTHORIZED', 'Please sign in to view orders', { traceId }), { status: 401 })
     }
 
-    // Process auto-cancellation of expired orders first
     await cancelExpiredOrders()
 
     const orders = await prisma.order.findMany({
@@ -66,74 +78,92 @@ export async function GET(request: NextRequest) {
         items: {
           include: {
             product: { select: { name: true, imageUrl: true } },
+            variant: {
+              select: {
+                sku: true,
+                imageUrl: true,
+                optionValues: {
+                  include: {
+                    optionValue: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
       orderBy: { createdAt: 'desc' },
     })
 
-    return NextResponse.json(success(orders))
+    return NextResponse.json(success(orders, { traceId }))
   } catch (error) {
-    console.error('Error fetching orders:', error)
-    return NextResponse.json(fail('FETCH_ORDERS_ERROR', 'Lỗi khi lấy danh sách đơn hàng'), { status: 500 })
+    logServerError('api.orders.list', error, traceId)
+    return NextResponse.json(fail('FETCH_ORDERS_ERROR', 'Could not fetch orders', { traceId }), { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
+  const traceId = createTraceId()
+
   try {
     const user = await getCurrentUser(request)
     if (!user) {
-      return NextResponse.json(fail('UNAUTHORIZED', 'Vui lòng đăng nhập để thanh toán'), { status: 401 })
+      return NextResponse.json(fail('UNAUTHORIZED', 'Please sign in before checkout', { traceId }), { status: 401 })
     }
 
-    // Process auto-cancellation of expired orders first to release locked stock
     await cancelExpiredOrders()
 
     const body = await request.json()
-    const { items, totalAmount, paymentMethod, shippingName, shippingPhone, shippingAddress, shippingCccd } = body
+    const { totalAmount, paymentMethod, shippingName, shippingPhone, shippingAddress, shippingCccd } = body
+    const items = Array.isArray(body.items) ? body.items as CheckoutItem[] : []
 
-    if (!items || items.length === 0) {
-      return NextResponse.json(badRequest('Giỏ hàng trống'), { status: 400 })
+    if (items.length === 0) {
+      return NextResponse.json(badRequest('Cart is empty', { traceId }), { status: 400 })
     }
 
-    // Anti-spam & Inventory protection: Limit user to a max of 3 pending/awaiting orders
+    for (const item of items) {
+      if (!item.productId || !Number.isInteger(item.quantity) || item.quantity <= 0 || !Number.isFinite(Number(item.price))) {
+        return NextResponse.json(badRequest('Invalid checkout item', { traceId }), { status: 400 })
+      }
+    }
+
     const activeOrdersCount = await prisma.order.count({
       where: {
         userId: user.id,
-        status: {
-          in: ['PENDING', 'AWAITING_PAYMENT']
-        }
-      }
+        status: { in: ['PENDING', 'AWAITING_PAYMENT'] },
+      },
     })
 
     if (activeOrdersCount >= 3) {
-      return NextResponse.json(
-        badRequest('Bạn đang có 3 đơn hàng ở trạng thái chờ xử lý hoặc thanh toán. Vui lòng thanh toán/xác nhận các đơn hàng cũ hoặc liên hệ Hotline để được hỗ trợ trước khi tạo đơn mới!'),
-        { status: 400 }
-      )
+      return NextResponse.json(badRequest('You already have 3 pending or awaiting-payment orders', { traceId }), { status: 400 })
     }
 
-    // Start transaction
     const order = await prisma.$transaction(async (tx) => {
-      // Check if automated bank or momo payment is configured
-      const isAutomatedBank = !!(process.env.NEXT_PUBLIC_SEPAY_API_KEY || process.env.PAYOS_API_KEY)
-      const isAutomatedMomo = !!process.env.NEXT_PUBLIC_MOMO_PHONE // If Momo API is implemented, otherwise manual starts as PENDING
+      const isAutomatedBank = Boolean(process.env.NEXT_PUBLIC_SEPAY_API_KEY || process.env.PAYOS_API_KEY)
+      const initialStatus = paymentMethod === 'bank' && isAutomatedBank ? 'AWAITING_PAYMENT' : 'PENDING'
+      const productIds = [...new Set(items.map((item) => item.productId))]
+      const variantIds = [...new Set(items.map((item) => item.variantId).filter(Boolean))] as string[]
 
-      // Determine initial status based on payment method and automated configuration
-      const initialStatus = (paymentMethod === 'bank' && isAutomatedBank)
-        ? 'AWAITING_PAYMENT' 
-        : 'PENDING'
+      const [products, variants] = await Promise.all([
+        tx.product.findMany({ where: { id: { in: productIds } } }),
+        variantIds.length > 0
+          ? tx.productVariant.findMany({ where: { id: { in: variantIds } } })
+          : Promise.resolve([]),
+      ])
+      const productMap = new Map(products.map((product) => [product.id, product]))
+      const variantMap = new Map(variants.map((variant) => [variant.id, variant]))
 
-      // Check stock before checking out
-      const productIds = items.map((item: any) => item.productId)
-      const products = await tx.product.findMany({
-        where: { id: { in: productIds } }
-      })
-      const productMap = new Map(products.map(p => [p.id, p]))
       for (const item of items) {
         const product = productMap.get(item.productId)
-        if (!product || product.stock < item.quantity) {
-          throw new Error(`Sản phẩm ${product?.name || 'không xác định'} đã hết hàng hoặc số lượng trong kho không đủ!`)
+        if (!product) throw new Error('Product not found')
+
+        if (item.variantId) {
+          const variant = variantMap.get(item.variantId)
+          if (!variant || variant.productId !== item.productId || !variant.isActive || variant.stock < item.quantity) {
+            throw new Error(`${product.name} variant is out of stock`)
+          }
+        } else if (product.stock < item.quantity) {
+          throw new Error(`${product.name} is out of stock`)
         }
       }
 
@@ -148,8 +178,9 @@ export async function POST(request: NextRequest) {
           shippingAddress,
           shippingCccd,
           items: {
-            create: items.map((item: any) => ({
+            create: items.map((item) => ({
               productId: item.productId,
+              variantId: item.variantId ?? null,
               quantity: item.quantity,
               price: item.price,
             })),
@@ -157,23 +188,40 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      // Update product stock and soldCount
-      await Promise.all(items.map((item: any) => 
-        tx.product.update({
-          where: { id: item.productId },
-          data: {
-            stock: { decrement: item.quantity },
-            soldCount: { increment: item.quantity },
-          },
-        })
-      ))
+      const seen = new Map<string, CheckoutItem>()
+      for (const item of items) {
+        const key = cartKey(item)
+        const current = seen.get(key)
+        seen.set(key, current ? { ...current, quantity: current.quantity + item.quantity } : item)
+      }
+
+      await Promise.all(Array.from(seen.values()).flatMap((item) => {
+        const stockUpdate = item.variantId
+          ? tx.productVariant.update({
+              where: { id: item.variantId },
+              data: { stock: { decrement: item.quantity } },
+            })
+          : tx.product.update({
+              where: { id: item.productId },
+              data: { stock: { decrement: item.quantity } },
+            })
+
+        return [
+          stockUpdate,
+          tx.product.update({
+            where: { id: item.productId },
+            data: { soldCount: { increment: item.quantity } },
+          }),
+        ]
+      }))
 
       return newOrder
     })
 
-    return NextResponse.json(success(order), { status: 201 })
-  } catch (error: any) {
-    console.error('Error creating order:', error)
-    return NextResponse.json(fail('CREATE_ORDER_ERROR', error.message || 'Lỗi khi tạo đơn hàng'), { status: 500 })
+    return NextResponse.json(success(order, { traceId }), { status: 201 })
+  } catch (error) {
+    logServerError('api.orders.create', error, traceId)
+    const message = error instanceof Error ? error.message : 'Could not create order'
+    return NextResponse.json(fail('CREATE_ORDER_ERROR', message, { traceId }), { status: 500 })
   }
 }

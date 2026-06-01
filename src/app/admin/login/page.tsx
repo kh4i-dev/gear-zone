@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ShieldAlert } from 'lucide-react'
@@ -12,6 +12,16 @@ import { getAdminPath } from '@/lib/adminPath'
 export default function AdminLoginPage() {
   const { replace, refresh } = useRouter()
   const { refreshUser } = useAuth()
+  const [shopName, setShopName] = useState('GearZone')
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(result => {
+        if (result.data?.shop_name) setShopName(result.data.shop_name)
+      })
+      .catch(() => {})
+  }, [])
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({ username: '', password: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -63,7 +73,7 @@ export default function AdminLoginPage() {
           <div className="mx-auto size-12 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-4 border border-blue-500/20">
             <ShieldAlert className="size-6 text-blue-400" />
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight text-white">GearZone Admin</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-white">{shopName} Admin</h1>
           <p className="text-slate-400 mt-2 text-sm">Đăng nhập bằng tài khoản quản trị đã cấu hình trên server.</p>
         </div>
 

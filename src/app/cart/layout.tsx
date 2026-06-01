@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Giỏ hàng | GearZone',
+  title: 'Giỏ hàng',
 }
 
 export default function CartLayout({ children }: { children: React.ReactNode }) {

@@ -1,7 +1,7 @@
 import { OrdersClient } from './OrdersClient'
 
 export const metadata = {
-  title: 'Trung tâm đơn hàng | Admin GearZone',
+  title: 'Trung tâm đơn hàng | Admin',
   description: 'Quản lý, theo dõi và xử lý đơn hàng',
 }
 

@@ -2,80 +2,61 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Package } from 'lucide-react'
 
 export interface CategoryData {
   id: string
   name: string
   count: number
   imageUrl: string
-  badge?: 'HOT' | 'NEW' | 'TRENDING'
 }
 
 interface CategoryCardProps {
   category: CategoryData
 }
 
-const BADGE_COLORS = {
-  HOT: 'from-purple-600 to-pink-600',
-  NEW: 'from-blue-600 to-cyan-600', 
-  TRENDING: 'from-emerald-600 to-teal-600',
-} as const
-
 export function CategoryCard({ category }: CategoryCardProps) {
-  const { name, count, imageUrl, badge } = category
+  const { name, count, imageUrl } = category
 
   return (
     <Link 
       href={`/products?category=${encodeURIComponent(name)}`}
-      className="group block relative overflow-hidden rounded-[20px] bg-[#070b17] border border-white/[0.05] transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/[0.12] hover:shadow-[0_0_0_1px_rgba(124,92,255,0.3),0_0_30px_rgba(124,92,255,0.15)]"
+      className="group block relative overflow-hidden rounded-xl bg-[#070b17]/90 border border-white/[0.06] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-emerald-400/20 hover:shadow-[0_0_0_1px_rgba(16,185,129,0.08),0_12px_30px_rgba(0,0,0,0.28)]"
     >
-      {/* Badge */}
-      {badge && (
-        <div className="absolute top-4 right-4 z-10">
-          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold text-white bg-gradient-to-r ${BADGE_COLORS[badge]}`}>
-            {badge}
-          </span>
-        </div>
-      )}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.10),transparent_58%)] opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
 
-      {/* Image Container */}
-      <div className="relative h-48 overflow-hidden bg-gradient-to-b from-white/[0.02] to-transparent">
+      <div className="relative h-24 overflow-hidden bg-[#050812] sm:h-[104px] md:h-28">
         {imageUrl ? (
-          <div className="absolute inset-0 flex items-center justify-center p-6">
+          <div className="absolute inset-0 flex items-center justify-center p-3">
             <Image
               src={imageUrl}
               alt={name}
               fill
-              className="object-contain transition-transform duration-300 ease-out group-hover:scale-105"
-              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+              className="object-contain drop-shadow-[0_16px_24px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-out group-hover:scale-105"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 180px"
               loading="lazy"
             />
           </div>
         ) : (
           <div className="flex h-full items-center justify-center">
-            <div className="size-16 rounded-full bg-white/[0.05]" />
+            <Package className="size-7 text-slate-600" />
           </div>
         )}
       </div>
 
-      {/* Content */}
-      <div className="p-5">
-        <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-white/90 transition-colors">
+      <div className="relative p-3">
+        <h3 className="text-sm font-semibold text-white mb-0.5 group-hover:text-white/90 transition-colors line-clamp-1 md:text-base">
           {name}
         </h3>
-        <p className="text-sm text-slate-400 mb-3">
+        <p className="text-xs text-slate-500 mb-2">
           {count} sản phẩm
         </p>
         
-        <div className="flex items-center gap-2 text-sm font-medium text-indigo-400 group-hover:text-indigo-300 transition-colors">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-indigo-400 group-hover:text-indigo-300 transition-colors">
           <span>Xem ngay</span>
-          <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
+          <ArrowRight className="size-3 transition-transform duration-300 group-hover:translate-x-0.5" />
         </div>
       </div>
-
-      {/* Subtle RGB accent on hover */}
-      <div className="absolute inset-0 rounded-[20px] bg-gradient-to-br from-purple-600/5 via-transparent to-cyan-600/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none" />
     </Link>
   )
 }

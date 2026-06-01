@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { LayoutDashboard, Package, ShoppingCart, Users, LogOut, Settings, Boxes } from 'lucide-react'
@@ -8,6 +9,18 @@ import { getAdminPath } from '@/lib/adminPath'
 
 export function Navbar() {
   const { push, refresh } = useRouter()
+  const [shopName, setShopName] = useState('GearZone')
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(result => {
+        if (result.success && result.data && result.data.shop_name) {
+          setShopName(result.data.shop_name)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const handleLogout = async () => {
     try {
@@ -24,7 +37,7 @@ export function Navbar() {
     <nav className="border-b border-white/5 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href={getAdminPath('/dashboard')} className="font-extrabold text-lg tracking-tight text-white">
-          GearZone <span className="text-blue-400">Admin</span>
+          {shopName} <span className="text-blue-400">Admin</span>
         </Link>
 
         <div className="flex items-center gap-1">
