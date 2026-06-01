@@ -210,7 +210,12 @@ export function ProductRowCarousel({
   }
 
   // Transition end - reset clone positions invisibly to the equivalent real item.
-  const handleTransitionEnd = useCallback(() => {
+  // Must filter by propertyName and target to ignore bubbled transitionend events
+  // from child elements (ProductCard has transition-all, transition-opacity, etc.)
+  const handleTransitionEnd = useCallback((e: React.TransitionEvent) => {
+    if (e.target !== e.currentTarget) return
+    if (e.propertyName !== 'transform') return
+
     if (transitionFallbackRef.current) {
       clearTimeout(transitionFallbackRef.current)
       transitionFallbackRef.current = null
