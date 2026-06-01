@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -18,7 +19,9 @@ model User {
   address   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  cart      Cart?
   orders    Order[]
+  reviews   Review[]
 }
 
 model Category {
@@ -28,27 +31,127 @@ model Category {
 }
 
 model Product {
-  id          String      @id @default(cuid())
+  id          String           @id @default(cuid())
   name        String
   description String?
   imageUrl    String?
   price       Float
   oldPrice    Float?
-  stock       Int         @default(0)
-  soldCount   Int         @default(0)
+  stock       Int              @default(0)
+  soldCount   Int              @default(0)
   categoryId  String?
-  category    Category?   @relation(fields: [categoryId], references: [id])
+  isVisible   Boolean          @default(true)
+  status      String           @default("ACTIVE")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  specs       Json?
   orderItems  OrderItem[]
-  isVisible   Boolean     @default(true)
-  status      String      @default("ACTIVE")
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  cartItems   CartItem[]
+  category    Category?        @relation(fields: [categoryId], references: [id])
+  images      ProductImage[]
+  options     ProductOption[]
+  variants    ProductVariant[]
+  reviews     Review[]
+}
+
+model ProductImage {
+  id        String          @id @default(cuid())
+  productId String
+  variantId String?
+  url       String
+  alt       String?
+  sortOrder Int             @default(0)
+  isPrimary Boolean         @default(false)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+
+  @@index([productId, sortOrder])
+  @@index([variantId])
+}
+
+model ProductOption {
+  id        String               @id @default(cuid())
+  productId String
+  name      String
+  sortOrder Int                  @default(0)
+  product   Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  values    ProductOptionValue[]
+
+  @@unique([productId, name])
+  @@index([productId, sortOrder])
+}
+
+model ProductOptionValue {
+  id        String                      @id @default(cuid())
+  optionId  String
+  value     String
+  label     String
+  sortOrder Int                         @default(0)
+  option    ProductOption               @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  variants  ProductVariantOptionValue[]
+
+  @@unique([optionId, value])
+  @@index([optionId, sortOrder])
+}
+
+model ProductVariant {
+  id           String                      @id @default(cuid())
+  productId    String
+  sku          String?                     @unique
+  price        Float?
+  salePrice    Float?
+  stock        Int                         @default(0)
+  imageUrl     String?
+  isActive     Boolean                     @default(true)
+  createdAt    DateTime                    @default(now())
+  updatedAt    DateTime                    @updatedAt
+  orderItems   OrderItem[]
+  cartItems    CartItem[]
+  images       ProductImage[]
+  product      Product                     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  optionValues ProductVariantOptionValue[]
+
+  @@index([productId])
+  @@index([productId, isActive])
+}
+
+model ProductVariantOptionValue {
+  variantId     String
+  optionValueId String
+  optionValue   ProductOptionValue @relation(fields: [optionValueId], references: [id], onDelete: Cascade)
+  variant       ProductVariant     @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@id([variantId, optionValueId])
+  @@index([optionValueId])
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String          @id @default(cuid())
+  cartId    String
+  cart      Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  variantId String?
+  quantity  Int
+  product   Product         @relation(fields: [productId], references: [id])
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+
+  @@unique([cartId, productId, variantId])
 }
 
 model Order {
-  id          String      @id @default(cuid())
-  userId      String
-  user        User        @relation(fields: [userId], references: [id])
+  id              String      @id @default(cuid())
+  userId          String
   status          String      @default("PENDING")
   totalAmount     Float
   shippingName    String?
@@ -56,19 +159,25 @@ model Order {
   shippingAddress String?
   shippingCccd    String?
   paymentMethod   String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  user            User        @relation(fields: [userId], references: [id])
   items           OrderItem[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  reviews         Review[]
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
+  id        String          @id @default(cuid())
   orderId   String
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
-  product   Product @relation(fields: [productId], references: [id])
   quantity  Int
   price     Float
+  variantId String?
+  order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product         @relation(fields: [productId], references: [id])
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+
+  @@index([variantId])
 }
 
 model Setting {
@@ -76,3 +185,20 @@ model Setting {
   value String
 }
 
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  orderId   String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, productId, orderId])
+  @@index([productId])
+  @@index([userId])
+}
