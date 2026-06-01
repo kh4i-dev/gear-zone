@@ -5,10 +5,19 @@ export function parseLegacyImageUrls(input?: string | null): string[] {
     return []
   }
 
-  return input
+  const urls = input
     .split(/[\r\n|]+/)
     .map((url) => url.trim())
     .filter((url) => url.length > 0)
+
+  const hasRealImage = urls.some(
+    (url) => !url.includes('unsplash.com') && url !== PLACEHOLDER_IMAGE
+  )
+  if (hasRealImage) {
+    return urls.filter((url) => !url.includes('unsplash.com'))
+  }
+
+  return urls
 }
 
 export function getPrimaryLegacyImageUrl(input?: string | null): string | null {
