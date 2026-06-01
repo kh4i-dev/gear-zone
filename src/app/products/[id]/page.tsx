@@ -50,6 +50,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               optionValue: true,
             },
           },
+          images: {
+            orderBy: { sortOrder: 'asc' },
+          },
         },
       },
       reviews: {

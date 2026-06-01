@@ -19,7 +19,12 @@ import { getAdminPath } from '@/lib/adminPath'
 import { RichTextEditor } from '@/components/domain/RichTextEditor'
 import { ProductImageFrame } from '@/components/domain/ProductImageFrame'
 import { AdminImageGallery } from '@/components/domain/AdminImageGallery'
+import { AdminVariantEditor } from '@/components/domain/AdminVariantEditor'
+import { generateVariants } from '@/components/domain/AdminVariantEditor'
+import type { AdminOptionGroup, AdminVariant } from '@/components/domain/AdminVariantEditor'
+import { parseSpecText, serializeSpecs } from '@/lib/products/adminProductForm'
 import { buildCategoryCounts, buildBrandCounts } from '@/lib/products/adminProductFilters'
+
 
 interface AdminProduct {
   id: string
@@ -36,6 +41,12 @@ interface AdminProduct {
   status: string
   images?: { url: string; sortOrder: number; isPrimary?: boolean | null }[]
   specs?: { name: string; value: string }[] | null
+  options?: { id: string; name: string; sortOrder: number; values: { id: string; label: string; sortOrder: number }[] }[]
+  variants?: {
+    id: string; sku: string | null; price: number | null; salePrice: number | null;
+    stock: number; imageUrl: string | null; isActive: boolean;
+    optionValues: { optionValue: { id: string; optionId: string; label: string } }[]
+  }[]
 }
 
 type SalesStatus = 'active' | 'hidden' | 'discontinued' | 'draft'
@@ -49,7 +60,9 @@ const initialForm = {
   price: 0,
   stock: '',
   description: '',
-  specRows: [] as { name: string; value: string }[],
+  specRows: '',
+  optionGroups: [] as AdminOptionGroup[],
+  variants: [] as AdminVariant[],
 }
 
 const COMMON_BRANDS = [
@@ -202,9 +215,12 @@ export default function AdminProductsPage() {
         .split(/\r?\n/)
         .map((url) => url.trim())
         .filter(Boolean)
-      const validSpecs = formData.specRows.filter((s) => s.name.trim() && s.value.trim())
+      const validSpecs = parseSpecText(formData.specRows)
 
       setHasSubmitted(true)
+
+      const optionGroups = formData.optionGroups.length > 0 ? formData.optionGroups : undefined
+      const variants = formData.variants.length > 0 ? formData.variants : undefined
 
       const res = await fetch(url, {
         method,
@@ -220,6 +236,8 @@ export default function AdminProductsPage() {
           description: formData.description.trim(),
           galleryImages: galleryUrls,
           specs: validSpecs.length > 0 ? validSpecs : null,
+          ...(optionGroups ? { optionGroups } : {}),
+          ...(variants ? { variants } : {}),
         }),
       })
       const result = await res.json()
@@ -280,6 +298,34 @@ export default function AdminProductsPage() {
       ? (product.description || '').replace(/\n\n?\$\$\$SPECS\$\$\$[\s\S]*/, '').trim()
       : product.description || ''
 
+    const loadedOptionGroups: AdminOptionGroup[] =
+      product.options?.map((o) => ({
+        name: o.name,
+        values: o.values
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((v) => v.label),
+      })) ?? []
+
+    const loadedVariants: AdminVariant[] =
+      product.variants?.map((v) => {
+        const options: Record<string, string> = {}
+        for (const item of v.optionValues) {
+          const optionName = product.options?.find(
+            (o) => o.values.some((ov) => ov.id === item.optionValue.optionId)
+          )?.name
+          if (optionName) options[optionName] = item.optionValue.label
+        }
+        return {
+          sku: v.sku ?? '',
+          options,
+          price: v.price,
+          salePrice: v.salePrice,
+          stock: v.stock,
+          imageUrl: v.imageUrl ?? '',
+          isActive: v.isActive,
+        }
+      }) ?? []
+
     setFormData({
       name: product.name,
       categoryName: product.category?.name || '',
@@ -288,7 +334,9 @@ export default function AdminProductsPage() {
       price: product.price,
       stock: product.stock.toString(),
       description,
-      specRows: parsedSpecs,
+      specRows: serializeSpecs(parsedSpecs),
+      optionGroups: loadedOptionGroups,
+      variants: loadedVariants,
     })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -634,69 +682,35 @@ export default function AdminProductsPage() {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="block text-sm font-medium text-indigo-400 font-bold flex items-center gap-1.5">
-                      <span className="inline-block size-1.5 bg-indigo-400 rounded-full"></span>
-                      Thông số kỹ thuật
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormData({
-                          ...formData,
-                          specRows: [...formData.specRows, { name: '', value: '' }],
-                        })
-                      }
-                      className="text-xs flex items-center gap-1 text-indigo-400 hover:text-indigo-300"
-                    >
-                      <Plus className="size-3" /> Thêm dòng
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    {formData.specRows.map((row, i) => (
-                      <div key={i} className="flex gap-2 items-start">
-                        <div className="flex-1">
-                          <input
-                            aria-label="Tên thông số"
-                            value={row.name}
-                            onChange={(e) => {
-                              const next = [...formData.specRows]
-                              next[i] = { ...next[i], name: e.target.value }
-                              setFormData({ ...formData, specRows: next })
-                            }}
-                            placeholder="VD: Thương hiệu"
-                            className="w-full rounded-lg border border-white/[0.06] bg-slate-950/60 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <input
-                            aria-label="Giá trị thông số"
-                            value={row.value}
-                            onChange={(e) => {
-                              const next = [...formData.specRows]
-                              next[i] = { ...next[i], value: e.target.value }
-                              setFormData({ ...formData, specRows: next })
-                            }}
-                            placeholder="VD: Akko"
-                            className="w-full rounded-lg border border-white/[0.06] bg-slate-950/60 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const next = formData.specRows.filter((_, idx) => idx !== i)
-                            setFormData({ ...formData, specRows: next })
-                          }}
-                          className="p-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                        >
-                          <X className="size-4" />
-                        </button>
+                  <p className="block text-sm font-medium text-indigo-400 font-bold flex items-center gap-1.5 mb-1.5">
+                    <span className="inline-block size-1.5 bg-indigo-400 rounded-full"></span>
+                    Thông số kỹ thuật
+                  </p>
+                  <textarea
+                    aria-label="Thông số kỹ thuật"
+                    value={formData.specRows}
+                    onChange={(e) => setFormData({ ...formData, specRows: e.target.value })}
+                    placeholder={"Thương hiệu: Akko\nModel: 5075B Plus\nKết nối: Bluetooth / 2.4G / USB-C\nPin: 3000mAh\nTrọng lượng: 0.9kg"}
+                    className="w-full rounded-lg border border-white/[0.06] bg-slate-950/60 px-3 py-2 text-sm text-white placeholder:text-slate-500 placeholder:leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500/50 font-mono resize-y min-h-[160px]"
+                    rows={8}
+                    spellCheck={false}
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Mỗi dòng một thông số, định dạng <code className="text-indigo-400">Tên: Giá trị</code> hoặc <code className="text-indigo-400">Tên|Giá trị</code>
+                  </p>
+                  {formData.specRows.trim() && (
+                    <div className="mt-2 rounded-lg border border-white/[0.06] bg-slate-950/40 p-2.5">
+                      <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider mb-1.5">Xem trước ({parseSpecText(formData.specRows).length} thông số)</p>
+                      <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-xs">
+                        {parseSpecText(formData.specRows).map((spec, i) => (
+                          <div key={i} className="contents">
+                            <span className="text-slate-400 truncate max-w-[160px]">{spec.name}:</span>
+                            <span className="text-white">{spec.value}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                    {formData.specRows.length === 0 && (
-                      <p className="text-xs text-slate-500 italic">Chưa có thông số kỹ thuật. Nhấn &ldquo;Thêm dòng&rdquo; để bắt đầu.</p>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -749,6 +763,24 @@ export default function AdminProductsPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-white/[0.06]">
+              <AdminVariantEditor
+                optionGroups={formData.optionGroups}
+                variants={formData.variants}
+                onOptionGroupsChange={(groups) =>
+                  setFormData({
+                    ...formData,
+                    optionGroups: groups,
+                    variants: generateVariants(groups, formData.variants),
+                  })
+                }
+                onVariantsChange={(variants) =>
+                  setFormData({ ...formData, variants })
+                }
+                disabled={isSaving}
+              />
             </div>
 
             <div className="flex justify-end gap-3 mt-5 pt-5 border-t border-white/5">

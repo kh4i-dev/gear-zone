@@ -39,6 +39,29 @@ export function parseAdminImageLines(value: string) {
     .filter(Boolean)
 }
 
+export function parseSpecText(text: string): AdminProductFormSpec[] {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const pipeIdx = line.indexOf('|')
+      const colonIdx = line.indexOf(':')
+      if (pipeIdx > 0) {
+        return { name: line.slice(0, pipeIdx).trim(), value: line.slice(pipeIdx + 1).trim() }
+      }
+      if (colonIdx > 0) {
+        return { name: line.slice(0, colonIdx).trim(), value: line.slice(colonIdx + 1).trim() }
+      }
+      return null
+    })
+    .filter((s): s is AdminProductFormSpec => s !== null && s.name !== '' && s.value !== '')
+}
+
+export function serializeSpecs(specs: AdminProductFormSpec[]): string {
+  return specs.map((s) => `${s.name}: ${s.value}`).join('\n')
+}
+
 export function buildAdminProductSubmitPayload(formData: AdminProductFormState) {
   const description = formData.detailedSpecs.trim()
     ? `${formData.description.trim()}\n\n$$$SPECS$$$\n${formData.detailedSpecs.trim()}`

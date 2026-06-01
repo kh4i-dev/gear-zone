@@ -1,0 +1,377 @@
+# GearZone Full Regression Audit & UX Recovery
+
+## Context
+
+Project: GearZone
+
+Stack:
+
+* Next.js App Router
+* TypeScript
+* Prisma
+* PostgreSQL
+* TailwindCSS
+* React
+
+Recent refactors and fixes were performed by another AI agent.
+
+Several regressions appeared afterward.
+
+Before implementing any new feature, perform a full audit to identify what functionality, UI, UX, state management, and behavior were lost or degraded.
+
+Do NOT blindly rewrite code.
+
+Do NOT assume current behavior is correct.
+
+Do NOT remove existing architecture.
+
+Audit first. Then produce findings. Then propose fixes.
+
+---
+
+# Part 1 — Product Carousel Regression
+
+## Symptoms
+
+Previously:
+
+* Product carousels had smooth sliding behavior.
+* Product cards had hover animations.
+* Auto-slide worked.
+* Infinite carousel behavior worked.
+
+Current:
+
+* Some carousel visual effects appear missing.
+* Product cards feel static.
+* Hover interactions look degraded.
+* Sliding behavior feels different.
+
+## Task
+
+Audit:
+
+* ProductRowCarousel
+* FeaturedProducts
+* ProductCard
+* Swiper / custom carousel logic
+* transitionend handling
+* animation classes
+* hover effects
+* CSS transforms
+* Framer Motion usage (if any)
+
+Identify:
+
+* What existed before
+* What exists now
+* What functionality was lost
+
+---
+
+# Part 2 — Homepage Regression
+
+## Symptoms
+
+Production and Local differ.
+
+Homepage layouts appear inconsistent.
+
+Category section changed.
+
+Product row behavior changed.
+
+## Task
+
+Compare:
+
+* Current local
+* Current production
+* Recent commits
+
+Determine:
+
+* Which version is intended
+* Which version contains regressions
+
+---
+
+# Part 3 — Admin Product Management Regression
+
+## Symptoms
+
+Older screenshots show:
+
+Category management block:
+
+"KHU VỰC QUẢN LÝ SẢN PHẨM"
+
+Brand filtering block:
+
+"LỌC THEO THƯƠNG HIỆU"
+
+Current production shows:
+
+"KHU VỰC QUẢN LÝ THEO NHÃN HÀNG / THƯƠNG HIỆU"
+
+UI structure differs.
+
+## Task
+
+Audit:
+
+* Product management page
+* Category filters
+* Brand filters
+* Search controls
+* Product table
+
+Identify:
+
+* Removed sections
+* Renamed sections
+* Missing UI
+* Missing functionality
+
+---
+
+# Part 4 — Product Gallery Regression
+
+## Symptoms
+
+User remembers previous image gallery workflow.
+
+Current edit page now contains:
+
+* Main image
+* Add image button
+
+Need verification whether gallery behavior changed.
+
+## Task
+
+Audit:
+
+* ProductImage
+* ProductImageFrame
+* ProductImage model
+* Product edit form
+
+Verify:
+
+* Upload
+* Preview
+* Remove
+* Reorder
+* Primary image selection
+
+Determine:
+
+* Missing functionality
+* Existing functionality
+* UX regressions
+
+---
+
+# Part 5 — Product Variant System Audit
+
+## Findings already known
+
+Current system contains:
+
+* Variant groups
+* Variant values
+* SKU
+* Inventory
+* Price
+* Sale price
+
+Data still exists.
+
+Database still works.
+
+Edit form still loads variant data.
+
+Example:
+
+Group:
+"Màu"
+
+Value:
+"Trắng"
+
+## Missing UX
+
+Current variant editor is developer-oriented.
+
+Desired behavior similar to Playzone:
+
+Product Detail:
+
+Variant groups:
+
+[Màu]
+[Trắng] [Đen]
+
+[Phiên bản]
+[Mini] [Mini Plus]
+
+Selection should update:
+
+* Price
+* Sale Price
+* SKU
+* Stock
+* Images
+
+Admin:
+
+* Easier variant creation
+* Bulk generation
+* Variant matrix
+
+## Task
+
+Audit:
+
+* Variant schema
+* Variant UI
+* Variant editor
+* Variant rendering
+* Variant pricing
+* Variant stock
+
+Determine:
+
+* What already works
+* What is missing
+* What is partially implemented
+
+Do not redesign schema.
+
+Reuse existing models.
+
+---
+
+# Part 6 — Technical Specifications UX
+
+## Current
+
+Textarea:
+
+Thương hiệu: Akko
+Model: 5075B Plus
+
+## Previous Refactor
+
+Agent temporarily changed this into:
+
+Key input
+Value input
+Add Row
+
+This workflow was rejected.
+
+## Requirement
+
+Keep textarea workflow.
+
+Admins need fast copy-paste from suppliers.
+
+Audit:
+
+* Parsing
+* Saving
+* Rendering
+
+Verify no regressions.
+
+---
+
+# Part 7 — Product Detail Page UX
+
+Compare against Playzone.
+
+Audit:
+
+* Gallery
+* Variant selection
+* Thumbnail switching
+* Price switching
+* Sale badge
+* Stock display
+* Add to cart
+* Buy now
+* Product specs
+* Related products
+
+Produce a gap analysis.
+
+Do not copy Playzone.
+
+Identify which UX patterns would genuinely improve GearZone.
+
+---
+
+# Part 8 — Floating Contact Widget
+
+Current:
+
+Messenger
+Zalo
+Hotline
+
+Verify:
+
+* Mobile responsiveness
+* Accessibility
+* Z-index conflicts
+* Product page overlap
+* Checkout page overlap
+
+---
+
+# Part 9 — Git Audit
+
+Find exactly which commits introduced regressions.
+
+Search:
+
+git log
+git diff
+git blame
+
+Focus on:
+
+* Product page
+* Product edit page
+* Carousel
+* Admin products page
+* Variant editor
+
+Produce a report:
+
+Regression
+Commit
+Root Cause
+Fix Strategy
+
+---
+
+# Deliverables
+
+1. Regression Report
+2. Missing Features Report
+3. UX Degradation Report
+4. State/Data Flow Report
+5. Recommended Fix Priority
+
+Priority format:
+
+P0 = Broken Functionality
+P1 = Lost UX
+P2 = Enhancement
+
+Do not modify code until audit is complete.
+
+Produce evidence-based findings only.

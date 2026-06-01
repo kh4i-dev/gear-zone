@@ -270,6 +270,7 @@ export const productRelationsInclude = {
   variants: {
     orderBy: { createdAt: 'asc' as const },
     include: {
+      images: { orderBy: { sortOrder: 'asc' as const } },
       optionValues: {
         include: {
           optionValue: {

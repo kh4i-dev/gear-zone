@@ -15,6 +15,7 @@ export interface ProductVariantLike {
   stock: number
   imageUrl: string | null
   isActive: boolean
+  images?: ProductImageLike[]
   optionValues: { optionValue: VariantOptionValue }[]
 }
 
@@ -90,12 +91,31 @@ export function getPrimaryProductImage(
   selectedVariant: ProductVariantLike | null,
   images: ProductImageLike[]
 ) {
+  if (selectedVariant?.images && selectedVariant.images.length > 0) {
+    const sorted = [...selectedVariant.images].sort((a, b) => a.sortOrder - b.sortOrder)
+    return getPrimaryLegacyImageUrl(sorted[0].url)
+  }
   if (selectedVariant?.imageUrl) return getPrimaryLegacyImageUrl(selectedVariant.imageUrl)
   const primary = images.find((image) => image.isPrimary) ?? images.reduce<ProductImageLike | undefined>(
     (earliest, image) => !earliest || image.sortOrder < earliest.sortOrder ? image : earliest,
     undefined,
   )
   return getPrimaryLegacyImageUrl(primary?.url ?? product.imageUrl ?? null)
+}
+
+export function getVariantGalleryImages(
+  selectedVariant: ProductVariantLike | null,
+  fallbackImages: string[]
+): string[] {
+  if (selectedVariant?.images && selectedVariant.images.length > 0) {
+    const sorted = [...selectedVariant.images]
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .filter((img) => img.url.trim())
+    return sorted
+      .map((img) => getPrimaryLegacyImageUrl(img.url))
+      .filter((url): url is string => Boolean(url))
+  }
+  return fallbackImages
 }
 
 export function getOrderedGalleryImages(

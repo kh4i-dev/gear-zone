@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildAdminProductSubmitPayload, parseAdminImageLines } from './adminProductForm'
+import { buildAdminProductSubmitPayload, parseAdminImageLines, parseSpecText, serializeSpecs } from './adminProductForm'
 
 describe('admin product form payload', () => {
   it('keeps gallery, summary specs, purchase options, variants, and detailed specs separate', () => {
@@ -60,5 +60,66 @@ describe('admin product form payload', () => {
 
   it('parses one gallery URL per line and removes empty lines', () => {
     expect(parseAdminImageLines('/a.png\n\n /b.png \r\n')).toEqual(['/a.png', '/b.png'])
+  })
+})
+
+describe('parseSpecText', () => {
+  it('parses colon-delimited bulk text into spec objects', () => {
+    const result = parseSpecText('Thương hiệu: Akko\nModel: 5075B Plus\nKết nối: Bluetooth / 2.4G / USB-C')
+    expect(result).toEqual([
+      { name: 'Thương hiệu', value: 'Akko' },
+      { name: 'Model', value: '5075B Plus' },
+      { name: 'Kết nối', value: 'Bluetooth / 2.4G / USB-C' },
+    ])
+  })
+
+  it('parses pipe-delimited bulk text into spec objects', () => {
+    const result = parseSpecText('Thương hiệu|Akko\nModel|5075B Plus')
+    expect(result).toEqual([
+      { name: 'Thương hiệu', value: 'Akko' },
+      { name: 'Model', value: '5075B Plus' },
+    ])
+  })
+
+  it('prefers pipe over colon when both exist on the same line', () => {
+    const result = parseSpecText('Thương hiệu|Akko: Version 2')
+    expect(result).toEqual([
+      { name: 'Thương hiệu', value: 'Akko: Version 2' },
+    ])
+  })
+
+  it('skips lines without a delimiter', () => {
+    const result = parseSpecText('Thương hiệu: Akko\njust some random text\nModel: 5075B')
+    expect(result).toEqual([
+      { name: 'Thương hiệu', value: 'Akko' },
+      { name: 'Model', value: '5075B' },
+    ])
+  })
+
+  it('skips empty lines', () => {
+    const result = parseSpecText('Key1: Val1\n\n\nKey2: Val2')
+    expect(result).toEqual([
+      { name: 'Key1', value: 'Val1' },
+      { name: 'Key2', value: 'Val2' },
+    ])
+  })
+
+  it('returns empty array for empty input', () => {
+    expect(parseSpecText('')).toEqual([])
+    expect(parseSpecText('   ')).toEqual([])
+  })
+})
+
+describe('serializeSpecs', () => {
+  it('serializes spec objects to colon-delimited text', () => {
+    const result = serializeSpecs([
+      { name: 'Thương hiệu', value: 'Akko' },
+      { name: 'Model', value: '5075B Plus' },
+    ])
+    expect(result).toBe('Thương hiệu: Akko\nModel: 5075B Plus')
+  })
+
+  it('returns empty string for empty specs', () => {
+    expect(serializeSpecs([])).toBe('')
   })
 })

@@ -13,6 +13,7 @@ import {
   getOrderedGalleryImages,
   getPrimaryProductImage,
   getSelectedVariant,
+  getVariantGalleryImages,
   getVariantPrice,
   type SelectedOptions,
 } from '@/lib/products/productVariants'
@@ -46,9 +47,11 @@ export function ProductPurchaseExperience({ product, settingsMap }: ProductPurch
   const price = getVariantPrice(product, selectedVariant)
   const persistedGallery = getOrderedGalleryImages(product, product.images ?? [])
   const primaryImage = getPrimaryProductImage(product, selectedVariant, product.images ?? [])
-  const galleryImages = primaryImage
-    ? [primaryImage, ...persistedGallery.filter((url) => url !== primaryImage)]
-    : persistedGallery
+  const galleryImages = selectedVariant
+    ? getVariantGalleryImages(selectedVariant, persistedGallery)
+    : (primaryImage
+        ? [primaryImage, ...persistedGallery.filter((url) => url !== primaryImage)]
+        : persistedGallery)
   const hasVariants = (product.variants?.length ?? 0) > 0
   const currentStock = hasVariants ? selectedVariant?.stock ?? 0 : product.stock
   const isDiscontinued = product.status === 'DISCONTINUED'
@@ -136,45 +139,58 @@ export function ProductPurchaseExperience({ product, settingsMap }: ProductPurch
           </div>
 
           {hasVariants && product.options?.length > 0 && (
-            <div className="space-y-5 mb-7">
-              {product.options.map((option: any) => (
-                <div key={option.id} className="grid gap-2 sm:grid-cols-[120px_1fr] sm:items-start">
-                  <div>
-                    <p className="text-sm font-bold text-slate-200">{option.name}:</p>
-                    <p className="text-[11px] text-emerald-400 mt-1">
-                      {option.values?.find((value: any) => value.id === selectedOptions[option.id])?.label}
-                    </p>
+            <div className="space-y-6 mb-7">
+              {product.options.map((option: any) => {
+                const selectedLabel = option.values?.find(
+                  (value: any) => value.id === selectedOptions[option.id]
+                )?.label
+                return (
+                  <div key={option.id}>
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <span className="size-1.5 rounded-full bg-gradient-to-b from-emerald-400 to-cyan-400" />
+                      <p className="text-sm font-bold text-slate-200">{option.name}</p>
+                      {selectedLabel && (
+                        <span className="text-[10px] font-semibold tracking-wide text-emerald-400/70 bg-emerald-500/8 px-2 py-0.5 rounded-full ring-1 ring-emerald-500/15">
+                          {selectedLabel}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2.5">
+                      {option.values?.map((value: any) => {
+                        const isSelected = selectedOptions[option.id] === value.id
+                        const selectionWithoutCurrentOption = Object.fromEntries(
+                          Object.entries(selectedOptions).filter(([optionId]) => optionId !== option.id)
+                        )
+                        const availableForOption = getAvailableOptionValues(selectionWithoutCurrentOption, product.variants ?? [])
+                        const isAvailable = availableForOption.has(value.id) || isSelected
+                        return (
+                          <button
+                            key={value.id}
+                            type="button"
+                            disabled={!isAvailable}
+                            onClick={() => updateOption(option.id, value.id)}
+                            className={`relative h-10 rounded-full px-5 text-xs font-bold tracking-wide transition-all duration-200 ease-out ${
+                              isSelected
+                                ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-[0_0_24px_rgba(16,185,129,0.25)] ring-1 ring-emerald-400/30 scale-[1.03]'
+                                : isAvailable
+                                  ? 'bg-white/[0.04] text-slate-200 ring-1 ring-white/[0.08] hover:bg-white/[0.08] hover:ring-white/[0.18] hover:scale-[1.02] active:scale-[0.97] cursor-pointer'
+                                  : 'bg-white/[0.015] text-slate-700 ring-1 ring-white/[0.03] cursor-not-allowed overflow-hidden'
+                            }`}
+                          >
+                            {value.label}
+                            {!isAvailable && (
+                              <span className="absolute inset-0 flex items-center justify-center">
+                                <span className="absolute inset-x-3 top-1/2 h-[1.5px] -translate-y-1/2 rotate-[-20deg] bg-slate-700/80" />
+                                <span className="absolute inset-x-3 top-1/2 h-[1.5px] -translate-y-1/2 rotate-[20deg] bg-slate-700/80" />
+                              </span>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {option.values?.map((value: any) => {
-                      const isSelected = selectedOptions[option.id] === value.id
-                      const selectionWithoutCurrentOption = Object.fromEntries(
-                        Object.entries(selectedOptions).filter(([optionId]) => optionId !== option.id)
-                      )
-                      const availableForOption = getAvailableOptionValues(selectionWithoutCurrentOption, product.variants ?? [])
-                      const isAvailable = availableForOption.has(value.id) || isSelected
-                      return (
-                        <button
-                          key={value.id}
-                          type="button"
-                          disabled={!isAvailable}
-                          onClick={() => updateOption(option.id, value.id)}
-                          className={`relative min-w-[92px] rounded-xl px-4 py-2.5 text-xs font-semibold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
-                            isSelected
-                              ? 'bg-white text-slate-950 shadow-[0_0_24px_rgba(255,255,255,0.12)]'
-                              : isAvailable
-                                ? 'bg-white/[0.03] text-slate-300 ring-1 ring-white/[0.08] hover:bg-white/[0.07]'
-                                : 'bg-white/[0.02] text-slate-700 ring-1 ring-white/[0.04] cursor-not-allowed overflow-hidden'
-                          }`}
-                        >
-                          {value.label}
-                          {!isAvailable && <span className="absolute inset-x-2 top-1/2 h-px rotate-[-18deg] bg-slate-700" />}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
 
