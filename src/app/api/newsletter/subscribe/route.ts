@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { success, badRequest } from '@/lib/api'
+import { newsletterService } from '@/lib/services/NewsletterService'
+import { notificationService } from '@/lib/notifications/NotificationService'
 
 // Simple in-memory rate limit: 1 request per email per minute
 const rateLimitCache = new Map<string, number>()
@@ -36,32 +38,32 @@ export async function POST(req: Request) {
       rateLimitCache.clear()
     }
 
-    // Telegram Admin Notification
-    const botToken = process.env.TELEGRAM_BOT_TOKEN
-    const chatId = process.env.TELEGRAM_CHAT_ID
-
-    if (botToken && chatId) {
-      const message = `📩 Newsletter mới từ GearZone\nEmail: ${email}\nTime: ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}\nSource: homepage_footer`
-      
-      try {
-        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text: message,
-          }),
-        })
-      } catch (err) {
-        // Log the error but don't fail the request so the user still gets a success message
-        console.error('Failed to send Telegram notification:', err)
-      }
-    } else {
-      // If no env vars configured, we gracefully fallback and do nothing (acting like it succeeded)
-      console.warn('Newsletter subscribe: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is missing in environment variables.')
+    // Check if email already exists in DB
+    const existing = await newsletterService.findByEmail(email)
+    if (existing) {
+      // If already exists, we return success gracefully so user thinks it worked
+      // but we don't save duplicates and don't send duplicate welcome emails.
+      return NextResponse.json(success({ 
+        message: 'Bạn đã đăng ký nhận bản tin từ trước',
+        alreadySubscribed: true 
+      }))
     }
 
-    return NextResponse.json(success({ message: 'Subscribed successfully' }))
+    // Save to database
+    const source = 'homepage_footer'
+    const newSubscription = await newsletterService.subscribe(email, source)
+
+    // Send notifications in parallel (don't block the response)
+    Promise.allSettled([
+      notificationService.sendNewsletterWelcome(email),
+      notificationService.notifyAdminNewSubscriber(email, source)
+    ]).catch(err => console.error('Background notification error:', err))
+
+    return NextResponse.json(success({ 
+      message: 'Đăng ký thành công! Vui lòng kiểm tra email của bạn.',
+      subscriptionId: newSubscription.id
+    }))
+
   } catch (error) {
     console.error('Newsletter subscribe error:', error)
     return NextResponse.json(badRequest('Có lỗi xảy ra, vui lòng thử lại sau'))
