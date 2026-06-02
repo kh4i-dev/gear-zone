@@ -232,19 +232,19 @@ export default function StoreHomePageClient({
           
           <div className="relative z-20 mt-auto pb-8 px-4 md:px-8 text-center shrink-0 flex flex-col items-center justify-center">
             <motion.h3
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
+              transition={{ type: 'spring', stiffness: 100, damping: 15, delay: 0.1 }}
               className="text-2xl md:text-3xl font-semibold text-white mb-2 tracking-tight drop-shadow-lg"
             >
               {settings.introTitle}
             </motion.h3>
             <motion.p
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 40, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: 0.3, ease: 'easeOut' }}
+              transition={{ type: 'spring', stiffness: 100, damping: 15, delay: 0.3 }}
               className="text-slate-300 max-w-3xl mx-auto text-sm md:text-base leading-relaxed mb-2 drop-shadow-md"
             >
               {settings.introText}
@@ -260,28 +260,28 @@ export default function StoreHomePageClient({
         <div className="grid gap-6 rounded-3xl bg-slate-900 border border-white/5 p-6 text-white shadow-xl md:grid-cols-[1.2fr_0.8fr] md:p-8">
           <div className="flex flex-col justify-center py-4">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 40, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
+              transition={{ type: 'spring', stiffness: 100, damping: 15, delay: 0.05 }}
               className={`mb-4 inline-flex w-fit items-center gap-2 rounded-full ${accent.soft} px-3 py-1 text-sm font-bold`}
             >
               {settings.shopTagline}
             </motion.div>
             <motion.h1
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
+              transition={{ type: 'spring', stiffness: 100, damping: 15, delay: 0.1 }}
               className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl"
             >
               {settings.bannerTitle}
             </motion.h1>
             <motion.p
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 40, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: 0.3, ease: 'easeOut' }}
+              transition={{ type: 'spring', stiffness: 100, damping: 15, delay: 0.3 }}
               className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 md:text-base"
             >
               {settings.bannerSubtitle}
