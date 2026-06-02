@@ -79,8 +79,9 @@ export async function PUT(request: NextRequest) {
 
       await tx.auditLog.create({
         data: {
-          userId: user.id, // The admin who made the change
+          adminId: user.id, // The admin who made the change
           action: 'UPDATE_USER_ROLE',
+          targetType: 'User',
           details: {
             targetUserId: userId,
             targetUserName: currentUserRecord.name,
