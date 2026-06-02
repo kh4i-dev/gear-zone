@@ -56,6 +56,8 @@ export async function Footer() {
   const zalo = settingsMap.contact_zalo || '#'
   const guideBuy = settingsMap.guide_buy_link || '/products'
   const warranty = settingsMap.warranty_link || '/products'
+  const returnPolicy = settingsMap.return_link || '/products'
+  const paymentLink = settingsMap.payment_link || '/products'
   const googleMapEmbed = settingsMap.google_map_embed || ''
   const shopDescription = settingsMap.shop_description || "Gaming gear chính hãng. Giá minh bạch. Tồn kho thực. Hỗ trợ nhanh."
 
