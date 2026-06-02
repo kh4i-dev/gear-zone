@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Award, Globe, Headset, Loader2, Mail, Package, ShieldCheck, Truck, Zap, ShoppingCart, Star, ImageIcon, Tag, RotateCcw, Cpu, Gamepad2 } from 'lucide-react'
 import { StoreNavbar } from '@/components/domain/StoreNavbar'
@@ -114,19 +114,41 @@ function parseTickerMessages(raw: string | null | undefined, fallback: string[])
   }
 }
 
-const subscribeNewsletterEmail = (e: React.FormEvent) => {
-  e.preventDefault()
-  toast.success('Đăng ký email thành công! Bạn sẽ nhận được khuyến mãi sớm nhất.')
-}
-
 export default function StoreHomePageClient({
   featuredProducts,
   categoryProducts,
   settings: homeSettings,
 }: HomeData) {
+  const [isSubscribing, setIsSubscribing] = useState(false)
+  const [email, setEmail] = useState('')
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email) return
+
+    setIsSubscribing(true)
+    try {
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const data = await res.json()
+
+      if (data.error) {
+        toast.error(data.error.message || 'Có lỗi xảy ra khi đăng ký')
+      } else {
+        toast.success(data.data?.message || 'Đăng ký email thành công! Bạn sẽ nhận được khuyến mãi sớm nhất.')
+        setEmail('') // reset on success
+      }
+    } catch (err) {
+      toast.error('Không thể kết nối đến máy chủ, vui lòng thử lại sau.')
+    } finally {
+      setIsSubscribing(false)
+    }
+  }
 
 
-  
   const settings = homeSettings ?? DEFAULT_HOME_SETTINGS
   const accent = accentStyles[settings.themeAccent as keyof typeof accentStyles] ?? accentStyles.indigo
   const bannerCtaLink = settings.bannerCtaLink || DEFAULT_HOME_SETTINGS.bannerCtaLink
@@ -334,22 +356,33 @@ export default function StoreHomePageClient({
             <p className="text-slate-400 text-sm md:text-base max-w-xl">Đăng ký email để nhận tin tức về siêu phẩm gaming mới nhất, code giảm giá độc quyền và các chương trình giveaway.</p>
           </div>
           
-          <form onSubmit={subscribeNewsletterEmail} className="w-full md:w-auto flex flex-col sm:flex-row gap-3 shrink-0 z-10">
+          <form onSubmit={handleSubscribe} className="w-full md:w-auto flex flex-col sm:flex-row gap-3 shrink-0 z-10">
             <div className="relative min-w-[280px]">
               <Mail className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
               <input
                 type="email"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isSubscribing}
                 placeholder="Nhập email của bạn..."
                 aria-label="Địa chỉ Email"
-                className="h-12 w-full rounded-xl border border-white/10 bg-slate-950/60 pl-11 pr-4 text-sm text-white placeholder-slate-500 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                className="h-12 w-full rounded-xl border border-white/10 bg-slate-950/60 pl-11 pr-4 text-sm text-white placeholder-slate-500 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
             <button 
               type="submit"
-              className="h-12 rounded-xl bg-indigo-600 px-6 text-sm font-bold text-white hover:bg-indigo-500 active:scale-95 transition-all shadow-lg shadow-indigo-600/25"
+              disabled={isSubscribing || !email}
+              className="h-12 rounded-xl bg-indigo-600 px-6 text-sm font-bold text-white hover:bg-indigo-500 active:scale-95 transition-all shadow-lg shadow-indigo-600/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 disabled:active:scale-100 flex items-center justify-center gap-2"
             >
-              Đăng ký ngay
+              {isSubscribing ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : (
+                'Đăng ký ngay'
+              )}
             </button>
           </form>
         </div>
