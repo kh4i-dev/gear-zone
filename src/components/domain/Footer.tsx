@@ -57,9 +57,8 @@ export async function Footer() {
   const guideBuy = settingsMap.guide_buy_link || '/products'
   const warranty = settingsMap.warranty_link || '/products'
   const returnPolicy = settingsMap.return_link || '/products'
-  
-  // Hardcode description to requested version for better typography/layout
-  const shopDescription = "Gaming gear chính hãng. Giá minh bạch. Tồn kho thực. Hỗ trợ nhanh."
+  const googleMapEmbed = settingsMap.google_map_embed || ''
+  const shopDescription = settingsMap.shop_description || "Gaming gear chính hãng. Giá minh bạch. Tồn kho thực. Hỗ trợ nhanh."
 
   return (
     <footer className="relative bg-[#050505] text-slate-400 overflow-hidden border-t border-white/[0.04]">
@@ -173,6 +172,15 @@ export async function Footer() {
                 <span className="group-hover:text-emerald-400 transition-colors cursor-default">Hỗ trợ trực tuyến</span>
               </li>
             </ul>
+            
+            {googleMapEmbed && (
+              <div className="mt-6 rounded-xl overflow-hidden border border-white/10 h-32 opacity-80 hover:opacity-100 transition-opacity">
+                <div 
+                  dangerouslySetInnerHTML={{ __html: googleMapEmbed }} 
+                  className="w-full h-full [&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-0" 
+                />
+              </div>
+            )}
           </div>
         </div>
         

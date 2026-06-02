@@ -89,6 +89,7 @@ type SettingsPageState = {
   logoUrl: string
   faviconUrl: string
   seoTitleTemplate: string
+  googleMapEmbed: string
 }
  
 const initialSettingsPageState: SettingsPageState = {
@@ -131,6 +132,7 @@ const initialSettingsPageState: SettingsPageState = {
   logoUrl: '',
   faviconUrl: '',
   seoTitleTemplate: '',
+  googleMapEmbed: '',
 }
  
 const menuSections = [
@@ -218,6 +220,7 @@ export default function AdminSettingsPage() {
     logoUrl,
     faviconUrl,
     seoTitleTemplate,
+    googleMapEmbed,
   } = pageState
   const setVideoUrl = (videoUrl: string) => updatePageState({ videoUrl })
   const setThemeAccent = (themeAccent: string) => updatePageState({ themeAccent })
@@ -251,6 +254,7 @@ export default function AdminSettingsPage() {
   const setLogoUrl = (logoUrl: string) => updatePageState({ logoUrl })
   const setFaviconUrl = (faviconUrl: string) => updatePageState({ faviconUrl })
   const setSeoTitleTemplate = (seoTitleTemplate: string) => updatePageState({ seoTitleTemplate })
+  const setGoogleMapEmbed = (googleMapEmbed: string) => updatePageState({ googleMapEmbed })
   const setNewCatName = (newCatName: string) => updatePageState({ newCatName })
   const setCategoryMegaMenuJson = (categoryMegaMenuJson: string) => updatePageState({ categoryMegaMenuJson })
   const setCurrentPassword = (currentPassword: string) => updatePageState({ currentPassword })
@@ -320,6 +324,7 @@ export default function AdminSettingsPage() {
         setLogoUrl(result.data.logo_url || '')
         setFaviconUrl(result.data.favicon_url || '')
         setSeoTitleTemplate(result.data.seo_title_template || '')
+        setGoogleMapEmbed(result.data.google_map_embed || '')
         
         const defaultMegaMenuJson = JSON.stringify(
           categoryMegaMenu.map(cat => ({
@@ -390,6 +395,7 @@ export default function AdminSettingsPage() {
             warranty_link: warrantyLink,
             return_link: returnLink,
             payment_link: paymentLink,
+            google_map_embed: googleMapEmbed,
             
             // New settings
             theme_accent: themeAccent,
@@ -1094,6 +1100,20 @@ export default function AdminSettingsPage() {
                         placeholder="VD: Thứ 2 - Chủ Nhật: 08:00 - 22:00"
                         className="bg-slate-900 border-white/10"
                       />
+                    </div>
+                    
+                    <div className="border-t border-white/5 pt-4">
+                      <p className="block text-sm font-semibold mb-2 flex items-center gap-2">
+                        <MapPin className="size-4 text-slate-400" /> Mã nhúng Google Maps (Iframe)
+                      </p>
+                      <textarea
+                        value={googleMapEmbed}
+                        onChange={(e) => setGoogleMapEmbed(e.target.value)}
+                        placeholder='Dán mã nhúng <iframe> từ Google Maps vào đây...'
+                        rows={4}
+                        className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-600 resize-none"
+                      />
+                      <p className="text-xs text-slate-500 mt-2">Đoạn iframe này sẽ được hiển thị ở Footer giúp khách hàng dễ dàng tìm đường.</p>
                     </div>
                   </div>
                 </div>
