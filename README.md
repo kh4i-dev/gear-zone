@@ -2,7 +2,7 @@
 
 Production-minded ecommerce for gaming gear: variant-rich catalog, persisted cart, transactional checkout, inventory operations, admin CMS, and Azure-ready deployment.
 
-![GearZone storefront](docs/screenshots/homepage.png)
+![GearZone storefront](docs/screenshots/homepage-showcase.png)
 
 ## Features
 
@@ -314,4 +314,3 @@ npm run build
 Detailed findings, screenshot rationale, recruiter review, ecommerce feature matrix, and final scoring are available in [docs/repository-showcase-report.md](docs/repository-showcase-report.md).
 
 Final documentation score target: **9/10**.
-
