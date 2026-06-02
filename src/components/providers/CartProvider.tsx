@@ -243,6 +243,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       window.dispatchEvent(new Event('gearzone_cart_changed'))
       return next
     })
+
+    // Fire social proof event for guests too
+    try {
+      fetch('/api/social-proof', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productName: item.name, socketId }),
+      }).catch(() => {})
+    } catch {}
   }, [user, socketId])
 
   const removeFromCart = useCallback((productId: string, variantId: string | null = null) => {
