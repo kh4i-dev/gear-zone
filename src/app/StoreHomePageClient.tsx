@@ -9,6 +9,8 @@ import { ProductCard, type StoreProduct } from '@/components/domain/ProductCard'
 import { HomeCategorySection } from '@/components/domain/HomeCategorySection'
 import { ProductRowCarousel } from '@/components/domain/ProductRowCarousel'
 import { useCart } from '@/components/providers/CartProvider'
+import { useSocialProofContext } from '@/components/providers/SocialProofProvider'
+import { LiveFeedTicker } from '@/components/domain/LiveFeedTicker'
 import { toast } from 'sonner'
 import { formatPrice } from '@/lib/utils'
 import { isPublicProduct } from '@/lib/products/publicProductHelper'
@@ -122,6 +124,7 @@ export default function StoreHomePageClient({
 }: HomeData) {
   const [isSubscribing, setIsSubscribing] = useState(false)
   const [email, setEmail] = useState('')
+  const { recentEvents } = useSocialProofContext()
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -198,18 +201,22 @@ export default function StoreHomePageClient({
         }
       `}</style>
       {/* Ticker Section - Lucide icons, premium scrolling, no hover pause */}
-      <div className={`${accent.ticker} border-b overflow-hidden py-2 relative`}>
-        <div 
-          className="whitespace-nowrap inline-flex gap-12 px-4 animate-ticker"
-          style={{ animationDuration: settings.tickerSpeed }}
-        >
-          {tickerItems.map((item) => (
-            <span key={item.id} className={`${accent.tickerText} text-xs font-extrabold tracking-wider uppercase flex items-center gap-2 flex-shrink-0 select-none`}>
-              <item.icon className="size-4 shrink-0" strokeWidth={2.5} />
-              {item.text}
-            </span>
-          ))}
-        </div>
+      <div className={`${accent.ticker} border-b overflow-hidden py-2 relative h-10`}>
+        {recentEvents.length > 0 ? (
+          <LiveFeedTicker events={recentEvents} accent={accent} />
+        ) : (
+          <div 
+            className="whitespace-nowrap inline-flex gap-12 px-4 animate-ticker h-full items-center"
+            style={{ animationDuration: settings.tickerSpeed }}
+          >
+            {tickerItems.map((item) => (
+              <span key={item.id} className={`${accent.tickerText} text-xs font-extrabold tracking-wider uppercase flex items-center gap-2 flex-shrink-0 select-none`}>
+                <item.icon className="size-4 shrink-0" strokeWidth={2.5} />
+                {item.text}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       <StoreNavbar />
