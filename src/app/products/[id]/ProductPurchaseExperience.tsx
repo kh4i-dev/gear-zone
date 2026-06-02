@@ -139,23 +139,23 @@ export function ProductPurchaseExperience({ product, settingsMap }: ProductPurch
           </div>
 
           {hasVariants && product.options?.length > 0 && (
-            <div className="space-y-6 mb-7">
+            <div className="space-y-3 mb-7">
               {product.options.map((option: any) => {
                 const selectedLabel = option.values?.find(
                   (value: any) => value.id === selectedOptions[option.id]
                 )?.label
                 return (
-                  <div key={option.id}>
-                    <div className="flex items-center gap-2.5 mb-3">
-                      <span className="size-1.5 rounded-full bg-gradient-to-b from-emerald-400 to-cyan-400" />
-                      <p className="text-sm font-bold text-slate-200">{option.name}</p>
+                  <div key={option.id} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+                    <div className="flex items-center gap-2.5 mb-2.5">
+                      <span className="size-1.5 rounded-full bg-emerald-400" />
+                      <p className="text-[13px] font-extrabold text-slate-100">{option.name}</p>
                       {selectedLabel && (
-                        <span className="text-[10px] font-semibold tracking-wide text-emerald-400/70 bg-emerald-500/8 px-2 py-0.5 rounded-full ring-1 ring-emerald-500/15">
+                        <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold tracking-wide text-emerald-300 ring-1 ring-emerald-500/20">
                           {selectedLabel}
                         </span>
                       )}
                     </div>
-                    <div className="flex flex-wrap gap-2.5">
+                    <div className="flex flex-wrap gap-2">
                       {option.values?.map((value: any) => {
                         const isSelected = selectedOptions[option.id] === value.id
                         const selectionWithoutCurrentOption = Object.fromEntries(
@@ -169,12 +169,12 @@ export function ProductPurchaseExperience({ product, settingsMap }: ProductPurch
                             type="button"
                             disabled={!isAvailable}
                             onClick={() => updateOption(option.id, value.id)}
-                            className={`relative h-10 rounded-full px-5 text-xs font-bold tracking-wide transition-all duration-200 ease-out ${
+                            className={`relative h-9 rounded-lg border px-4 text-xs font-bold tracking-wide transition-all duration-200 ease-out ${
                               isSelected
-                                ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-[0_0_24px_rgba(16,185,129,0.25)] ring-1 ring-emerald-400/30 scale-[1.03]'
+                                ? 'border-emerald-300 bg-emerald-500 text-slate-950 shadow-[0_0_22px_rgba(16,185,129,0.24)] ring-2 ring-emerald-500/25'
                                 : isAvailable
-                                  ? 'bg-white/[0.04] text-slate-200 ring-1 ring-white/[0.08] hover:bg-white/[0.08] hover:ring-white/[0.18] hover:scale-[1.02] active:scale-[0.97] cursor-pointer'
-                                  : 'bg-white/[0.015] text-slate-700 ring-1 ring-white/[0.03] cursor-not-allowed overflow-hidden'
+                                  ? 'border-white/[0.10] bg-white/[0.04] text-slate-200 hover:border-blue-400/40 hover:bg-white/[0.08] active:scale-[0.98] cursor-pointer'
+                                  : 'border-white/[0.04] bg-white/[0.015] text-slate-700 opacity-50 cursor-not-allowed overflow-hidden'
                             }`}
                           >
                             {value.label}

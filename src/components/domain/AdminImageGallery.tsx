@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
-import { ChevronUp, ChevronDown, Trash2, ImageIcon, Upload, Loader2, Link2, Plus } from 'lucide-react'
+import { ChevronUp, ChevronDown, Trash2, ImageIcon, Upload, Loader2, Link2, Plus, Star } from 'lucide-react'
 import { getSafeImageSrc } from '@/lib/product-images'
 
 interface AdminImageGalleryProps {
@@ -54,6 +54,16 @@ export function AdminImageGallery({
       const next = [...images]
       ;[next[index], next[index + 1]] = [next[index + 1], next[index]]
       onChange(next.join('\n'))
+    },
+    [images, onChange]
+  )
+
+  const handleSetPrimary = useCallback(
+    (index: number) => {
+      if (index <= 0) return
+      const next = [...images]
+      const [selected] = next.splice(index, 1)
+      onChange([selected, ...next].join('\n'))
     },
     [images, onChange]
   )
@@ -132,6 +142,17 @@ export function AdminImageGallery({
                   >
                     <Trash2 className="size-3.5" />
                   </button>
+                  {index > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleSetPrimary(index)}
+                      disabled={disabled}
+                      className="p-1.5 rounded-lg bg-amber-500/80 hover:bg-amber-500 text-white transition-colors"
+                      title="Đặt làm ảnh chính"
+                    >
+                      <Star className="size-3.5" />
+                    </button>
+                  )}
                   {index > 0 && (
                     <button
                       type="button"

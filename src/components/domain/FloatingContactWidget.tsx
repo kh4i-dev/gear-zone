@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { Phone, MessageCircle } from 'lucide-react'
 
 interface ContactSettings {
@@ -38,6 +39,7 @@ const contactItems = [
 
 export function FloatingContactWidget() {
   const [settings, setSettings] = useState<ContactSettings | null>(null)
+  const pathname = usePathname()
 
   useEffect(() => {
     fetch('/api/settings')
@@ -58,10 +60,13 @@ export function FloatingContactWidget() {
   if (!hasAny) return null
 
   const items = contactItems.filter((item) => settings[item.key])
+  const bottomClass = pathname.startsWith('/cart')
+    ? 'bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] md:bottom-6'
+    : 'bottom-[calc(env(safe-area-inset-bottom)+1rem)] md:bottom-6'
 
   return (
     <div
-      className="fixed right-4 bottom-4 z-50 flex flex-col gap-3 md:right-6 md:bottom-6"
+      className={`fixed right-4 z-40 flex flex-col gap-3 md:right-6 ${bottomClass}`}
       role="navigation"
       aria-label="Liên hệ nhanh"
     >
@@ -79,7 +84,7 @@ export function FloatingContactWidget() {
             {...linkProps}
             className={`group relative flex size-12 items-center justify-center rounded-full text-white shadow-lg backdrop-blur-sm transition-all duration-300 ease-out ${item.color} ${item.hoverColor} hover:scale-110 hover:shadow-xl active:scale-95`}
             style={{ animationDelay: `${index * 100}ms` }}
-            aria-label={item.label}
+            aria-label={`${item.label}: ${href}`}
           >
             {item.customIcon || (Icon && <Icon className="size-5" />)}
 

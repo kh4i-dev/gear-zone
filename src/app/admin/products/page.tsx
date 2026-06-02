@@ -1,4 +1,3 @@
-/* eslint-disable react-doctor/no-giant-component */
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
@@ -20,9 +19,8 @@ import { RichTextEditor } from '@/components/domain/RichTextEditor'
 import { ProductImageFrame } from '@/components/domain/ProductImageFrame'
 import { AdminImageGallery } from '@/components/domain/AdminImageGallery'
 import { AdminVariantEditor } from '@/components/domain/AdminVariantEditor'
-import { generateVariants } from '@/components/domain/AdminVariantEditor'
 import type { AdminOptionGroup, AdminVariant } from '@/components/domain/AdminVariantEditor'
-import { parseSpecText, serializeSpecs } from '@/lib/products/adminProductForm'
+import { hydrateAdminVariants, parseSpecText, serializeSpecs } from '@/lib/products/adminProductForm'
 import { buildCategoryCounts, buildBrandCounts } from '@/lib/products/adminProductFilters'
 
 
@@ -45,7 +43,7 @@ interface AdminProduct {
   variants?: {
     id: string; sku: string | null; price: number | null; salePrice: number | null;
     stock: number; imageUrl: string | null; isActive: boolean;
-    optionValues: { optionValue: { id: string; optionId: string; label: string } }[]
+    optionValues: { optionValue: { id: string; optionId: string; label: string; option?: { id: string; name: string } | null } }[]
   }[]
 }
 
@@ -135,6 +133,13 @@ export default function AdminProductsPage() {
   const [selectedBrand, setSelectedBrand] = useState<'all' | string>('all')
   const [brands, setBrands] = useState<string[] | undefined>(undefined)
   const resolvedBrands = brands || COMMON_BRANDS
+  const previewVariant = formData.variants.find((variant) => variant.isActive) ?? formData.variants[0] ?? null
+  const previewVariantName = previewVariant
+    ? Object.values(previewVariant.options).filter(Boolean).join(' / ') || 'Bien the'
+    : 'Chua co bien the'
+  const previewPrice = previewVariant?.salePrice ?? previewVariant?.price ?? formData.price
+  const previewOldPrice = previewVariant?.salePrice ? (previewVariant.price ?? formData.oldPrice) : formData.oldPrice
+  const previewStock = previewVariant?.stock ?? (Number(formData.stock) || 0)
 
   const categoryStats = useMemo(() => {
     return buildCategoryCounts(products, categories)
@@ -156,7 +161,6 @@ export default function AdminProductsPage() {
         // Fallback
       }
     }
-    // eslint-disable-next-line react-doctor/no-initialize-state
     fetchSettings()
   }, [])
 
@@ -306,25 +310,7 @@ export default function AdminProductsPage() {
           .map((v) => v.label),
       })) ?? []
 
-    const loadedVariants: AdminVariant[] =
-      product.variants?.map((v) => {
-        const options: Record<string, string> = {}
-        for (const item of v.optionValues) {
-          const optionName = product.options?.find(
-            (o) => o.values.some((ov) => ov.id === item.optionValue.optionId)
-          )?.name
-          if (optionName) options[optionName] = item.optionValue.label
-        }
-        return {
-          sku: v.sku ?? '',
-          options,
-          price: v.price,
-          salePrice: v.salePrice,
-          stock: v.stock,
-          imageUrl: v.imageUrl ?? '',
-          isActive: v.isActive,
-        }
-      }) ?? []
+    const loadedVariants: AdminVariant[] = hydrateAdminVariants(product.variants, product.options)
 
     setFormData({
       name: product.name,
@@ -714,12 +700,12 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              <div className="p-1.5 rounded-[1.25rem] bg-white/[0.03] ring-1 ring-white/[0.06] shadow-xl">
-                <div className="relative rounded-[calc(1.25rem-6px)] bg-[#0a0a0a] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] overflow-hidden flex flex-col h-full">
+              <div className="lg:sticky lg:top-5 rounded-xl border border-white/[0.06] bg-[#070707] p-3 shadow-xl">
+                <div className="relative overflow-hidden">
                   {/* Image Area - Premium white stage in a dark gradient frame */}
-                  <div className="relative block p-3 bg-gradient-to-b from-[#111] to-[#080808]">
+                  <div className="relative float-left mr-3 w-24 rounded-lg border border-white/[0.06] bg-[#0a0a0a] p-1">
                     <ProductImageFrame
-                      src={getPrimaryLegacyImageUrl(formData.imageUrl)}
+                      src={getPrimaryLegacyImageUrl(previewVariant?.imageUrl || formData.imageUrl)}
                       alt={formData.name || 'Preview'}
                       aspectRatio="aspect-square"
                       galleryImages={formData.imageUrl.split(/\r?\n/).filter(Boolean)}
@@ -727,7 +713,7 @@ export default function AdminProductsPage() {
                   </div>
 
                   {/* Body Content */}
-                  <div className="p-5 flex flex-col flex-grow">
+                  <div className="min-w-0">
                     {/* Category Badge — Eyebrow pill */}
                     <div className="mb-3 inline-flex items-center rounded-full bg-blue-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-blue-400 w-fit">
                       {formData.categoryName || 'Khác'}
@@ -747,11 +733,11 @@ export default function AdminProductsPage() {
                     <div className="mt-auto pt-4 border-t border-white/[0.04] flex items-center justify-between gap-2">
                       <div className="flex flex-col">
                         <span className="text-base md:text-lg font-bold text-white">
-                          {formData.price ? formatPrice(Number(formData.price)) : formatPrice(0)}
+                          {formatPrice(Number(previewPrice) || 0)}
                         </span>
-                        {formData.oldPrice && formData.oldPrice > 0 ? (
+                        {previewOldPrice && previewOldPrice > Number(previewPrice || 0) ? (
                           <span className="text-[10px] md:text-xs font-semibold text-slate-500 line-through">
-                            {formatPrice(Number(formData.oldPrice))}
+                            {formatPrice(Number(previewOldPrice))}
                           </span>
                         ) : null}
                       </div>
@@ -770,14 +756,13 @@ export default function AdminProductsPage() {
                 optionGroups={formData.optionGroups}
                 variants={formData.variants}
                 onOptionGroupsChange={(groups) =>
-                  setFormData({
-                    ...formData,
+                  setFormData((current) => ({
+                    ...current,
                     optionGroups: groups,
-                    variants: generateVariants(groups, formData.variants),
-                  })
+                  }))
                 }
                 onVariantsChange={(variants) =>
-                  setFormData({ ...formData, variants })
+                  setFormData((current) => ({ ...current, variants }))
                 }
                 disabled={isSaving}
               />

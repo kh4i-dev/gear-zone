@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { buildAdminProductSubmitPayload, parseAdminImageLines, parseSpecText, serializeSpecs } from './adminProductForm'
+import {
+  buildAdminProductSubmitPayload,
+  hydrateAdminVariants,
+  parseAdminImageLines,
+  parseSpecText,
+  serializeSpecs,
+} from './adminProductForm'
 
 describe('admin product form payload', () => {
   it('keeps gallery, summary specs, purchase options, variants, and detailed specs separate', () => {
@@ -121,5 +127,98 @@ describe('serializeSpecs', () => {
 
   it('returns empty string for empty specs', () => {
     expect(serializeSpecs([])).toBe('')
+  })
+})
+
+describe('hydrateAdminVariants', () => {
+  it('reconstructs variant option labels from option ids', () => {
+    const variants = hydrateAdminVariants(
+      [
+        {
+          sku: 'AKKO-WHITE-MINI',
+          price: 1200000,
+          salePrice: 990000,
+          stock: 7,
+          imageUrl: '/white-mini.png',
+          isActive: true,
+          optionValues: [
+            {
+              optionValue: {
+                id: 'value-white',
+                optionId: 'option-color',
+                label: 'White',
+              },
+            },
+            {
+              optionValue: {
+                id: 'value-mini',
+                optionId: 'option-version',
+                label: 'Mini',
+              },
+            },
+          ],
+        },
+      ],
+      [
+        {
+          id: 'option-color',
+          name: 'Color',
+          values: [{ id: 'value-white', label: 'White' }],
+        },
+        {
+          id: 'option-version',
+          name: 'Version',
+          values: [{ id: 'value-mini', label: 'Mini' }],
+        },
+      ]
+    )
+
+    expect(variants).toEqual([
+      {
+        sku: 'AKKO-WHITE-MINI',
+        options: { Color: 'White', Version: 'Mini' },
+        price: 1200000,
+        salePrice: 990000,
+        stock: 7,
+        imageUrl: '/white-mini.png',
+        isActive: true,
+      },
+    ])
+  })
+
+  it('prefers the included option name when Prisma includes optionValue.option', () => {
+    const variants = hydrateAdminVariants(
+      [
+        {
+          sku: null,
+          price: null,
+          salePrice: null,
+          stock: 1,
+          imageUrl: null,
+          isActive: true,
+          optionValues: [
+            {
+              optionValue: {
+                id: 'value-black',
+                optionId: 'option-color',
+                label: 'Black',
+                option: { id: 'option-color', name: 'Color' },
+              },
+            },
+          ],
+        },
+      ],
+      []
+    )
+
+    expect(variants[0]).toEqual({
+      sku: '',
+      options: { Color: 'Black' },
+      price: null,
+      salePrice: null,
+      stock: 1,
+      imageUrl: '',
+      isActive: true,
+    })
   })
 })

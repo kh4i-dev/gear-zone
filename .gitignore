@@ -82,3 +82,4 @@ react_doctor_*.txt
 # Logs / baselines
 *-baseline.log
 react-doctor-output.txt
+.next-dev.*.log

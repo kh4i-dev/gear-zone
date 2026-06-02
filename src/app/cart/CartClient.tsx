@@ -432,10 +432,12 @@ export default function CartClient({ shopName = 'GearZone' }: { shopName?: strin
                       <div className="size-11 bg-white border border-white/10 rounded-lg overflow-hidden shrink-0 relative shadow-inner">
                         {item.imageUrl ? (
                           <div className="absolute inset-1">
-                            <img 
-                              src={getSafeImageSrc(item.imageUrl)} 
-                              alt={item.name} 
-                              className="size-full object-contain" 
+                            <Image
+                              src={getSafeImageSrc(item.imageUrl)}
+                              alt={item.name}
+                              fill
+                              sizes="44px"
+                              className="object-contain"
                             />
                           </div>
                         ) : (
