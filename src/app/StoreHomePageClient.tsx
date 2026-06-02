@@ -252,7 +252,7 @@ export default function StoreHomePageClient({
               className="w-full max-w-3xl overflow-hidden bg-black/40 backdrop-blur-md border border-white/10 rounded-full py-2.5 shadow-xl relative"
             >
               <div 
-                className="whitespace-nowrap inline-flex gap-8 px-4 animate-ticker hover:[animation-play-state:paused]"
+                className="whitespace-nowrap inline-flex gap-8 px-4 animate-ticker"
                 style={{ animationDuration: settings.tickerSpeed }}
               >
                 {[...tickerItems, ...tickerItems].map((item, idx) => (
