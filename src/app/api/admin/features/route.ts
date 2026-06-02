@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { getUserSession } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/auth'
 
 export async function GET(req: Request) {
   try {
-    const user = await getUserSession()
+    const user = await getCurrentUser()
     if (!user || user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -19,7 +19,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const user = await getUserSession()
+    const user = await getCurrentUser()
     if (!user || user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
