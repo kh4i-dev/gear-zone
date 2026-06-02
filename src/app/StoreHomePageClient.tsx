@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { motion } from 'motion/react'
 import Link from 'next/link'
 import { ArrowRight, Award, Globe, Headset, Loader2, Mail, Package, ShieldCheck, Truck, Zap, ShoppingCart, Star, ImageIcon, Tag, RotateCcw, Cpu, Gamepad2 } from 'lucide-react'
 import { StoreNavbar } from '@/components/domain/StoreNavbar'
@@ -230,10 +231,24 @@ export default function StoreHomePageClient({
           <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none z-10" />
           
           <div className="relative z-20 mt-auto pb-8 px-4 md:px-8 text-center shrink-0 flex flex-col items-center justify-center">
-            <h3 className="text-2xl md:text-3xl font-semibold text-white mb-2 tracking-tight drop-shadow-lg">{settings.introTitle}</h3>
-            <p className="text-slate-300 max-w-3xl mx-auto text-sm md:text-base leading-relaxed mb-2 drop-shadow-md">
+            <motion.h3
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
+              className="text-2xl md:text-3xl font-semibold text-white mb-2 tracking-tight drop-shadow-lg"
+            >
+              {settings.introTitle}
+            </motion.h3>
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.3, ease: 'easeOut' }}
+              className="text-slate-300 max-w-3xl mx-auto text-sm md:text-base leading-relaxed mb-2 drop-shadow-md"
+            >
               {settings.introText}
-            </p>
+            </motion.p>
           </div>
           
           <div className={`absolute -bottom-10 left-1/4 right-1/4 h-20 ${accent.glow} blur-[80px] rounded-full pointer-events-none`} />
@@ -244,15 +259,33 @@ export default function StoreHomePageClient({
       <section className="mx-auto max-w-7xl px-4 pb-8">
         <div className="grid gap-6 rounded-3xl bg-slate-900 border border-white/5 p-6 text-white shadow-xl md:grid-cols-[1.2fr_0.8fr] md:p-8">
           <div className="flex flex-col justify-center py-4">
-            <div className={`mb-4 inline-flex w-fit items-center gap-2 rounded-full ${accent.soft} px-3 py-1 text-sm font-bold`}>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
+              className={`mb-4 inline-flex w-fit items-center gap-2 rounded-full ${accent.soft} px-3 py-1 text-sm font-bold`}
+            >
               {settings.shopTagline}
-            </div>
-            <h1 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
+            </motion.div>
+            <motion.h1
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
+              className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl"
+            >
               {settings.bannerTitle}
-            </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 md:text-base">
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.3, ease: 'easeOut' }}
+              className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 md:text-base"
+            >
               {settings.bannerSubtitle}
-            </p>
+            </motion.p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href={bannerCtaLink} className={`inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-extrabold shadow-lg ${accent.primary}`}>
                 {settings.bannerCtaText}
