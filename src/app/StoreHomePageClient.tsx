@@ -388,10 +388,6 @@ export default function StoreHomePageClient({
         </div>
       </section>
 
-      {/* Footer copyright */}
-      <footer className="border-t border-white/5 py-8 bg-slate-950 text-center">
-        <p className="text-xs text-slate-500">© 2026 {settings.shopName}. All rights reserved. Built for professional gamers.</p>
-      </footer>
     </main>
   )
 }

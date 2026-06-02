@@ -30,6 +30,7 @@ interface AdminOrder {
     product: { name: string }
   }>
   paymentStatus?: string
+  refundStatus?: string
   internalNote?: string
 }
 
@@ -41,6 +42,7 @@ const statusLabels: Record<string, string> = {
   PROCESSING: 'Đang xử lý',
   DELIVERING: 'Đang giao hàng',
   DELIVERED: 'Đã hoàn thành',
+  COMPLETED: 'Đã hoàn thành',
   CANCELLED: 'Đã hủy',
   REFUNDED: 'Đã hoàn tiền',
 }
@@ -51,6 +53,7 @@ const statusBadgeClasses: Record<string, string> = {
   PROCESSING: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
   DELIVERING: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
   DELIVERED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  COMPLETED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   CANCELLED: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
   REFUNDED: 'bg-red-500/10 text-red-400 border-red-500/20',
 }
@@ -171,13 +174,17 @@ export function OrdersClient() {
       })
       const result = await res.json()
       if (res.ok) {
+        const updatedOrder = result.data as AdminOrder
         toast.success('Cập nhật trạng thái thành công')
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o))
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...updatedOrder } : o))
         if (selectedOrder?.id === orderId) {
-          setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null)
+          setSelectedOrder(prev => prev ? { ...prev, ...updatedOrder } : null)
         }
       } else {
-        toast.error(result.error?.message || 'Lỗi cập nhật trạng thái')
+        const fallback = res.status === 409
+          ? 'Không thể chuyển trạng thái đơn hàng này'
+          : 'Lỗi cập nhật trạng thái'
+        toast.error(result.error?.message || fallback)
       }
     } catch {
       toast.error('Lỗi khi cập nhật trạng thái')
@@ -441,7 +448,6 @@ export function OrdersClient() {
                     const isCancelled = getOrderCategory(order.status) === 'CANCELLED'
 
                     return (
-                    return (
                       <tr key={order.id} className={cn("hover:bg-slate-900/60 transition-colors relative", activeMenu === order.id ? "z-50" : "z-0", isCancelled && "opacity-60")}>
                         <td className="p-4 pl-6 align-top">
                           <button type="button" onClick={() => openDrawer(order)} className="font-mono text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 px-2.5 py-1.5 rounded-lg border border-blue-500/20 shadow-sm flex items-center gap-1 w-fit">
@@ -519,25 +525,25 @@ export function OrdersClient() {
                                   <div className="border-t border-white/5 my-1"></div>
                                   
                                   {order.status === 'PENDING' && (
-                                    <button type="button" onClick={() => handleUpdateStatus(order.id, 'PROCESSING')} className="flex w-full items-center px-4 py-2 text-xs font-semibold text-blue-400 hover:bg-slate-700">
+                                    <button type="button" disabled={isActionLoading} onClick={() => handleUpdateStatus(order.id, 'PROCESSING')} className="flex w-full items-center px-4 py-2 text-xs font-semibold text-blue-400 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
                                       <Package className="size-3.5 mr-2" /> Đánh dấu đang xử lý
                                     </button>
                                   )}
                                   
                                   {['PROCESSING', 'DELIVERING'].includes(order.status) && (
-                                    <button type="button" onClick={() => handleUpdateStatus(order.id, 'DELIVERED')} className="flex w-full items-center px-4 py-2 text-xs font-semibold text-emerald-400 hover:bg-slate-700">
+                                    <button type="button" disabled={isActionLoading} onClick={() => handleUpdateStatus(order.id, 'COMPLETED')} className="flex w-full items-center px-4 py-2 text-xs font-semibold text-emerald-400 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
                                       <CheckCircle className="size-3.5 mr-2" /> Hoàn tất đơn
                                     </button>
                                   )}
                                   
-                                  {!['CANCELLED', 'REFUNDED', 'DELIVERED'].includes(order.status) && (
-                                    <button type="button" onClick={() => setConfirmAction({ type: 'CANCEL', orderId: order.id })} className="flex w-full items-center px-4 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10">
+                                  {!['CANCELLED', 'REFUNDED', 'DELIVERED', 'COMPLETED'].includes(order.status) && (
+                                    <button type="button" disabled={isActionLoading} onClick={() => setConfirmAction({ type: 'CANCEL', orderId: order.id })} className="flex w-full items-center px-4 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
                                       <XCircle className="size-3.5 mr-2" /> Hủy đơn
                                     </button>
                                   )}
                                   
-                                  {(order.status === 'CANCELLED' || order.status === 'DELIVERED') && (
-                                    <button type="button" onClick={() => setConfirmAction({ type: 'REFUND', orderId: order.id })} className="flex w-full items-center px-4 py-2 text-xs font-semibold text-amber-400 hover:bg-amber-500/10">
+                                  {(order.status === 'CANCELLED' || order.status === 'DELIVERED' || order.status === 'COMPLETED') && (
+                                    <button type="button" disabled={isActionLoading} onClick={() => setConfirmAction({ type: 'REFUND', orderId: order.id })} className="flex w-full items-center px-4 py-2 text-xs font-semibold text-amber-400 hover:bg-amber-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
                                       <DollarSign className="size-3.5 mr-2" /> Hoàn tiền (Refund)
                                     </button>
                                   )}
@@ -575,7 +581,7 @@ export function OrdersClient() {
                 type="button"
                 onClick={() => setConfirmAction(null)}
                 disabled={isActionLoading}
-                className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Trở lại
               </button>
@@ -601,6 +607,7 @@ export function OrdersClient() {
           onClose={closeDrawer}
           onUpdateStatus={handleUpdateStatus}
           onConfirmAction={setConfirmAction}
+          isActionLoading={isActionLoading}
         />
       )}
     </div>

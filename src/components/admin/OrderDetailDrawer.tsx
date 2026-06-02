@@ -17,6 +17,7 @@ interface AdminOrder {
     product: { name: string }
   }>
   paymentStatus?: string
+  refundStatus?: string
   internalNote?: string
 }
 
@@ -26,6 +27,7 @@ interface OrderDetailDrawerProps {
   onClose: () => void
   onUpdateStatus: (orderId: string, newStatus: string) => void
   onConfirmAction: (action: { type: 'CANCEL' | 'REFUND' | 'DELETE', orderId: string }) => void
+  isActionLoading?: boolean
 }
 
 const statusLabels: Record<string, string> = {
@@ -34,6 +36,7 @@ const statusLabels: Record<string, string> = {
   PROCESSING: 'Đang xử lý',
   DELIVERING: 'Đang giao hàng',
   DELIVERED: 'Đã hoàn thành',
+  COMPLETED: 'Đã hoàn thành',
   CANCELLED: 'Đã hủy',
   REFUNDED: 'Đã hoàn tiền',
 }
@@ -44,6 +47,7 @@ const statusBadgeClasses: Record<string, string> = {
   PROCESSING: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
   DELIVERING: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
   DELIVERED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  COMPLETED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   CANCELLED: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
   REFUNDED: 'bg-red-500/10 text-red-400 border-red-500/20',
 }
@@ -62,7 +66,7 @@ const getOrderCategory = (status: string) => {
   return 'ALL'
 }
 
-export function OrderDetailDrawer({ order, isOpen, onClose, onUpdateStatus, onConfirmAction }: OrderDetailDrawerProps) {
+export function OrderDetailDrawer({ order, isOpen, onClose, onUpdateStatus, onConfirmAction, isActionLoading = false }: OrderDetailDrawerProps) {
   if (!order) return null;
 
   return (
@@ -115,12 +119,12 @@ export function OrderDetailDrawer({ order, isOpen, onClose, onUpdateStatus, onCo
               
               <div className="flex gap-2 shrink-0">
                 {order.status === 'PENDING' && (
-                  <button type="button" onClick={() => onUpdateStatus(order.id, 'PROCESSING')} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-colors">
+                  <button type="button" disabled={isActionLoading} onClick={() => onUpdateStatus(order.id, 'PROCESSING')} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                     Nhận xử lý
                   </button>
                 )}
-                {!['CANCELLED', 'REFUNDED'].includes(order.status) && (
-                  <button type="button" onClick={() => onConfirmAction({ type: 'CANCEL', orderId: order.id })} className="px-3 py-1.5 bg-slate-800 hover:bg-red-500/20 hover:text-red-400 text-white/80 rounded-lg text-xs font-bold transition-colors">
+                {!['CANCELLED', 'REFUNDED', 'COMPLETED', 'DELIVERED'].includes(order.status) && (
+                  <button type="button" disabled={isActionLoading} onClick={() => onConfirmAction({ type: 'CANCEL', orderId: order.id })} className="px-3 py-1.5 bg-slate-800 hover:bg-red-500/20 hover:text-red-400 text-white/80 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                     Hủy đơn
                   </button>
                 )}

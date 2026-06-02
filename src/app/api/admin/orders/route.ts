@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
             product: { select: { name: true } },
           },
         },
+        timeline: { orderBy: { createdAt: 'desc' } },
       },
       orderBy: { createdAt: 'desc' },
     })
