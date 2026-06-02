@@ -59,11 +59,11 @@ export async function Footer() {
   const googleMapEmbed = settingsMap.google_map_embed || ''
   const shopDescription = settingsMap.shop_description || "Gaming gear chính hãng. Giá minh bạch. Tồn kho thực. Hỗ trợ nhanh."
 
-  let categories: { id: string; name: string; slug: string }[] = []
+  let categories: { id: string; name: string }[] = []
   try {
     categories = await prisma.category.findMany({
       take: 5,
-      select: { id: true, name: true, slug: true }
+      select: { id: true, name: true }
     })
   } catch {}
 
