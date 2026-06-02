@@ -44,7 +44,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { userId, role } = body
+    const { userId, role, reason } = body
 
     if (!userId || !role) {
       return NextResponse.json(badRequest('Vui lòng cung cấp userId và role'), { status: 400 })
@@ -60,15 +60,38 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json(badRequest('Bạn không thể tự hạ quyền của chính mình'), { status: 400 })
     }
 
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: { role },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-      },
+    const currentUserRecord = await prisma.user.findUnique({ where: { id: userId } })
+    if (!currentUserRecord) {
+      return NextResponse.json(badRequest('User không tồn tại'), { status: 404 })
+    }
+
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      const u = await tx.user.update({
+        where: { id: userId },
+        data: { role },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      })
+
+      await tx.auditLog.create({
+        data: {
+          userId: user.id, // The admin who made the change
+          action: 'UPDATE_USER_ROLE',
+          details: {
+            targetUserId: userId,
+            targetUserName: currentUserRecord.name,
+            oldRole: currentUserRecord.role,
+            newRole: role,
+            reason: reason || 'Không có lý do',
+          }
+        }
+      })
+
+      return u
     })
 
     return NextResponse.json(success(updatedUser))

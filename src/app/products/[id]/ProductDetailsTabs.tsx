@@ -6,7 +6,7 @@ export function ProductDetailsTabs({ product }: { product: any }) {
 
   // Dữ liệu mẫu (sau này có thể lấy từ Database nếu thêm cột specifications)
   const mockSpecs = [
-    { label: 'Thương hiệu', value: 'Đang cập nhật' },
+    { label: 'Thương hiệu', value: product.brand?.name || 'Đang cập nhật' },
     { label: 'Bảo hành', value: '12 - 24 tháng' },
     { label: 'Tình trạng', value: 'Mới 100%' },
     { label: 'Mã sản phẩm', value: product.id.slice(-8).toUpperCase() },

@@ -56,9 +56,16 @@ export async function Footer() {
   const zalo = settingsMap.contact_zalo || '#'
   const guideBuy = settingsMap.guide_buy_link || '/products'
   const warranty = settingsMap.warranty_link || '/products'
-  const returnPolicy = settingsMap.return_link || '/products'
   const googleMapEmbed = settingsMap.google_map_embed || ''
   const shopDescription = settingsMap.shop_description || "Gaming gear chính hãng. Giá minh bạch. Tồn kho thực. Hỗ trợ nhanh."
+
+  let categories: { id: string; name: string; slug: string }[] = []
+  try {
+    categories = await prisma.category.findMany({
+      take: 5,
+      select: { id: true, name: true, slug: true }
+    })
+  } catch {}
 
   return (
     <footer className="relative bg-[#050505] text-slate-400 overflow-hidden border-t border-white/[0.04]">
@@ -116,11 +123,16 @@ export async function Footer() {
               Sản phẩm
             </h3>
             <ul className="space-y-3.5 text-[14px]">
-              <li><Link href="/products?category=chuot-gaming" className="text-slate-400 hover:text-white hover:translate-x-1 inline-block transition-all duration-200">Chuột Gaming</Link></li>
-              <li><Link href="/products?category=ban-phim-co" className="text-slate-400 hover:text-white hover:translate-x-1 inline-block transition-all duration-200">Bàn phím cơ</Link></li>
-              <li><Link href="/products?category=tai-nghe" className="text-slate-400 hover:text-white hover:translate-x-1 inline-block transition-all duration-200">Tai nghe</Link></li>
-              <li><Link href="/products?category=man-hinh" className="text-slate-400 hover:text-white hover:translate-x-1 inline-block transition-all duration-200">Màn hình</Link></li>
-              <li><Link href="/products?category=phu-kien" className="text-slate-400 hover:text-white hover:translate-x-1 inline-block transition-all duration-200">Phụ kiện</Link></li>
+              {categories.map(cat => (
+                <li key={cat.id}>
+                  <Link href={`/products?category=${cat.slug}`} className="text-slate-400 hover:text-white hover:translate-x-1 inline-block transition-all duration-200">
+                    {cat.name}
+                  </Link>
+                </li>
+              ))}
+              {categories.length === 0 && (
+                <li><Link href="/products" className="text-slate-400 hover:text-white hover:translate-x-1 inline-block transition-all duration-200">Tất cả sản phẩm</Link></li>
+              )}
             </ul>
           </div>
           

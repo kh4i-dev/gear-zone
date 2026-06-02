@@ -120,6 +120,7 @@ export function ProductSpecsAndDesc({ product, shopName = 'GearZone' }: { produc
 
   // Blended specs list for the right sidebar card
   const summarySpecs = [
+    { label: 'Thương hiệu', value: product.brand?.name || 'Đang cập nhật' },
     { label: 'Mã sản phẩm', value: product.id.slice(-8).toUpperCase() },
     { label: 'Danh mục', value: product.category?.name || 'Đang cập nhật' },
     { label: 'Tình trạng', value: product.stock > 0 ? 'Còn hàng' : 'Tạm hết hàng' },
@@ -277,6 +278,10 @@ export function ProductSpecsAndDesc({ product, shopName = 'GearZone' }: { produc
                   <tr className="border-b border-white/5 hover:bg-white/[0.01]">
                     <th className="py-3 px-4 font-semibold text-slate-400 w-1/3 text-xs">Mã sản phẩm</th>
                     <td className="py-3 px-4 font-medium text-white text-xs">{product.id.toUpperCase()}</td>
+                  </tr>
+                  <tr className="border-b border-white/5 hover:bg-white/[0.01]">
+                    <th className="py-3 px-4 font-semibold text-slate-400 text-xs">Thương hiệu</th>
+                    <td className="py-3 px-4 font-medium text-white text-xs">{product.brand?.name || 'Đang cập nhật'}</td>
                   </tr>
                   <tr className="border-b border-white/5 hover:bg-white/[0.01]">
                     <th className="py-3 px-4 font-semibold text-slate-400 text-xs">Danh mục</th>

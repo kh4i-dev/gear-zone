@@ -21,6 +21,8 @@ interface AdminOrder {
   status: string
   paymentMethod?: string
   totalAmount: number
+  shippingFee?: number
+  discountAmount?: number
   createdAt: string
   user: { name: string; email: string }
   items: Array<{

@@ -40,9 +40,21 @@ _Avoid_: Thumbnail (that's a presentation concern)
 A named grouping of products (e.g. "Bàn phím", "Chuột").
 _Avoid_: Type, collection, department
 
+**Brand**:
+The manufacturer or marque of a product (e.g. "Logitech", "Razer").
+_Avoid_: Vendor, maker
+
 **Order**:
-A customer purchase containing one or more line items.
+A customer purchase containing one or more line items. It also tracks additional financial components like `shippingFee` and `discountAmount`.
 _Avoid_: Transaction, purchase
+
+**Shipping Fee**:
+The cost applied to an Order for delivering the items to the customer. Currently manually set or fixed.
+_Avoid_: Delivery charge, postage
+
+**Discount Amount**:
+The total reduction applied to the Order's price. Currently manually set or fixed.
+_Avoid_: Sale amount, deduction
 
 **Setting**:
 A key-value configuration entry for store-wide parameters (payment, branding, etc.).
@@ -55,7 +67,15 @@ _Avoid_: Config, option, preference
 - A **ProductVariant** belongs to one **Product** and is identified by a unique combination of ProductOptionValues for that Product
 - A **Product** belongs to at most one **Category**
 - A **Category** has zero or more **Product** records
+- A **Product** belongs to at most one **Brand**
+- A **Brand** has zero or more **Product** records
 - An **Order** has one or more **OrderItem** records, each referencing one **Product**
+
+## Constraints
+
+- **B2C Model**: The platform is direct B2C. There is no multi-vendor escrow or intermediate money-holding state. Payments are directly confirmed or pending.
+- **Customer Communication**: All communication happens out-of-band (Zalo, Phone, Email). The system does not maintain an internal realtime chat module.
+- **Inventory Resolution**: If a `Product` has `ProductVariant`s, the parent `Product.stock` is ignored for availability checks; availability is strictly resolved against each `ProductVariant.stock`. If the `Product` has no variants, `Product.stock` acts as the source of truth.
 
 ## Example dialogue
 

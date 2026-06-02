@@ -36,6 +36,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     where: { id },
     include: {
       category: true,
+      brand: true,
       images: { orderBy: { sortOrder: 'asc' } },
       options: {
         orderBy: { sortOrder: 'asc' },

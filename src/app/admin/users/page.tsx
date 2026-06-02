@@ -278,12 +278,7 @@ export default function AdminUsersPage() {
                                 <option value="ADMIN" className="bg-slate-900 text-blue-400 font-bold">Quản trị viên</option>
                               </select>
                               <div className="flex gap-2">
-                                <span className="text-[9px] text-amber-500/70 border border-amber-500/20 bg-amber-500/5 px-1 rounded flex items-center gap-1" title="Cần tích hợp Backend 2FA">
-                                  <AlertTriangle className="size-2" /> TODO: Re-auth
-                                </span>
-                                <span className="text-[9px] text-emerald-500/70 border border-emerald-500/20 bg-emerald-500/5 px-1 rounded flex items-center gap-1" title="Cần tích hợp Audit Logs">
-                                  <FileText className="size-2" /> TODO: Audit
-                                </span>
+                                {/* Action buttons like Audit logs can be placed here in the future */}
                               </div>
                             </div>
                           )}
@@ -338,7 +333,7 @@ export default function AdminUsersPage() {
                     className="w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none"
                   />
                   <p className="text-[11px] text-slate-500 mt-2 flex items-center gap-1">
-                    <Lock className="size-3" /> Hành động này sẽ được lưu vào hệ thống Audit Log (TODO).
+                    <Lock className="size-3" /> Hành động này sẽ được lưu vào hệ thống nhật ký hoạt động (Audit Log).
                   </p>
                 </div>
               </div>

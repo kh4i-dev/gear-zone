@@ -1,13 +1,17 @@
 'use client'
 
-import { Calendar, CheckCircle, Clock, CreditCard, DollarSign, Edit, Lock, MessageSquare, Package, Receipt, User, X, AlertCircle } from 'lucide-react'
+import { Calendar, CheckCircle, Clock, CreditCard, DollarSign, Edit, Lock, Package, Receipt, User, X, AlertCircle, Loader2 } from 'lucide-react'
 import { cn, formatDateTime, formatPrice } from '@/lib/utils'
+import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 
 interface AdminOrder {
   id: string
   status: string
   paymentMethod?: string
   totalAmount: number
+  shippingFee?: number
+  discountAmount?: number
   createdAt: string
   user: { name: string; email: string }
   items: Array<{
@@ -71,6 +75,37 @@ const getOrderCategory = (status: string) => {
 }
 
 export function OrderDetailDrawer({ order, isOpen, onClose, onUpdateStatus, onConfirmAction, isActionLoading = false }: OrderDetailDrawerProps) {
+  const [note, setNote] = useState(order?.internalNote || '')
+  const [isSavingNote, setIsSavingNote] = useState(false)
+
+  useEffect(() => {
+    setNote(order?.internalNote || '')
+  }, [order?.internalNote])
+
+  const handleSaveNote = async () => {
+    if (!order) return
+    if (note === order.internalNote) return
+    
+    setIsSavingNote(true)
+    try {
+      const res = await fetch(`/api/admin/orders/${order.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ internalNote: note })
+      })
+      
+      if (res.ok) {
+        toast.success('Đã lưu ghi chú nội bộ')
+      } else {
+        toast.error('Không thể lưu ghi chú')
+      }
+    } catch {
+      toast.error('Lỗi khi lưu ghi chú')
+    } finally {
+      setIsSavingNote(false)
+    }
+  }
+
   if (!order) return null;
 
   return (
@@ -206,15 +241,15 @@ export function OrderDetailDrawer({ order, isOpen, onClose, onUpdateStatus, onCo
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between text-slate-400">
                   <span>Tạm tính</span>
-                  <span>{formatPrice(order.totalAmount)}</span>
+                  <span>{formatPrice(order.totalAmount - (order.shippingFee || 0) + (order.discountAmount || 0))}</span>
                 </div>
                 <div className="flex justify-between text-slate-400">
                   <span>Phí vận chuyển</span>
-                  <span className="text-slate-500 text-xs italic">Đang cập nhật</span>
+                  <span>{formatPrice(order.shippingFee || 0)}</span>
                 </div>
                 <div className="flex justify-between text-slate-400">
                   <span>Giảm giá</span>
-                  <span>0 ₫</span>
+                  <span>{order.discountAmount ? `-${formatPrice(order.discountAmount)}` : '0 ₫'}</span>
                 </div>
                 <div className="pt-4 mt-2 border-t border-white/5 flex justify-between items-center">
                   <span className="font-bold text-white">Tổng cộng</span>
@@ -225,31 +260,22 @@ export function OrderDetailDrawer({ order, isOpen, onClose, onUpdateStatus, onCo
           </section>
 
           <section className="pb-8">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2"><Lock className="size-4" /> Thông tin mở rộng & Ghi chú</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-slate-900/50 border border-dashed border-white/5 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                <Lock className="size-4 text-slate-600 mb-1.5" />
-                <p className="text-[10px] font-bold text-slate-500 uppercase">Trạng thái Escrow</p>
-                <p className="text-xs text-slate-600 mt-0.5 italic">Pending</p>
-              </div>
-              <div className="bg-slate-900/50 border border-dashed border-white/5 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                <MessageSquare className="size-4 text-slate-600 mb-1.5" />
-                <p className="text-[10px] font-bold text-slate-500 uppercase">Chat với người mua</p>
-                <p className="text-xs text-slate-600 mt-0.5 italic">Chưa khả dụng</p>
-              </div>
-            </div>
-            <div className="mt-3 bg-slate-900 border border-white/5 rounded-xl p-4">
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2"><Lock className="size-4" /> Ghi chú nội bộ</h3>
+            <div className="bg-slate-900 border border-white/5 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="text-xs font-bold text-slate-300 flex items-center gap-1.5"><Edit className="size-3" /> Ghi chú nội bộ</h4>
+                <h4 className="text-xs font-bold text-slate-300 flex items-center gap-1.5"><Edit className="size-3" /> Ghi chú (Chỉ Admin)</h4>
+                {isSavingNote && <Loader2 className="size-3 animate-spin text-blue-400" />}
               </div>
               <textarea 
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                onBlur={handleSaveNote}
                 aria-label="Ghi chú nội bộ"
-                placeholder="Chức năng ghi chú nội bộ chưa khả dụng..."
-                className="w-full bg-slate-950/50 border border-white/5 rounded-lg p-3 text-sm focus:outline-none text-slate-400 resize-none h-20"
-                disabled
+                placeholder="Nhập ghi chú vận hành, lý do hủy đơn, hẹn khách..."
+                className="w-full bg-slate-950/50 border border-white/5 rounded-lg p-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/50 text-slate-300 resize-none h-20 transition-all"
+                disabled={isSavingNote}
               />
             </div>
-            <p className="text-center text-[10px] text-slate-600 mt-6 italic">Một số thông tin hiển thị đang chờ hoàn thiện API từ backend.</p>
           </section>
         </div>
       </div>

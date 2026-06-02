@@ -127,3 +127,39 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json(fail('UPDATE_ORDER_ERROR', 'Could not update order', { traceId }), { status: 500 })
   }
 }
+
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const traceId = createTraceId()
+
+  try {
+    const user = await getCurrentUser(request)
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json(fail('UNAUTHORIZED', 'Unauthorized', { traceId }), { status: 401 })
+    }
+
+    const { id } = await params
+    const body = await request.json()
+    
+    if (!('internalNote' in body)) {
+      return NextResponse.json(badRequest('Missing field to update', { traceId }), { status: 400 })
+    }
+
+    const currentOrder = await prisma.order.findUnique({ where: { id } })
+    if (!currentOrder) {
+      return NextResponse.json(fail('ORDER_NOT_FOUND', 'Order not found', { traceId }), { status: 404 })
+    }
+
+    const updatedOrder = await prisma.order.update({
+      where: { id },
+      data: {
+        internalNote: body.internalNote === '' ? null : body.internalNote,
+      },
+      include: orderInclude,
+    })
+
+    return NextResponse.json(success(updatedOrder, { traceId }))
+  } catch (error) {
+    logServerError('api.admin.orders.patch', error, traceId)
+    return NextResponse.json(fail('UPDATE_ORDER_ERROR', 'Could not update order', { traceId }), { status: 500 })
+  }
+}

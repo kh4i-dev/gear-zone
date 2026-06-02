@@ -30,6 +30,12 @@ model Category {
   products Product[]
 }
 
+model Brand {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  products Product[]
+}
+
 model Product {
   id          String           @id @default(cuid())
   name        String
@@ -40,6 +46,7 @@ model Product {
   stock       Int              @default(0)
   soldCount   Int              @default(0)
   categoryId  String?
+  brandId     String?
   isVisible   Boolean          @default(true)
   status      String           @default("ACTIVE")
   createdAt   DateTime         @default(now())
@@ -48,6 +55,7 @@ model Product {
   orderItems  OrderItem[]
   cartItems   CartItem[]
   category    Category?        @relation(fields: [categoryId], references: [id])
+  brand       Brand?           @relation(fields: [brandId], references: [id])
   images      ProductImage[]
   options     ProductOption[]
   variants    ProductVariant[]
@@ -154,6 +162,8 @@ model Order {
   userId          String
   status          String          @default("PENDING")
   totalAmount     Float
+  shippingFee     Float           @default(0)
+  discountAmount  Float           @default(0)
   shippingName    String?
   shippingPhone   String?
   shippingAddress String?
@@ -230,6 +240,18 @@ model ActivityEvent {
   city        String?
   userId      String?
   createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  adminId    String
+  targetType String
+  targetId   String?
+  details    Json?
+  createdAt  DateTime @default(now())
 
   @@index([createdAt])
 }

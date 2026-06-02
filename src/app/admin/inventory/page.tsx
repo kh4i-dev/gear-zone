@@ -25,10 +25,7 @@ interface Product {
   variants?: { stock: number; isActive: boolean }[]
 }
 
-const isDiscontinued = (product: Product) => {
-  // TODO: Connect to backend. For now mock based on a fake condition or just assume false for demo
-  return false
-}
+
 
 const hasVariants = (product: Product) => (product.variants?.length ?? 0) > 0
 
@@ -82,7 +79,6 @@ export default function AdminInventoryPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [inventoryStatusFilter, setInventoryStatusFilter] = useState<'all' | 'in_stock' | 'low_stock' | 'out_of_stock'>('all')
-  const [showDiscontinued, setShowDiscontinued] = useState(false)
 
   useEffect(() => {
     if (!authLoading && (!user || user.role !== 'ADMIN')) {
@@ -248,8 +244,6 @@ export default function AdminInventoryPage() {
     }
     
     products.forEach(p => {
-      if (!showDiscontinued && isDiscontinued(p)) return
-
       const catName = p.category?.name || 'Chưa phân loại'
       const key = p.category?.name ? p.category.name.toLowerCase() : 'uncategorized'
       
@@ -261,12 +255,10 @@ export default function AdminInventoryPage() {
     })
 
     return Object.fromEntries(Object.entries(groups).filter(([_, v]) => v.total > 0))
-  }, [products, showDiscontinued])
+  }, [products])
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
-      if (!showDiscontinued && isDiscontinued(p)) return false
-
       const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             p.id.toLowerCase().includes(searchQuery.toLowerCase())
       if (!matchesSearch) return false
@@ -283,16 +275,14 @@ export default function AdminInventoryPage() {
 
       return true
     })
-  }, [products, searchQuery, selectedCategory, showDiscontinued, inventoryStatusFilter, stockChanges])
+  }, [products, searchQuery, selectedCategory, inventoryStatusFilter, stockChanges])
 
-  const totalProducts = products.filter(p => !(!showDiscontinued && isDiscontinued(p))).length
+  const totalProducts = products.length
   const lowStockCount = products.filter(p => {
-    if (!showDiscontinued && isDiscontinued(p)) return false
     const currentStock = stockChanges[p.id] !== undefined && !hasVariants(p) ? stockChanges[p.id] : getInventoryStock(p)
     return currentStock > 0 && currentStock <= 5
   }).length
   const outOfStockCount = products.filter(p => {
-    if (!showDiscontinued && isDiscontinued(p)) return false
     const currentStock = stockChanges[p.id] !== undefined && !hasVariants(p) ? stockChanges[p.id] : getInventoryStock(p)
     return currentStock === 0
   }).length
@@ -329,14 +319,6 @@ export default function AdminInventoryPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button type="button"
-              onClick={() => setShowDiscontinued(!showDiscontinued)}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl border transition-all ${
-                showDiscontinued ? 'bg-slate-800 border-white/10 text-white' : 'bg-slate-900 border-white/5 text-slate-400 hover:text-white'
-              }`}
-            >
-              <Filter className="size-4" /> Bao gồm hàng ngừng bán
-            </button>
             {unsavedCount > 0 && (
               <button type="button"
                 onClick={handleBulkSave}
@@ -489,7 +471,6 @@ export default function AdminInventoryPage() {
                               <p className="font-bold text-white text-sm line-clamp-1">{product.name}</p>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-[10px] font-mono text-slate-500 uppercase bg-slate-900 px-1.5 py-0.5 rounded border border-white/5">SKU: {product.id.slice(-8)}</span>
-                                {isDiscontinued(product) && <span className="text-[10px] font-bold text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20">Ngừng bán</span>}
                               </div>
                             </div>
                           </div>
