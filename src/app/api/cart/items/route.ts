@@ -78,7 +78,6 @@ export async function POST(request: NextRequest) {
         id: crypto.randomUUID(),
         type: 'ADD_TO_CART',
         productName: product.name,
-        productSlug: product.slug, // assuming slug exists, or just pass null
         createdAt: new Date().toISOString()
       }, body.socketId)
     }
