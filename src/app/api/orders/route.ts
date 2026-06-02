@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { badRequest, createTraceId, fail, logServerError, success } from '@/lib/api'
-import { createActivityEvent } from '@/lib/activity'
+import { createActivityEvent, createManyActivityEvents } from '@/lib/activity'
 
 type CheckoutItem = {
   productId: string
@@ -226,17 +226,18 @@ export async function POST(request: NextRequest) {
       select: { id: true, name: true },
     })
     const nameMap = new Map(productNames.map((p) => [p.id, p.name]))
-    for (const item of items) {
+    const activityEvents = items.map(item => {
       const name = nameMap.get(item.productId)
-      if (name) {
-        await createActivityEvent({
-          type: 'ORDER_CREATED',
-          productName: name,
-          productId: item.productId,
-          userId: user.id,
-        })
+      if (!name) return null
+      return {
+        type: 'ORDER_CREATED' as const,
+        productName: name,
+        productId: item.productId,
+        userId: user.id,
       }
-    }
+    }).filter((e): e is NonNullable<typeof e> => e !== null)
+
+    createManyActivityEvents(activityEvents)
 
     return NextResponse.json(success(order, { traceId }), { status: 201 })
   } catch (error) {

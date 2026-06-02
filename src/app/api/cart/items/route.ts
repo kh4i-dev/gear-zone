@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      await createActivityEvent({
+      createActivityEvent({
         type: 'ADD_TO_CART',
         productName: product.name,
         productId: product.id,
