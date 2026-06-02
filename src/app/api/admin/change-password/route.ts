@@ -4,6 +4,8 @@ import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { fail, success, unauthorized } from '@/lib/api'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const sessionUser = await getCurrentUser(request)

@@ -34,7 +34,8 @@ import {
   RotateCcw,
   Cpu,
   Gamepad2,
-  Star
+  Star,
+  Bell
 } from 'lucide-react'
 import { Navbar } from '@/components/domain/Navbar'
 import { useAuth } from '@/components/providers/AuthProvider'
@@ -93,6 +94,14 @@ type SettingsPageState = {
   seoTitleTemplate: string
   googleMapEmbed: string
   storeFeatures: any[]
+  telegramBotToken: string
+  telegramChatId: string
+  smtpHost: string
+  smtpPort: string
+  smtpUser: string
+  smtpPass: string
+  newsletterWelcomeEnabled: boolean
+  adminNotifyNewsletterEnabled: boolean
 }
  
 const initialSettingsPageState: SettingsPageState = {
@@ -137,6 +146,14 @@ const initialSettingsPageState: SettingsPageState = {
   seoTitleTemplate: '',
   googleMapEmbed: '',
   storeFeatures: [],
+  telegramBotToken: '',
+  telegramChatId: '',
+  smtpHost: 'smtp.gmail.com',
+  smtpPort: '587',
+  smtpUser: '',
+  smtpPass: '',
+  newsletterWelcomeEnabled: true,
+  adminNotifyNewsletterEnabled: true,
 }
  
 const menuSections = [
@@ -146,6 +163,7 @@ const menuSections = [
   { id: 'ticker', label: 'Ticker Khuyến Mãi', icon: Zap },
   { id: 'menu', label: 'Cấu hình Menu', icon: Settings },
   { id: 'contact', label: 'Thông tin liên hệ', icon: Globe },
+  { id: 'notifications', label: 'Cấu hình cảnh báo', icon: Bell },
   { id: 'policy', label: 'Chính sách & HD', icon: BookOpen },
   { id: 'seo', label: 'Cấu hình SEO', icon: Search },
   { id: 'category', label: 'Quản lý danh mục', icon: Tag },
@@ -227,6 +245,14 @@ export default function AdminSettingsPage() {
     seoTitleTemplate,
     googleMapEmbed,
     storeFeatures,
+    telegramBotToken,
+    telegramChatId,
+    smtpHost,
+    smtpPort,
+    smtpUser,
+    smtpPass,
+    newsletterWelcomeEnabled,
+    adminNotifyNewsletterEnabled,
   } = pageState
   const setVideoUrl = (videoUrl: string) => updatePageState({ videoUrl })
   const setThemeAccent = (themeAccent: string) => updatePageState({ themeAccent })
@@ -268,6 +294,14 @@ export default function AdminSettingsPage() {
   const setConfirmPassword = (confirmPassword: string) => updatePageState({ confirmPassword })
   const setActiveSection = (activeSection: string) => updatePageState({ activeSection })
   const setStoreFeatures = (storeFeatures: any[]) => updatePageState({ storeFeatures })
+  const setTelegramBotToken = (telegramBotToken: string) => updatePageState({ telegramBotToken })
+  const setTelegramChatId = (telegramChatId: string) => updatePageState({ telegramChatId })
+  const setSmtpHost = (smtpHost: string) => updatePageState({ smtpHost })
+  const setSmtpPort = (smtpPort: string) => updatePageState({ smtpPort })
+  const setSmtpUser = (smtpUser: string) => updatePageState({ smtpUser })
+  const setSmtpPass = (smtpPass: string) => updatePageState({ smtpPass })
+  const setNewsletterWelcomeEnabled = (newsletterWelcomeEnabled: boolean) => updatePageState({ newsletterWelcomeEnabled })
+  const setAdminNotifyNewsletterEnabled = (adminNotifyNewsletterEnabled: boolean) => updatePageState({ adminNotifyNewsletterEnabled })
   // 'video' | 'banner' | 'ticker' | 'contact' | 'policy' | 'seo' | 'category' | 'security'
 
   useEffect(() => {
@@ -345,6 +379,14 @@ export default function AdminSettingsPage() {
         setFaviconUrl(result.data.favicon_url || '')
         setSeoTitleTemplate(result.data.seo_title_template || '')
         setGoogleMapEmbed(result.data.google_map_embed || '')
+        setTelegramBotToken(result.data.telegram_bot_token || '')
+        setTelegramChatId(result.data.telegram_chat_id || '')
+        setSmtpHost(result.data.smtp_host || 'smtp.gmail.com')
+        setSmtpPort(result.data.smtp_port || '587')
+        setSmtpUser(result.data.smtp_user || '')
+        setSmtpPass(result.data.smtp_pass || '')
+        setNewsletterWelcomeEnabled(result.data.newsletter_welcome_enabled !== 'false')
+        setAdminNotifyNewsletterEnabled(result.data.admin_notify_newsletter_enabled !== 'false')
         
         const defaultMegaMenuJson = JSON.stringify(
           categoryMegaMenu.map(cat => ({
@@ -438,6 +480,14 @@ export default function AdminSettingsPage() {
             logo_url: logoUrl,
             favicon_url: faviconUrl,
             seo_title_template: seoTitleTemplate,
+            telegram_bot_token: telegramBotToken,
+            telegram_chat_id: telegramChatId,
+            smtp_host: smtpHost,
+            smtp_port: smtpPort,
+            smtp_user: smtpUser,
+            smtp_pass: smtpPass,
+            newsletter_welcome_enabled: newsletterWelcomeEnabled ? 'true' : 'false',
+            admin_notify_newsletter_enabled: adminNotifyNewsletterEnabled ? 'true' : 'false',
           }
         })
       })
@@ -1153,6 +1203,140 @@ export default function AdminSettingsPage() {
                   <Button type="button" onClick={() => handleSave('Liên hệ')} isLoading={isSaving} className="gap-2 bg-indigo-600 hover:bg-indigo-700 px-8 rounded-xl shadow-lg">
                     <Save className="size-4" />
                     Lưu cấu hình liên hệ
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Section: Notifications */}
+            {activeSection === 'notifications' && (
+              <div className="bg-slate-900/40 border border-white/5 p-6 rounded-3xl backdrop-blur-md shadow-xl animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 text-xl font-bold mb-6 border-b border-white/5 pb-4 text-slate-200">
+                  <Bell className="size-5 text-indigo-400" />
+                  Cấu hình cảnh báo & Email
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Telegram */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-2">Telegram Bot</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-slate-300 mb-1.5 flex items-center gap-2">
+                          <MessageSquare className="size-4 text-slate-400" />
+                          Bot Token
+                        </label>
+                        <Input
+                          placeholder="vd: 123456789:ABCdefGHIjklmNoP"
+                          value={telegramBotToken}
+                          onChange={(e) => setTelegramBotToken(e.target.value)}
+                          className="bg-black/20 border-white/10 text-white placeholder:text-slate-600 focus:border-indigo-500/50"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-slate-300 mb-1.5 flex items-center gap-2">
+                          <MessageSquare className="size-4 text-slate-400" />
+                          Chat ID
+                        </label>
+                        <Input
+                          placeholder="vd: -100123456789"
+                          value={telegramChatId}
+                          onChange={(e) => setTelegramChatId(e.target.value)}
+                          className="bg-black/20 border-white/10 text-white placeholder:text-slate-600 focus:border-indigo-500/50"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SMTP Settings */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-2">SMTP Server (Gửi Email)</h3>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-slate-300 mb-1.5 block">Host</label>
+                        <Input
+                          placeholder="smtp.gmail.com"
+                          value={smtpHost}
+                          onChange={(e) => setSmtpHost(e.target.value)}
+                          className="bg-black/20 border-white/10 text-white placeholder:text-slate-600 focus:border-indigo-500/50"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-slate-300 mb-1.5 block">Port</label>
+                        <Input
+                          placeholder="587"
+                          value={smtpPort}
+                          onChange={(e) => setSmtpPort(e.target.value)}
+                          className="bg-black/20 border-white/10 text-white placeholder:text-slate-600 focus:border-indigo-500/50"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-slate-300 mb-1.5 block">SMTP User (Email)</label>
+                      <Input
+                        placeholder="your_email@gmail.com"
+                        value={smtpUser}
+                        onChange={(e) => setSmtpUser(e.target.value)}
+                        className="bg-black/20 border-white/10 text-white placeholder:text-slate-600 focus:border-indigo-500/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-300 mb-1.5 block">SMTP Password (App Password)</label>
+                      <Input
+                        type="password"
+                        placeholder="••••••••••••••••"
+                        value={smtpPass}
+                        onChange={(e) => setSmtpPass(e.target.value)}
+                        className="bg-black/20 border-white/10 text-white placeholder:text-slate-600 focus:border-indigo-500/50"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Feature Toggles */}
+                  <div className="lg:col-span-2 mt-4 space-y-4">
+                    <h3 className="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-2">Tính năng</h3>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="flex items-center gap-3 bg-black/20 p-4 rounded-xl border border-white/5">
+                        <input
+                          type="checkbox"
+                          id="newsletter-welcome"
+                          checked={newsletterWelcomeEnabled}
+                          onChange={(e) => setNewsletterWelcomeEnabled(e.target.checked)}
+                          className="size-4 rounded border-white/10 bg-black/20 text-indigo-500 focus:ring-indigo-500/30"
+                        />
+                        <label htmlFor="newsletter-welcome" className="text-sm text-slate-300 cursor-pointer">
+                          Gửi Email chào mừng khi có người đăng ký Newsletter
+                        </label>
+                      </div>
+
+                      <div className="flex items-center gap-3 bg-black/20 p-4 rounded-xl border border-white/5">
+                        <input
+                          type="checkbox"
+                          id="admin-notify"
+                          checked={adminNotifyNewsletterEnabled}
+                          onChange={(e) => setAdminNotifyNewsletterEnabled(e.target.checked)}
+                          className="size-4 rounded border-white/10 bg-black/20 text-indigo-500 focus:ring-indigo-500/30"
+                        />
+                        <label htmlFor="admin-notify" className="text-sm text-slate-300 cursor-pointer">
+                          Báo cáo Admin qua Telegram khi có Newsletter mới
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-white/5 flex justify-end">
+                  <Button
+                    onClick={() => handleSave('notifications')}
+                    disabled={isSaving}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white min-w-[140px]"
+                  >
+                    {isSaving ? <span className="flex items-center gap-2"><RefreshCw className="size-4 animate-spin" /> Đang lưu...</span> : 'Lưu cấu hình cảnh báo'}
                   </Button>
                 </div>
               </div>

@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { createTraceId, fail, logServerError, success, badRequest } from '@/lib/api'
 
+export const dynamic = 'force-dynamic'
+
 async function getCart(userId: string) {
   const cart = await prisma.cart.findUnique({
     where: { userId },

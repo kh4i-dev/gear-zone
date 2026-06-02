@@ -4,6 +4,8 @@ import { getCurrentUser } from '@/lib/auth'
 import { createTraceId, fail, logServerError, success, badRequest } from '@/lib/api'
 import { createActivityEvent } from '@/lib/activity'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   const traceId = createTraceId()
 

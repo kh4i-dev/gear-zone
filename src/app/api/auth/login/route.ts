@@ -4,6 +4,8 @@ import { SignJWT } from 'jose'
 import { prisma } from '@/lib/db'
 import { success, fail, badRequest } from '@/lib/api'
 
+export const dynamic = 'force-dynamic'
+
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET is required')
 }

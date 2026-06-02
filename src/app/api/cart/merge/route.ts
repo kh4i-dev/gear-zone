@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { createTraceId, fail, logServerError, success } from '@/lib/api'
 
+export const dynamic = 'force-dynamic'
+
 type GuestItem = {
   productId: string
   variantId?: string | null

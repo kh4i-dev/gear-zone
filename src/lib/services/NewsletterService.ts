@@ -1,34 +1,58 @@
 import { prisma } from '@/lib/db'
 
 export class NewsletterService {
-  /**
-   * Find an existing subscription by email
-   */
+  public normalizeEmail(email: string) {
+    return email.trim().toLowerCase()
+  }
+
   public async findByEmail(email: string) {
     return await prisma.newsletterSubscription.findUnique({
-      where: { email },
+      where: { email: this.normalizeEmail(email) },
     })
   }
 
-  /**
-   * Create a new subscription
-   */
   public async subscribe(email: string, source: string = 'homepage_footer') {
-    return await prisma.newsletterSubscription.create({
-      data: {
-        email,
-        source,
-        isActive: true,
-      },
-    })
+    const normalizedEmail = this.normalizeEmail(email)
+    const existing = await this.findByEmail(normalizedEmail)
+
+    if (existing) {
+      if (!existing.isActive) {
+        const subscription = await prisma.newsletterSubscription.update({
+          where: { email: normalizedEmail },
+          data: { isActive: true, source },
+        })
+
+        return { subscription, wasCreated: false, wasReactivated: true }
+      }
+
+      return { subscription: existing, wasCreated: false, wasReactivated: false }
+    }
+
+    try {
+      const subscription = await prisma.newsletterSubscription.create({
+        data: {
+          email: normalizedEmail,
+          source,
+          isActive: true,
+        },
+      })
+
+      return { subscription, wasCreated: true, wasReactivated: false }
+    } catch (error: any) {
+      if (error?.code === 'P2002') {
+        const subscription = await this.findByEmail(normalizedEmail)
+        if (subscription) {
+          return { subscription, wasCreated: false, wasReactivated: false }
+        }
+      }
+
+      throw error
+    }
   }
 
-  /**
-   * Unsubscribe an email
-   */
   public async unsubscribe(email: string) {
     return await prisma.newsletterSubscription.update({
-      where: { email },
+      where: { email: this.normalizeEmail(email) },
       data: { isActive: false },
     })
   }

@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { badRequest, createTraceId, fail, forbidden, logServerError, success } from '@/lib/api'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const traceId = createTraceId()
   const user = await getCurrentUser(request)

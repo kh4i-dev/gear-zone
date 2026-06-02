@@ -3,6 +3,8 @@ import type { NextRequest } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { success, unauthorized } from '@/lib/api'
 
+export const dynamic = 'force-dynamic'
+
 const COOKIE_NAME = 'gearzone_session'
 
 export async function GET(request: NextRequest) {

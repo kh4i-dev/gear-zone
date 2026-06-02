@@ -1,28 +1,25 @@
+export type TelegramConfig = {
+  botToken?: string
+  chatId?: string
+}
+
 export class TelegramProvider {
-  private botToken: string | null = null
-  private chatId: string | null = null
-
-  constructor() {
-    this.botToken = process.env.TELEGRAM_BOT_TOKEN || null
-    this.chatId = process.env.TELEGRAM_CHAT_ID || null
+  public isConfigured(config: TelegramConfig): boolean {
+    return Boolean(config.botToken && config.chatId)
   }
 
-  public isConfigured(): boolean {
-    return this.botToken !== null && this.chatId !== null
-  }
-
-  public async sendMessage(message: string): Promise<boolean> {
-    if (!this.botToken || !this.chatId) {
-      console.warn('TelegramProvider is not configured (missing vars). Skipping message.')
+  public async sendMessage(message: string, config: TelegramConfig): Promise<boolean> {
+    if (!this.isConfigured(config)) {
+      console.warn('TelegramProvider is not configured (missing vars/settings). Skipping message.')
       return false
     }
 
     try {
-      const res = await fetch(`https://api.telegram.org/bot${this.botToken}/sendMessage`, {
+      const res = await fetch(`https://api.telegram.org/bot${config.botToken}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          chat_id: this.chatId,
+          chat_id: config.chatId,
           text: message,
         }),
       })

@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { badRequest, fail, forbidden, success } from '@/lib/api'
 
+export const dynamic = 'force-dynamic'
+
 const MAX_FILE_SIZE = 5 * 1024 * 1024
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
 

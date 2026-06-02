@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { success } from '@/lib/api'
 
+export const dynamic = 'force-dynamic'
+
 const COOKIE_NAME = 'gearzone_session'
 
 export async function POST() {

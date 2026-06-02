@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { badRequest, createTraceId, fail, logServerError, success } from '@/lib/api'
 
+export const dynamic = 'force-dynamic'
+
 const allowedTransitions: Record<string, string[]> = {
   AWAITING_PAYMENT: ['PROCESSING', 'CANCELLED'],
   PENDING: ['PROCESSING', 'CANCELLED'],

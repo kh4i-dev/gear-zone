@@ -12,6 +12,8 @@ import {
   validateProductRelations,
 } from '@/lib/products/adminProductPayload'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   const traceId = createTraceId()
   const user = await getCurrentUser(request)

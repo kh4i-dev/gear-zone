@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { success, fail, forbidden, badRequest } from '@/lib/api'
 
+export const dynamic = 'force-dynamic'
+
 const validRoles = ['ADMIN', 'USER', 'CUSTOMER', 'WAREHOUSE']
 
 export async function GET(request: NextRequest) {

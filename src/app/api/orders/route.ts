@@ -4,6 +4,8 @@ import { getCurrentUser } from '@/lib/auth'
 import { badRequest, createTraceId, fail, logServerError, success } from '@/lib/api'
 import { createActivityEvent, createManyActivityEvents } from '@/lib/activity'
 
+export const dynamic = 'force-dynamic'
+
 type CheckoutItem = {
   productId: string
   variantId?: string | null

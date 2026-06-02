@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { createTraceId, fail, logServerError, success } from '@/lib/api'
 import { CATEGORY_SLUG_TO_NAME, productFilters } from '@/config/productFilters'
 
+export const dynamic = 'force-dynamic'
+
 const FILTER_KEYS = new Set(['brand', 'resolution', 'refreshRate', 'connection', 'switch', 'size', 'shape', 'panel', 'layout', 'weight', 'sensor'])
 const RESERVED_QUERY_KEYS = new Set(['search', 'q', 'category', 'minPrice', 'maxPrice', 'page', 'pageSize', 'sort', 'inStockOnly'])
 const SORT_OPTIONS = new Set(['featured', 'name-asc', 'price-asc', 'price-desc', 'stock-desc', 'newest'])

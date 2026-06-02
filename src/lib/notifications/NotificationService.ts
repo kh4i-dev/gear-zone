@@ -1,5 +1,21 @@
+import { prisma } from '@/lib/db'
 import { EmailProvider } from './EmailProvider'
 import { TelegramProvider } from './TelegramProvider'
+
+type NotificationSettings = {
+  telegramBotToken?: string
+  telegramChatId?: string
+  smtpHost?: string
+  smtpPort: number
+  smtpUser?: string
+  smtpPass?: string
+  newsletterWelcomeEnabled: boolean
+  adminNotifyNewsletterEnabled: boolean
+}
+
+function enabledByDefault(value: string | undefined) {
+  return value !== 'false'
+}
 
 export class NotificationService {
   private emailProvider: EmailProvider
@@ -10,57 +26,94 @@ export class NotificationService {
     this.telegramProvider = new TelegramProvider()
   }
 
-  /**
-   * Send a Welcome Email to a new Newsletter Subscriber
-   */
-  public async sendNewsletterWelcome(email: string): Promise<boolean> {
-    const isEnabled = process.env.NEWSLETTER_WELCOME_ENABLED === 'true'
-    if (!isEnabled) return false
+  private async getSettings(): Promise<NotificationSettings> {
+    const rows = await prisma.setting.findMany({
+      where: {
+        key: {
+          in: [
+            'telegram_bot_token',
+            'telegram_chat_id',
+            'smtp_host',
+            'smtp_port',
+            'smtp_user',
+            'smtp_pass',
+            'newsletter_welcome_enabled',
+            'admin_notify_newsletter_enabled',
+          ],
+        },
+      },
+    })
+    const settingsMap = Object.fromEntries(rows.map((setting) => [setting.key, setting.value]))
+    const smtpPort = Number(settingsMap.smtp_port || process.env.SMTP_PORT || 587)
 
-    if (!this.emailProvider.isConfigured()) {
+    return {
+      telegramBotToken: settingsMap.telegram_bot_token || process.env.TELEGRAM_BOT_TOKEN || undefined,
+      telegramChatId: settingsMap.telegram_chat_id || process.env.TELEGRAM_CHAT_ID || undefined,
+      smtpHost: settingsMap.smtp_host || process.env.SMTP_HOST || 'smtp.gmail.com',
+      smtpPort: Number.isFinite(smtpPort) ? smtpPort : 587,
+      smtpUser: settingsMap.smtp_user || process.env.SMTP_USER || undefined,
+      smtpPass: settingsMap.smtp_pass || process.env.SMTP_PASS || undefined,
+      newsletterWelcomeEnabled: enabledByDefault(settingsMap.newsletter_welcome_enabled || process.env.NEWSLETTER_WELCOME_ENABLED),
+      adminNotifyNewsletterEnabled: enabledByDefault(settingsMap.admin_notify_newsletter_enabled || process.env.ADMIN_NOTIFY_NEWSLETTER_ENABLED),
+    }
+  }
+
+  public async sendNewsletterWelcome(email: string): Promise<boolean> {
+    const settings = await this.getSettings()
+    if (!settings.newsletterWelcomeEnabled) return false
+
+    const emailConfig = {
+      host: settings.smtpHost,
+      port: settings.smtpPort,
+      user: settings.smtpUser,
+      pass: settings.smtpPass,
+    }
+
+    if (!this.emailProvider.isConfigured(emailConfig)) {
       console.warn('Cannot send Newsletter Welcome. SMTP is not configured.')
       return false
     }
 
-    const subject = 'Chào mừng bạn đến với Newsletter của GearZone!'
+    const subject = 'Chao mung ban den voi Newsletter cua GearZone!'
     const html = `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #2563eb;">Chào mừng bạn đến với GearZone!</h2>
-        <p>Cảm ơn bạn đã đăng ký nhận bản tin từ GearZone.</p>
-        <p>Từ bây giờ, bạn sẽ là một trong những người đầu tiên nhận được thông báo về:</p>
+        <h2 style="color: #2563eb;">Chao mung ban den voi GearZone!</h2>
+        <p>Cam on ban da dang ky nhan ban tin tu GearZone.</p>
+        <p>Tu bay gio, ban se la mot trong nhung nguoi dau tien nhan thong bao ve:</p>
         <ul>
-          <li>Các ưu đãi và mã giảm giá độc quyền</li>
-          <li>Deal gaming gear giá tốt nhất</li>
-          <li>Thông báo khi có sản phẩm hot mới về</li>
+          <li>Cac uu dai va ma giam gia doc quyen</li>
+          <li>Deal gaming gear gia tot nhat</li>
+          <li>Thong bao khi co san pham hot moi ve</li>
         </ul>
-        <p>GearZone cam kết mang đến những thiết bị chơi game chất lượng nhất cho bạn.</p>
+        <p>GearZone cam ket mang den nhung thiet bi choi game chat luong nhat cho ban.</p>
         <br/>
-        <p>Trân trọng,</p>
-        <p><strong>Đội ngũ GearZone</strong></p>
+        <p>Tran trong,</p>
+        <p><strong>Doi ngu GearZone</strong></p>
       </div>
     `
 
-    return await this.emailProvider.sendEmail(email, subject, html)
+    return await this.emailProvider.sendEmail(email, subject, html, emailConfig)
   }
 
-  /**
-   * Send an Admin Alert via Telegram when someone subscribes
-   */
   public async notifyAdminNewSubscriber(email: string, source: string = 'unknown'): Promise<boolean> {
-    const isEnabled = process.env.ADMIN_NOTIFY_NEWSLETTER_ENABLED !== 'false' // default to true if not explicitly disabled
-    if (!isEnabled) return false
+    const settings = await this.getSettings()
+    if (!settings.adminNotifyNewsletterEnabled) return false
 
-    if (!this.telegramProvider.isConfigured()) {
+    const telegramConfig = {
+      botToken: settings.telegramBotToken,
+      chatId: settings.telegramChatId,
+    }
+
+    if (!this.telegramProvider.isConfigured(telegramConfig)) {
       console.warn('Cannot notify Admin of new subscriber. Telegram is not configured.')
       return false
     }
 
     const time = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
-    const message = `📩 Newsletter mới từ GearZone\nEmail: ${email}\nTime: ${time}\nSource: ${source}`
+    const message = `Newsletter moi tu GearZone\nEmail: ${email}\nTime: ${time}\nSource: ${source}`
 
-    return await this.telegramProvider.sendMessage(message)
+    return await this.telegramProvider.sendMessage(message, telegramConfig)
   }
 }
 
-// Export a singleton instance
 export const notificationService = new NotificationService()

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 // Simple in-memory rate limiting to prevent abuse
 const rateLimit = new Map<string, { count: number; timestamp: number }>()
 const RATE_LIMIT_WINDOW = 60000 // 1 minute
