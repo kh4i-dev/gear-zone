@@ -11,6 +11,7 @@ import { ProductRowCarousel } from '@/components/domain/ProductRowCarousel'
 import { ProductCard } from '@/components/domain/ProductCard'
 import { publicProductWhere } from '@/lib/products/publicProductHelper'
 import { selectRelatedProducts } from '@/lib/products/publicProductSections'
+import { toStoreProduct } from '@/lib/products/mapper'
 
 export const dynamic = 'force-dynamic'
 
@@ -91,7 +92,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     prisma.setting.findMany(),
   ])
 
-  const relatedProducts = selectRelatedProducts(initialRelatedProducts, product.id)
+  const relatedProducts = selectRelatedProducts(initialRelatedProducts, product.id).map(toStoreProduct)
   const settingsMap = settings.reduce((acc, setting) => ({ ...acc, [setting.key]: setting.value }), {} as Record<string, string>)
   
   const reviews = product.reviews || []

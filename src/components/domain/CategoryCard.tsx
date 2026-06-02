@@ -21,40 +21,48 @@ export function CategoryCard({ category }: CategoryCardProps) {
   return (
     <Link 
       href={`/products?category=${encodeURIComponent(name)}`}
-      className="group block relative overflow-hidden rounded-xl bg-[#070b17]/90 border border-white/[0.06] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-emerald-400/20 hover:shadow-[0_0_0_1px_rgba(16,185,129,0.08),0_12px_30px_rgba(0,0,0,0.28)]"
+      className="group block relative overflow-hidden rounded-[14px] p-[1.5px] bg-white/[0.06] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)]"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.10),transparent_58%)] opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
-
-      <div className="relative h-24 overflow-hidden bg-[#050812] sm:h-[104px] md:h-28">
-        {imageUrl ? (
-          <div className="absolute inset-0 flex items-center justify-center p-3">
-            <Image
-              src={imageUrl}
-              alt={name}
-              fill
-              className="object-contain drop-shadow-[0_16px_24px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-out group-hover:scale-105"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 180px"
-              loading="lazy"
-            />
-          </div>
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <Package className="size-7 text-slate-600" />
-          </div>
-        )}
+      {/* Animated RGB LED Border */}
+      <div className="absolute inset-0 overflow-hidden rounded-[14px]">
+        <div className="absolute -inset-[100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_0deg,#ff0000,#ff8000,#ffff00,#00ff00,#00ffff,#0000ff,#8000ff,#ff00ff,#ff0000)] opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
-      <div className="relative p-3">
-        <h3 className="text-sm font-semibold text-white mb-0.5 group-hover:text-white/90 transition-colors line-clamp-1 md:text-base">
-          {name}
-        </h3>
-        <p className="text-xs text-slate-500 mb-2">
-          {count} sản phẩm
-        </p>
-        
-        <div className="flex items-center gap-1.5 text-xs font-medium text-indigo-400 group-hover:text-indigo-300 transition-colors">
-          <span>Xem ngay</span>
-          <ArrowRight className="size-3 transition-transform duration-300 group-hover:translate-x-0.5" />
+      {/* Inner Card Content */}
+      <div className="relative h-full w-full rounded-[12.5px] bg-[#070b17] overflow-hidden flex flex-col">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.15),transparent_58%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-10" />
+
+        <div className="relative h-[60px] sm:h-[68px] bg-[#050812]/50 border-b border-white/[0.02]">
+          {imageUrl ? (
+            <div className="absolute inset-0 flex items-center justify-center p-2">
+              <Image
+                src={imageUrl}
+                alt={name}
+                fill
+                className="object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)] transition-transform duration-300 ease-out group-hover:scale-[1.12]"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 150px"
+                loading="lazy"
+              />
+            </div>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <Package className="size-5 text-slate-600" />
+            </div>
+          )}
+        </div>
+
+        <div className="relative px-2.5 py-2">
+          <h3 className="text-[12px] font-semibold text-white mb-0.5 group-hover:text-white/90 transition-colors line-clamp-1 sm:text-[13px]">
+            {name}
+          </h3>
+          <p className="text-[10px] text-slate-500/90 mb-1">
+            {count} sản phẩm
+          </p>
+          
+          <div className="flex items-center gap-1 text-[10px] font-medium text-emerald-400 group-hover:text-emerald-300 transition-colors">
+            <span>Xem ngay</span>
+            <ArrowRight className="size-2.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+          </div>
         </div>
       </div>
     </Link>

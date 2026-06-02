@@ -2,50 +2,35 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-const HOVER_SLIDESHOW_INTERVAL_MS = 1500
+const HOVER_SLIDESHOW_INTERVAL_MS = 1000
 
-export function useHoverImageSlideshow(productId: string, images: string[]) {
+export function useHoverImageSlideshow(productId: string, images: string[], productName: string = 'Unknown') {
   const [imageIndex, setImageIndex] = useState(0)
   const [hovered, setHovered] = useState(false)
-  const [disabled, setDisabled] = useState(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const [isVisible, setIsVisible] = useState(true)
+  
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const hasSlideshow = images.length > 1
 
-  // Detect touch devices and prefers-reduced-motion
-  useEffect(() => {
-    const mqlTouch = window.matchMedia('(hover: none)')
-    const mqlCoarse = window.matchMedia('(pointer: coarse)')
-    const mqlReduced = window.matchMedia('(prefers-reduced-motion: reduce)')
-
-    const updateDisabled = () => {
-      const prefersReduced = mqlReduced.matches
-      setDisabled(!hasSlideshow || prefersReduced)
-    }
-
-    updateDisabled()
-
-    mqlReduced.addEventListener('change', updateDisabled)
-    return () => {
-      mqlReduced.removeEventListener('change', updateDisabled)
-    }
+  const onPointerEnter = useCallback(() => {
+    if (hasSlideshow) setHovered(true)
   }, [hasSlideshow])
 
-  // Track tab visibility
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      setIsVisible(document.visibilityState === 'visible')
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }
+  const onPointerLeave = useCallback(() => {
+    setHovered(false)
+    setImageIndex(0)
   }, [])
 
-  // Slideshow interval — runs only when hovered, visible, and not disabled
+  const onFocus = useCallback(() => {
+    if (hasSlideshow) setHovered(true)
+  }, [hasSlideshow])
+
+  const onBlur = useCallback(() => {
+    setHovered(false)
+    setImageIndex(0)
+  }, [])
+
   useEffect(() => {
-    if (!isVisible || !hovered || disabled || !hasSlideshow) {
+    if (!hovered || !hasSlideshow) {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
         intervalRef.current = null
@@ -54,7 +39,9 @@ export function useHoverImageSlideshow(productId: string, images: string[]) {
     }
 
     intervalRef.current = setInterval(() => {
-      setImageIndex((current) => (current + 1) % images.length)
+      setImageIndex((current) => {
+        return (current + 1) % images.length
+      })
     }, HOVER_SLIDESHOW_INTERVAL_MS)
 
     return () => {
@@ -63,29 +50,7 @@ export function useHoverImageSlideshow(productId: string, images: string[]) {
         intervalRef.current = null
       }
     }
-  }, [isVisible, hovered, disabled, hasSlideshow, images.length])
-
-  const onMouseEnter = useCallback(() => {
-    if (hasSlideshow) setHovered(true)
-  }, [hasSlideshow])
-  const onMouseLeave = useCallback(() => {
-    setHovered(false)
-    setImageIndex(0)
-  }, [])
-  const onFocus = useCallback(() => {
-    if (hasSlideshow) setHovered(true)
-  }, [hasSlideshow])
-  const onBlur = useCallback(() => {
-    setHovered(false)
-    setImageIndex(0)
-  }, [])
-  const onTouchStart = useCallback(() => {
-    if (hasSlideshow) setHovered(true)
-  }, [hasSlideshow])
-  const onTouchEnd = useCallback(() => {
-    setHovered(false)
-    setImageIndex(0)
-  }, [])
+  }, [hovered, hasSlideshow, images.length])
 
   const safeImageIndex = images.length > 0 ? imageIndex % images.length : 0
   const activeImage = images[safeImageIndex] ?? images[0] ?? null
@@ -94,12 +59,12 @@ export function useHoverImageSlideshow(productId: string, images: string[]) {
     activeImage,
     imageIndex: safeImageIndex,
     bind: {
-      onMouseEnter,
-      onMouseLeave,
+      onPointerEnter,
+      onPointerLeave,
+      onMouseEnter: onPointerEnter,
+      onMouseLeave: onPointerLeave,
       onFocus,
-      onBlur,
-      onTouchStart,
-      onTouchEnd
+      onBlur
     }
   }
 }

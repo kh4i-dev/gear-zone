@@ -17,6 +17,7 @@ import {
   getVariantPrice,
   type SelectedOptions,
 } from '@/lib/products/productVariants'
+import { getPrimaryLegacyImageUrl } from '@/lib/product-images'
 
 interface ProductPurchaseExperienceProps {
   product: any
@@ -47,11 +48,66 @@ export function ProductPurchaseExperience({ product, settingsMap }: ProductPurch
   const price = getVariantPrice(product, selectedVariant)
   const persistedGallery = getOrderedGalleryImages(product, product.images ?? [])
   const primaryImage = getPrimaryProductImage(product, selectedVariant, product.images ?? [])
+  
+  const resolvedVariantImage = useMemo(() => {
+    let img = primaryImage
+    if (selectedVariant && product.images) {
+      const hasVariantSpecificImage = selectedVariant.imageUrl || (selectedVariant.images && selectedVariant.images.length > 0)
+      if (selectedVariant.imageUrl) {
+        const parsedUrl = getPrimaryLegacyImageUrl(selectedVariant.imageUrl)
+        img = parsedUrl || selectedVariant.imageUrl
+      } else if (!hasVariantSpecificImage) {
+        let match = null
+        
+        // 1. Try text matching (alt or url)
+        const selectedLabels = Object.entries(selectedOptions).map(([optId, valId]) => {
+          const option = product.options?.find((o: any) => o.id === optId)
+          return option?.values?.find((v: any) => v.id === valId)?.label
+        }).filter(Boolean)
+
+        match = product.images.find((imgInfo: any) => 
+          selectedLabels.some((label: any) => {
+            const lowerLabel = label.toLowerCase()
+            const normalizedLabel = lowerLabel.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d")
+            const lowerAlt = imgInfo.alt ? imgInfo.alt.toLowerCase() : ""
+            const lowerUrl = imgInfo.url.toLowerCase()
+            return lowerAlt.includes(lowerLabel) || lowerUrl.includes(lowerLabel) || 
+                   (normalizedLabel.length > 2 && (lowerAlt.includes(normalizedLabel) || lowerUrl.includes(normalizedLabel)))
+          })
+        )
+
+        // 2. Fallback to matching by sortOrder if there's exactly 1 option type (e.g. just Color)
+        if (!match && product.options?.length === 1 && product.images.length === product.options[0].values?.length) {
+          const option = product.options[0]
+          const selectedValueId = selectedOptions[option.id]
+          const selectedValue = option.values?.find((v: any) => v.id === selectedValueId)
+          
+          if (selectedValue) {
+            match = product.images.find((imgInfo: any) => imgInfo.sortOrder === selectedValue.sortOrder)
+          }
+        }
+
+        if (match) {
+          const parsedUrl = getPrimaryLegacyImageUrl(match.url)
+          if (parsedUrl) img = parsedUrl
+        }
+      }
+    }
+    return img
+  }, [primaryImage, product, selectedVariant, selectedOptions])
+
   const galleryImages = selectedVariant
     ? getVariantGalleryImages(selectedVariant, persistedGallery)
     : (primaryImage
         ? [primaryImage, ...persistedGallery.filter((url) => url !== primaryImage)]
         : persistedGallery)
+        
+  const displayGalleryImages = useMemo(() => {
+    if (resolvedVariantImage && !galleryImages.includes(resolvedVariantImage)) {
+      return [resolvedVariantImage, ...galleryImages.filter(url => url !== resolvedVariantImage)]
+    }
+    return galleryImages
+  }, [galleryImages, resolvedVariantImage])
   const hasVariants = (product.variants?.length ?? 0) > 0
   const currentStock = hasVariants ? selectedVariant?.stock ?? 0 : product.stock
   const isDiscontinued = product.status === 'DISCONTINUED'
@@ -108,7 +164,12 @@ export function ProductPurchaseExperience({ product, settingsMap }: ProductPurch
   return (
     <div className="p-2 rounded-[2rem] bg-white/[0.02] ring-1 ring-white/[0.06]">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 bg-[#0a0a0a] rounded-[calc(2rem-8px)] p-6 lg:p-10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
-        <ProductGallery imageUrls={galleryImages} name={product.name} />
+        <ProductGallery 
+          imageUrls={displayGalleryImages} 
+          name={product.name} 
+          selectedOptionsKey={JSON.stringify(selectedOptions)}
+          resolvedImage={resolvedVariantImage}
+        />
 
         <div className="flex flex-col">
           <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 w-fit px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-[0.15em] mb-5 ring-1 ring-emerald-500/20">

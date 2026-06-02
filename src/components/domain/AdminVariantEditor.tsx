@@ -22,6 +22,7 @@ interface AdminVariantEditorProps {
   variants: AdminVariant[]
   onOptionGroupsChange: (groups: AdminOptionGroup[]) => void
   onVariantsChange: (variants: AdminVariant[]) => void
+  productGalleryImages?: string[]
   disabled?: boolean
 }
 
@@ -85,6 +86,7 @@ export function AdminVariantEditor({
   variants,
   onOptionGroupsChange,
   onVariantsChange,
+  productGalleryImages,
   disabled,
 }: AdminVariantEditorProps) {
   const [newGroupName, setNewGroupName] = useState('')
@@ -92,6 +94,7 @@ export function AdminVariantEditor({
   const [bulkPrice, setBulkPrice] = useState('')
   const [bulkSalePrice, setBulkSalePrice] = useState('')
   const [bulkStock, setBulkStock] = useState('')
+  const [skuPrefix, setSkuPrefix] = useState('')
 
   const generatedPreview = useMemo(
     () => generateVariants(optionGroups, variants),
@@ -239,6 +242,21 @@ export function AdminVariantEditor({
       sku: variant.sku || suggestedSku(variant, optionGroups),
     })))
   }, [variants, optionGroups, onVariantsChange])
+
+  const applySkuPrefix = useCallback(() => {
+    const trimmed = skuPrefix.trim()
+    if (!trimmed) return
+    onVariantsChange(variants.map((variant, index) => ({
+      ...variant,
+      sku: `${trimmed}-${(index + 1).toString().padStart(2, '0')}`,
+    })))
+  }, [variants, skuPrefix, onVariantsChange])
+
+  const toggleAllActive = useCallback(() => {
+    if (variants.length === 0) return
+    const allActive = variants.every(v => v.isActive)
+    onVariantsChange(variants.map(v => ({ ...v, isActive: !allActive })))
+  }, [variants, onVariantsChange])
 
   return (
     <section className="space-y-4">
@@ -433,7 +451,15 @@ export function AdminVariantEditor({
                     disabled={disabled}
                     className="h-8 rounded-lg border border-white/[0.08] px-2.5 text-[11px] font-bold text-slate-300 transition-colors hover:border-blue-500/30 hover:text-white disabled:opacity-40"
                   >
-                    Tu tao SKU thieu
+                    Tự tạo SKU thiếu
+                  </button>
+                  <button
+                    type="button"
+                    onClick={toggleAllActive}
+                    disabled={disabled || variants.length === 0}
+                    className="h-8 rounded-lg border border-white/[0.08] px-2.5 text-[11px] font-bold text-slate-300 transition-colors hover:border-blue-500/30 hover:text-white disabled:opacity-40"
+                  >
+                    Bật/Tắt tất cả Active
                   </button>
                 </div>
 
@@ -490,6 +516,24 @@ export function AdminVariantEditor({
                       className="h-8 rounded-md bg-blue-600/20 px-2 text-[11px] font-bold text-blue-300 hover:bg-blue-600/30 disabled:opacity-40"
                     >
                       Ap dung
+                    </button>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      value={skuPrefix}
+                      onChange={(event) => setSkuPrefix(event.target.value)}
+                      placeholder="Prefix SKU (VD: SP01)"
+                      disabled={disabled}
+                      className="h-8 min-w-0 flex-1 rounded-md border border-white/[0.06] bg-slate-950/60 px-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500/40"
+                    />
+                    <button
+                      type="button"
+                      onClick={applySkuPrefix}
+                      disabled={disabled || !skuPrefix.trim()}
+                      className="h-8 rounded-md bg-blue-600/20 px-2 text-[11px] font-bold text-blue-300 hover:bg-blue-600/30 disabled:opacity-40"
+                    >
+                      Áp dụng
                     </button>
                   </div>
                 </div>
@@ -561,15 +605,34 @@ export function AdminVariantEditor({
                           />
                         </td>
                         <td className="px-3 py-2">
-                          <div className="relative">
-                            <ImageIcon className="absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-slate-600" />
-                            <input
-                              value={variant.imageUrl}
-                              onChange={(event) => handleVariantChange(variantIndex, 'imageUrl', event.target.value)}
-                              placeholder="URL anh"
-                              disabled={disabled}
-                              className="h-8 min-w-[150px] rounded-md border border-white/[0.06] bg-transparent py-1.5 pl-7 pr-2 text-xs text-white placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500/40"
-                            />
+                          <div className="relative flex items-center gap-2">
+                            {variant.imageUrl && (
+                              <img src={variant.imageUrl.startsWith('http') ? variant.imageUrl : `/uploads/${variant.imageUrl}`} alt="" className="size-8 rounded object-contain bg-white shrink-0" />
+                            )}
+                            <div className="relative flex-1">
+                              <ImageIcon className="absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-slate-600 pointer-events-none" />
+                              {productGalleryImages && productGalleryImages.length > 0 ? (
+                                <select
+                                  value={variant.imageUrl || ''}
+                                  onChange={(event) => handleVariantChange(variantIndex, 'imageUrl', event.target.value)}
+                                  disabled={disabled}
+                                  className="h-8 w-full min-w-[120px] rounded-md border border-white/[0.06] bg-slate-900 py-1.5 pl-7 pr-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500/40 appearance-none"
+                                >
+                                  <option value="">-- Chọn ảnh --</option>
+                                  {productGalleryImages.map((url, i) => (
+                                    <option key={i} value={url}>Ảnh {i + 1}</option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <input
+                                  value={variant.imageUrl || ''}
+                                  onChange={(event) => handleVariantChange(variantIndex, 'imageUrl', event.target.value)}
+                                  placeholder="URL ảnh"
+                                  disabled={disabled}
+                                  className="h-8 w-full min-w-[120px] rounded-md border border-white/[0.06] bg-transparent py-1.5 pl-7 pr-2 text-xs text-white placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500/40"
+                                />
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="px-3 py-2">

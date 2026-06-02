@@ -30,6 +30,8 @@ export function AdminImageGallery({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const images = useMemo(() => parseImageUrls(imageUrl), [imageUrl])
 
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+
   const handleRemove = useCallback(
     (index: number) => {
       const next = images.filter((_, i) => i !== index)
@@ -67,6 +69,35 @@ export function AdminImageGallery({
     },
     [images, onChange]
   )
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    if (disabled) return
+    setDraggedIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', index.toString())
+  }
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    if (disabled) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
+    if (disabled) return
+    e.preventDefault()
+    if (draggedIndex === null || draggedIndex === dropIndex) return
+
+    const next = [...images]
+    const [draggedItem] = next.splice(draggedIndex, 1)
+    next.splice(dropIndex, 0, draggedItem)
+    onChange(next.join('\n'))
+    setDraggedIndex(null)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null)
+  }
 
   const [urlInput, setUrlInput] = useState('')
 
@@ -116,10 +147,19 @@ export function AdminImageGallery({
             return (
               <div
                 key={`${url}-${index}`}
-                className="group relative rounded-xl overflow-hidden bg-white border border-white/[0.06] aspect-square"
+                draggable={!disabled}
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`group relative rounded-xl overflow-hidden bg-white border aspect-square transition-all ${
+                  draggedIndex === index
+                    ? 'opacity-50 scale-95 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] z-10'
+                    : 'border-white/[0.06] hover:border-white/20'
+                } ${disabled ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
               >
                 {index === 0 && (
-                  <span className="absolute top-1 left-1 z-10 px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-500/80 text-white">
+                  <span className="absolute top-1 left-1 z-10 px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-500/80 text-white shadow-sm backdrop-blur-sm">
                     Chính
                   </span>
                 )}
@@ -234,7 +274,7 @@ export function AdminImageGallery({
 
       {images.length > 0 && (
         <p className="text-[11px] text-slate-500">
-          Ảnh đầu tiên là ảnh chính. Kéo thả sắp xếp chưa hỗ trợ — dùng nút mũi tên để đổi thứ tự.
+          Ảnh đầu tiên là ảnh chính. Có thể kéo thả (drag & drop) để sắp xếp thứ tự ảnh.
         </p>
       )}
     </div>

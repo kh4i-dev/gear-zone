@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import StoreHomePageClient, { DEFAULT_HOME_SETTINGS } from './StoreHomePageClient'
 import { prisma } from '@/lib/db'
+import { toStoreProduct } from '@/lib/products/mapper'
 import { publicInStockProductWhere, publicProductWhere } from '@/lib/products/publicProductHelper'
 import { selectHomepageFeaturedProducts } from '@/lib/products/publicProductSections'
 
@@ -58,24 +59,6 @@ const homeProductInclude = {
     orderBy: { sortOrder: 'asc' as const },
     select: { url: true, sortOrder: true, isPrimary: true },
   },
-}
-
-function toStoreProduct(product: any) {
-  return {
-    id: product.id,
-    name: product.name,
-    description: product.description,
-    imageUrl: product.imageUrl,
-    price: product.price,
-    oldPrice: product.oldPrice,
-    stock: product.stock,
-    soldCount: product.soldCount,
-    category: product.category,
-    isVisible: product.isVisible,
-    status: product.status,
-    images: product.images,
-    specs: product.specs,
-  }
 }
 
 function buildHomeSettings(settings: { key: string; value: string }[]) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { ImageIcon } from 'lucide-react'
 import { ProductImageFrame } from '@/components/domain/ProductImageFrame'
@@ -8,11 +8,28 @@ import { ProductImageFrame } from '@/components/domain/ProductImageFrame'
 interface ProductGalleryProps {
   imageUrls: string[]
   name: string
+  selectedOptionsKey?: string
+  resolvedImage?: string | null
 }
 
-export function ProductGallery({ imageUrls, name }: ProductGalleryProps) {
+export function ProductGallery({ imageUrls, name, selectedOptionsKey, resolvedImage }: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const activeImage = imageUrls[activeIndex] || imageUrls[0] || ''
+
+  useEffect(() => {
+    if (selectedOptionsKey !== undefined) {
+      if (resolvedImage) {
+        const idx = imageUrls.findIndex(url => url === resolvedImage)
+        if (idx !== -1) {
+          setActiveIndex(idx)
+        } else {
+          setActiveIndex(0)
+        }
+      } else {
+        setActiveIndex(0)
+      }
+    }
+  }, [selectedOptionsKey, resolvedImage, imageUrls])
 
   if (imageUrls.length === 0) {
     return (

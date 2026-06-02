@@ -1,11 +1,11 @@
-import { Metadata } from 'next'
 import { Suspense } from 'react'
-import { ProductCatalog } from '@/components/domain/ProductCatalog'
+import { Metadata } from 'next'
 import { prisma } from '@/lib/db'
+import { ProductCatalog } from '@/components/domain/ProductCatalog'
+import { getSiteSettings } from '@/lib/settings'
+import { toStoreProduct } from '@/lib/products/mapper'
 
 export const dynamic = 'force-dynamic'
-
-import { getSiteSettings } from '@/lib/settings'
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings()
@@ -29,7 +29,10 @@ export default async function ProductsPage() {
       { soldCount: 'desc' },
       { updatedAt: 'desc' },
     ],
-  }) as any // Cast as any because ProductCatalog expects StoreProduct which might have different types (like Dates serialized as strings from API vs Date objects from Prisma)
+  })
+
+  // Map to plain objects so Next.js RSC serialization preserves the images array
+  const mappedProducts = products.map(toStoreProduct)
 
   return (
     <main className="min-h-screen bg-slate-950">
@@ -39,7 +42,7 @@ export default async function ProductsPage() {
           <p className="text-slate-400">Tìm kiếm và khám phá các sản phẩm gaming gear phù hợp với bạn.</p>
         </div>
         <Suspense fallback={<div className="text-white text-center py-10">Đang tải sản phẩm…</div>}>
-          <ProductCatalog products={products} />
+          <ProductCatalog products={mappedProducts} />
         </Suspense>
       </div>
     </main>

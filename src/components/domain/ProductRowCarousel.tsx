@@ -27,7 +27,7 @@ export function ProductRowCarousel({
   header,
   autoSlideInterval = 4000,
   pauseOnHover = true,
-  respectReducedMotion = true,
+  respectReducedMotion = false,
 }: ProductRowCarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const childArray = React.Children.toArray(children)
@@ -41,7 +41,8 @@ export function ProductRowCarousel({
   const [isCarouselHovered, setIsCarouselHovered] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
   const [containerWidth, setContainerWidth] = useState(1200)
-  const [isVisible, setIsVisible] = useState(true)
+  const [isTabVisible, setIsTabVisible] = useState(true)
+  const [isInViewport, setIsInViewport] = useState(false)
   const [isSwiping, setIsSwiping] = useState(false)
   const [isTransitionEnabled, setIsTransitionEnabled] = useState(true)
 
@@ -90,9 +91,26 @@ export function ProductRowCarousel({
 
   // Tab visibility
   useEffect(() => {
-    const handler = () => setIsVisible(document.visibilityState === 'visible')
+    const handler = () => setIsTabVisible(document.visibilityState === 'visible')
     document.addEventListener('visibilitychange', handler)
+    setIsTabVisible(document.visibilityState === 'visible')
     return () => document.removeEventListener('visibilitychange', handler)
+  }, [])
+
+  // Viewport intersection observer
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setIsInViewport(entries[0].isIntersecting)
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(el)
+    return () => observer.disconnect()
   }, [])
 
   // Responsive dimensions and reduced motion
@@ -170,7 +188,7 @@ export function ProductRowCarousel({
   useEffect(() => { slideNextRef.current = slideNext }, [slideNext])
 
   const shouldAutoSlideNow = shouldAutoSlide({
-    isVisible,
+    isVisible: isTabVisible && isInViewport,
     hovered: (pauseOnHover && isCarouselHovered) || isSwiping,
     reducedMotion: respectReducedMotion && reducedMotion,
     hasEnoughItems,
@@ -249,8 +267,8 @@ export function ProductRowCarousel({
     return (
       <div
         className="p-1.5 rounded-[1.25rem] bg-white/[0.02] ring-1 ring-white/[0.04] mb-8 select-none relative"
-        onMouseEnter={() => setIsCarouselHovered(true)}
-        onMouseLeave={() => setIsCarouselHovered(false)}
+        onPointerEnter={() => setIsCarouselHovered(true)}
+        onPointerLeave={() => setIsCarouselHovered(false)}
       >
         <div className="rounded-[calc(1.25rem-6px)] bg-[#070707] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)] overflow-hidden">
           {header && (
@@ -279,8 +297,8 @@ export function ProductRowCarousel({
   return (
     <div
       className="p-1.5 rounded-[1.25rem] bg-white/[0.02] ring-1 ring-white/[0.04] mb-8 select-none relative"
-      onMouseEnter={() => setIsCarouselHovered(true)}
-      onMouseLeave={() => setIsCarouselHovered(false)}
+      onPointerEnter={() => setIsCarouselHovered(true)}
+      onPointerLeave={() => setIsCarouselHovered(false)}
     >
       <div className="rounded-[calc(1.25rem-6px)] bg-[#070707] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)] overflow-hidden">
         {header && (
@@ -317,6 +335,7 @@ export function ProductRowCarousel({
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
           >
             <div
               className="flex"

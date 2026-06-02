@@ -53,7 +53,7 @@ export function ProductImageFrame({
         <div 
           className="absolute inset-0 flex transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
           style={{ 
-            transform: `translateX(-${activeIndex * 100}%)`, 
+            transform: `translateX(-${activeIndex * (100 / galleryImages.length)}%)`, 
             width: `${galleryImages.length * 100}%` 
           }}
         >
@@ -63,7 +63,7 @@ export function ProductImageFrame({
               <div 
                 key={`${imgSrc}-${idx}`} 
                 style={{ width: `${100 / galleryImages.length}%` }} 
-                className="relative h-full flex items-center justify-center p-3 sm:p-4 z-0"
+                className="relative h-full flex shrink-0 items-center justify-center p-3 sm:p-4 z-0"
               >
                 <Image
                   src={safeImg}
