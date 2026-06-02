@@ -38,7 +38,8 @@ app.prepare().then(() => {
   initSocketServer(httpServer)
 
   const port = process.env.PORT || 3000
-  httpServer.listen(port, () => {
-    console.log(`> Ready on http://localhost:${port}`)
+  const hostname = process.env.HOSTNAME || process.env.HOST || '127.0.0.1'
+  httpServer.listen(port, hostname, () => {
+    console.log(`> Ready on http://${hostname}:${port}`)
   })
 })
