@@ -220,3 +220,16 @@ model OrderTimeline {
 
   @@index([orderId])
 }
+
+model ActivityEvent {
+  id          String   @id @default(cuid())
+  type        String
+  productName String
+  productSlug String?
+  productId   String?
+  city        String?
+  userId      String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { createTraceId, fail, logServerError, success, badRequest } from '@/lib/api'
+import { createActivityEvent } from '@/lib/activity'
 
 export async function POST(request: NextRequest) {
   const traceId = createTraceId()
@@ -65,6 +66,13 @@ export async function POST(request: NextRequest) {
           variantId: variantId ?? null,
           quantity,
         },
+      })
+
+      await createActivityEvent({
+        type: 'ADD_TO_CART',
+        productName: product.name,
+        productId: product.id,
+        userId: user.id,
       })
     }
 
