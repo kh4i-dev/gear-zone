@@ -201,22 +201,18 @@ export default function StoreHomePageClient({
         }
       `}</style>
       {/* Ticker Section - Lucide icons, premium scrolling, no hover pause */}
-      <div className={`${accent.ticker} border-b overflow-hidden py-2 relative h-10`}>
-        {recentEvents.length > 0 ? (
-          <LiveFeedTicker events={recentEvents} accent={accent} />
-        ) : (
-          <div 
-            className="whitespace-nowrap inline-flex gap-12 px-4 animate-ticker h-full items-center"
-            style={{ animationDuration: settings.tickerSpeed }}
-          >
-            {tickerItems.map((item) => (
-              <span key={item.id} className={`${accent.tickerText} text-xs font-extrabold tracking-wider uppercase flex items-center gap-2 flex-shrink-0 select-none`}>
-                <item.icon className="size-4 shrink-0" strokeWidth={2.5} />
-                {item.text}
-              </span>
-            ))}
-          </div>
-        )}
+      <div className={`${accent.ticker} border-b overflow-hidden py-2 relative`}>
+        <div 
+          className="whitespace-nowrap inline-flex gap-12 px-4 animate-ticker"
+          style={{ animationDuration: settings.tickerSpeed }}
+        >
+          {tickerItems.map((item) => (
+            <span key={item.id} className={`${accent.tickerText} text-xs font-extrabold tracking-wider uppercase flex items-center gap-2 flex-shrink-0 select-none`}>
+              <item.icon className="size-4 shrink-0" strokeWidth={2.5} />
+              {item.text}
+            </span>
+          ))}
+        </div>
       </div>
 
       <StoreNavbar />
@@ -247,7 +243,7 @@ export default function StoreHomePageClient({
 
           <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none z-10" />
           
-          <div className="relative z-20 mt-auto pb-8 px-4 md:px-8 text-center shrink-0 flex flex-col items-center justify-center">
+          <div className="relative z-20 mt-auto pb-12 px-4 md:px-8 text-center shrink-0 flex flex-col items-center justify-center">
             <motion.h3
               initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 32, scale: 0.96 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -262,10 +258,20 @@ export default function StoreHomePageClient({
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
               transition={shouldReduce ? { duration: 0.4, ease: 'easeOut', delay: 0.3 } : { type: 'spring', stiffness: 80, damping: 18, mass: 0.8, delay: 0.3 }}
-              className="text-slate-300 max-w-3xl mx-auto text-sm md:text-base leading-relaxed mb-2 drop-shadow-md"
+              className="text-slate-300 max-w-3xl mx-auto text-sm md:text-base leading-relaxed mb-6 drop-shadow-md"
             >
               {settings.introText}
             </motion.p>
+            
+            {recentEvents.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-6 py-2.5 shadow-xl flex items-center justify-center min-w-[300px]"
+              >
+                <LiveFeedTicker events={recentEvents} accent={accent} />
+              </motion.div>
+            )}
           </div>
           
           <div className={`absolute -bottom-10 left-1/4 right-1/4 h-20 ${accent.glow} blur-[80px] rounded-full pointer-events-none`} />
