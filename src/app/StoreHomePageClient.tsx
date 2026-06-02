@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { motion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import Link from 'next/link'
 import { ArrowRight, Award, Globe, Headset, Loader2, Mail, Package, ShieldCheck, Truck, Zap, ShoppingCart, Star, ImageIcon, Tag, RotateCcw, Cpu, Gamepad2 } from 'lucide-react'
 import { StoreNavbar } from '@/components/domain/StoreNavbar'
@@ -153,6 +153,7 @@ export default function StoreHomePageClient({
   const settings = homeSettings ?? DEFAULT_HOME_SETTINGS
   const accent = accentStyles[settings.themeAccent as keyof typeof accentStyles] ?? accentStyles.indigo
   const bannerCtaLink = settings.bannerCtaLink || DEFAULT_HOME_SETTINGS.bannerCtaLink
+  const shouldReduce = useReducedMotion()
   
   const tickerItems = useMemo(() => {
     // Custom infinite ticker item list with proper Lucide icons (Emoji-free)
@@ -187,6 +188,15 @@ export default function StoreHomePageClient({
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50">
+      <style>{`
+        @keyframes hero-glow {
+          0%, 100% { text-shadow: 0 0 20px rgba(99,102,241,0); }
+          50% { text-shadow: 0 0 20px rgba(99,102,241,0.12); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hero-glow { animation: none !important; }
+        }
+      `}</style>
       {/* Ticker Section - Lucide icons, premium scrolling, no hover pause */}
       <div className={`${accent.ticker} border-b overflow-hidden py-2 relative`}>
         <div 
@@ -232,19 +242,19 @@ export default function StoreHomePageClient({
           
           <div className="relative z-20 mt-auto pb-8 px-4 md:px-8 text-center shrink-0 flex flex-col items-center justify-center">
             <motion.h3
-              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 32, scale: 0.96 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ type: 'spring', stiffness: 100, damping: 15, delay: 0.1 }}
-              className="text-2xl md:text-3xl font-semibold text-white mb-2 tracking-tight drop-shadow-lg"
+              transition={shouldReduce ? { duration: 0.4, ease: 'easeOut', delay: 0.1 } : { type: 'spring', stiffness: 80, damping: 18, mass: 0.8, delay: 0.1 }}
+              className={`text-2xl md:text-3xl font-semibold text-white mb-2 tracking-tight drop-shadow-lg ${!shouldReduce ? 'hero-glow' : ''}`}
             >
               {settings.introTitle}
             </motion.h3>
             <motion.p
-              initial={{ opacity: 0, y: 40, scale: 0.95 }}
+              initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 32, scale: 0.96 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ type: 'spring', stiffness: 100, damping: 15, delay: 0.3 }}
+              transition={shouldReduce ? { duration: 0.4, ease: 'easeOut', delay: 0.3 } : { type: 'spring', stiffness: 80, damping: 18, mass: 0.8, delay: 0.3 }}
               className="text-slate-300 max-w-3xl mx-auto text-sm md:text-base leading-relaxed mb-2 drop-shadow-md"
             >
               {settings.introText}
@@ -260,28 +270,28 @@ export default function StoreHomePageClient({
         <div className="grid gap-6 rounded-3xl bg-slate-900 border border-white/5 p-6 text-white shadow-xl md:grid-cols-[1.2fr_0.8fr] md:p-8">
           <div className="flex flex-col justify-center py-4">
             <motion.div
-              initial={{ opacity: 0, y: 40, scale: 0.95 }}
+              initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 32, scale: 0.96 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ type: 'spring', stiffness: 100, damping: 15, delay: 0.05 }}
+              transition={shouldReduce ? { duration: 0.4, ease: 'easeOut', delay: 0.05 } : { type: 'spring', stiffness: 80, damping: 18, mass: 0.8, delay: 0.05 }}
               className={`mb-4 inline-flex w-fit items-center gap-2 rounded-full ${accent.soft} px-3 py-1 text-sm font-bold`}
             >
               {settings.shopTagline}
             </motion.div>
             <motion.h1
-              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 32, scale: 0.96 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ type: 'spring', stiffness: 100, damping: 15, delay: 0.1 }}
-              className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl"
+              transition={shouldReduce ? { duration: 0.4, ease: 'easeOut', delay: 0.1 } : { type: 'spring', stiffness: 80, damping: 18, mass: 0.8, delay: 0.1 }}
+              className={`max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl ${!shouldReduce ? 'hero-glow' : ''}`}
             >
               {settings.bannerTitle}
             </motion.h1>
             <motion.p
-              initial={{ opacity: 0, y: 40, scale: 0.95 }}
+              initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 32, scale: 0.96 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ type: 'spring', stiffness: 100, damping: 15, delay: 0.3 }}
+              transition={shouldReduce ? { duration: 0.4, ease: 'easeOut', delay: 0.3 } : { type: 'spring', stiffness: 80, damping: 18, mass: 0.8, delay: 0.3 }}
               className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 md:text-base"
             >
               {settings.bannerSubtitle}
