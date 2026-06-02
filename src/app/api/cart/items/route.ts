@@ -38,13 +38,11 @@ export async function POST(request: NextRequest) {
       update: {},
     })
 
-    const existing = await prisma.cartItem.findUnique({
+    const existing = await prisma.cartItem.findFirst({
       where: {
-        cartId_productId_variantId: {
-          cartId: cart.id,
-          productId,
-          variantId: variantId ?? null,
-        },
+        cartId: cart.id,
+        productId,
+        variantId: variantId ?? null,
       },
     })
 
