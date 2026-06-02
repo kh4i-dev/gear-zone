@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import Link from 'next/link'
+import * as LucideIcons from 'lucide-react'
 import { ArrowRight, Award, Globe, Headset, Loader2, Mail, Package, ShieldCheck, Truck, Zap, ShoppingCart, Star, ImageIcon, Tag, RotateCcw, Cpu, Gamepad2 } from 'lucide-react'
 import { StoreNavbar } from '@/components/domain/StoreNavbar'
 import { ProductCard, type StoreProduct } from '@/components/domain/ProductCard'
@@ -34,10 +35,17 @@ export const DEFAULT_HOME_SETTINGS = {
   shopTagline: 'Gaming gear store',
 }
 
+type StoreFeature = {
+  icon: string
+  title: string
+  description: string
+}
+
 type HomeData = {
   featuredProducts: StoreProduct[]
   categoryProducts: StoreProduct[]
   settings?: typeof DEFAULT_HOME_SETTINGS
+  storeFeatures?: StoreFeature[]
 }
 
 const accentStyles = {
@@ -119,6 +127,7 @@ export default function StoreHomePageClient({
   featuredProducts,
   categoryProducts,
   settings: homeSettings,
+  storeFeatures,
 }: HomeData) {
   const [isSubscribing, setIsSubscribing] = useState(false)
   const [email, setEmail] = useState('')
@@ -338,20 +347,23 @@ export default function StoreHomePageClient({
           <p className="text-slate-400 max-w-2xl mx-auto">Chúng tôi mang đến những giá trị tốt nhất cho cộng đồng game thủ với dịch vụ chuyên nghiệp và sản phẩm chất lượng cao.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { icon: Award, title: 'Chính hãng 100%', desc: 'Cam kết sản phẩm chất lượng cao từ các thương hiệu hàng đầu thế giới.' },
-            { icon: Zap, title: 'Giao hàng siêu tốc', desc: 'Nhận hàng ngay trong 2h đối với khu vực nội thành.' },
-            { icon: Headset, title: 'Hỗ trợ 24/7', desc: 'Đội ngũ kỹ thuật viên luôn sẵn sàng giải đáp mọi thắc mắc của bạn.' },
-            { icon: Globe, title: 'Cộng đồng lớn mạnh', desc: `Tham gia các giải đấu và event độc quyền dành cho member ${settings.shopName}.` },
-          ].map((feature) => (
-            <div key={feature.title} className="bg-slate-900/50 border border-white/5 p-6 rounded-2xl hover:bg-slate-900 transition-colors group">
-              <div className="size-12 bg-indigo-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <feature.icon className="size-6 text-indigo-400" />
+          {(storeFeatures?.length ? storeFeatures : [
+            { icon: 'Award', title: 'Chính hãng 100%', description: 'Cam kết sản phẩm chất lượng cao từ các thương hiệu hàng đầu thế giới.' },
+            { icon: 'Zap', title: 'Giao hàng siêu tốc', description: 'Nhận hàng ngay trong 2h đối với khu vực nội thành.' },
+            { icon: 'Headset', title: 'Hỗ trợ 24/7', description: 'Đội ngũ kỹ thuật viên luôn sẵn sàng giải đáp mọi thắc mắc của bạn.' },
+            { icon: 'Globe', title: 'Cộng đồng lớn mạnh', description: `Tham gia các giải đấu và event độc quyền dành cho member ${settings.shopName}.` },
+          ]).map((feature) => {
+            const Icon = (LucideIcons as any)[feature.icon] || Award;
+            return (
+              <div key={feature.title} className="bg-slate-900/50 border border-white/5 p-6 rounded-2xl hover:bg-slate-900 transition-colors group">
+                <div className="size-12 bg-indigo-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <Icon className="size-6 text-indigo-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">{feature.description}</p>
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-              <p className="text-sm text-slate-400 leading-relaxed">{feature.desc}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

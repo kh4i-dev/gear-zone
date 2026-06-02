@@ -40,6 +40,7 @@ import { useAuth } from '@/components/providers/AuthProvider'
 import { toast } from 'sonner'
 import { Input, Button } from '@/components/domain/ui'
 import { getAdminPath } from '@/lib/adminPath'
+import { FeaturesAdmin } from './FeaturesAdmin'
  
 type SettingsStatus = {
   isLoading: boolean
@@ -90,6 +91,7 @@ type SettingsPageState = {
   faviconUrl: string
   seoTitleTemplate: string
   googleMapEmbed: string
+  storeFeatures: any[]
 }
  
 const initialSettingsPageState: SettingsPageState = {
@@ -133,11 +135,13 @@ const initialSettingsPageState: SettingsPageState = {
   faviconUrl: '',
   seoTitleTemplate: '',
   googleMapEmbed: '',
+  storeFeatures: [],
 }
  
 const menuSections = [
   { id: 'video', label: 'Giao diện & Video', icon: Film },
   { id: 'banner', label: 'Banner Trang Chủ', icon: ImageIcon },
+  { id: 'features', label: 'Tính năng nổi bật', icon: Star },
   { id: 'ticker', label: 'Ticker Khuyến Mãi', icon: Zap },
   { id: 'menu', label: 'Cấu hình Menu', icon: Settings },
   { id: 'contact', label: 'Thông tin liên hệ', icon: Globe },
@@ -221,6 +225,7 @@ export default function AdminSettingsPage() {
     faviconUrl,
     seoTitleTemplate,
     googleMapEmbed,
+    storeFeatures,
   } = pageState
   const setVideoUrl = (videoUrl: string) => updatePageState({ videoUrl })
   const setThemeAccent = (themeAccent: string) => updatePageState({ themeAccent })
@@ -261,6 +266,7 @@ export default function AdminSettingsPage() {
   const setNewPassword = (newPassword: string) => updatePageState({ newPassword })
   const setConfirmPassword = (confirmPassword: string) => updatePageState({ confirmPassword })
   const setActiveSection = (activeSection: string) => updatePageState({ activeSection })
+  const setStoreFeatures = (storeFeatures: any[]) => updatePageState({ storeFeatures })
   // 'video' | 'banner' | 'ticker' | 'contact' | 'policy' | 'seo' | 'category' | 'security'
 
   useEffect(() => {
@@ -273,8 +279,21 @@ export default function AdminSettingsPage() {
     if (user?.role === 'ADMIN') {
       fetchSettings()
       fetchCategories()
+      fetchFeatures()
     }
   }, [user])
+
+  const fetchFeatures = async () => {
+    try {
+      const res = await fetch('/api/admin/features')
+      const result = await res.json()
+      if (res.ok && result.data) {
+        setStoreFeatures(result.data)
+      }
+    } catch {
+      toast.error('Không thể tải danh sách tính năng nổi bật')
+    }
+  }
 
   const fetchCategories = async () => {
     try {
@@ -816,6 +835,17 @@ export default function AdminSettingsPage() {
                     Lưu cấu hình Banner
                   </Button>
                 </div>
+              </div>
+            )}
+
+            {/* Section: Features */}
+            {activeSection === 'features' && (
+              <div className="bg-slate-900/40 border border-white/5 p-6 rounded-3xl backdrop-blur-md shadow-xl animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 text-xl font-bold mb-6 border-b border-white/5 pb-4 text-slate-200">
+                  <Star className="size-5 text-indigo-400" />
+                  Tính năng nổi bật (Why Choose Us)
+                </div>
+                <FeaturesAdmin features={storeFeatures} onUpdate={fetchFeatures} />
               </div>
             )}
 

@@ -465,9 +465,15 @@ export function OrdersClient() {
                             <div className="size-6 rounded-full bg-slate-800 flex items-center justify-center shrink-0 border border-white/5">
                               <User className="size-3 text-slate-400" />
                             </div>
-                            <p className="font-bold text-white text-sm line-clamp-1" title={order.user.name}>{order.user.name}</p>
+                            <p className="font-bold text-white text-sm line-clamp-1" title={order.shippingName || order.user.name}>{order.shippingName || order.user.name}</p>
                           </div>
-                          <p className="text-xs text-slate-500 line-clamp-1 pl-8" title={order.user.email}>{order.user.email}</p>
+                          <p className="text-xs text-slate-500 line-clamp-1 pl-8 mb-1" title={order.user.email}>{order.user.email}</p>
+                          {(order.shippingPhone || order.shippingAddress) && (
+                            <div className="pl-8 text-[11px] text-slate-400 flex flex-col gap-0.5 mt-1">
+                              {order.shippingPhone && <span title="SĐT">📞 {order.shippingPhone}</span>}
+                              {order.shippingAddress && <span className="line-clamp-1" title={order.shippingAddress}>📍 {order.shippingAddress}</span>}
+                            </div>
+                          )}
                         </td>
                         <td className="p-4 align-top">
                           <div className="flex flex-col gap-1.5 max-w-[200px]">
