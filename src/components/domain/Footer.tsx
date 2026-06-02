@@ -125,7 +125,7 @@ export async function Footer() {
             <ul className="space-y-3.5 text-[14px]">
               {categories.map(cat => (
                 <li key={cat.id}>
-                  <Link href={`/products?category=${cat.slug}`} className="text-slate-400 hover:text-white hover:translate-x-1 inline-block transition-all duration-200">
+                  <Link href={`/products?category=${cat.name}`} className="text-slate-400 hover:text-white hover:translate-x-1 inline-block transition-all duration-200">
                     {cat.name}
                   </Link>
                 </li>
