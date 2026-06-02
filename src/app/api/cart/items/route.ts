@@ -72,6 +72,15 @@ export async function POST(request: NextRequest) {
         productId: product.id,
         userId: user.id,
       })
+      
+      const { emitSocialProofInternal } = await import('@/lib/socket-emit')
+      emitSocialProofInternal({
+        id: crypto.randomUUID(),
+        type: 'ADD_TO_CART',
+        productName: product.name,
+        productSlug: product.slug, // assuming slug exists, or just pass null
+        createdAt: new Date().toISOString()
+      }, body.socketId)
     }
 
     const updatedCart = await prisma.cart.findUnique({

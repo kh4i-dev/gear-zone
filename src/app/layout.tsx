@@ -27,26 +27,29 @@ export async function generateMetadata() {
   }
 }
 
+import { SocialProofProvider } from '@/components/providers/SocialProofProvider'
+
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const settings = await getSiteSettings()
   return (
     <html lang="vi" className={`${inter.variable}`}>
       <body className="bg-slate-950 text-white antialiased font-sans">
         <AuthProvider>
-          <CartProvider>
-            <div className="flex flex-col min-h-screen">
-              <div className="flex-1">
-                {children}
+          <SocialProofProvider>
+            <CartProvider>
+              <div className="flex flex-col min-h-screen">
+                <div className="flex-1">
+                  {children}
+                </div>
+                <Footer />
               </div>
-              <Footer />
-            </div>
-            <Toaster position="top-right" richColors />
-            <Suspense fallback={null}>
-              <AuthModal shopName={settings.shopName} />
-            </Suspense>
-            <FloatingContactWidget />
-            <SocialProofToast />
-          </CartProvider>
+              <Toaster position="top-right" richColors />
+              <Suspense fallback={null}>
+                <AuthModal shopName={settings.shopName} />
+              </Suspense>
+              <FloatingContactWidget />
+            </CartProvider>
+          </SocialProofProvider>
         </AuthProvider>
       </body>
     </html>

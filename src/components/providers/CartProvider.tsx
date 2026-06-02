@@ -2,6 +2,7 @@
 
 import React, { createContext, use, useMemo, useCallback, useState, useEffect } from 'react'
 import { useAuth } from '@/components/providers/AuthProvider'
+import { useSocialProofContext } from '@/components/providers/SocialProofProvider'
 
 export interface CartItem {
   id?: string
@@ -189,6 +190,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user])
 
+  const { socketId } = useSocialProofContext()
+
   const addToCart = useCallback(async (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
     const qty = item.quantity || 1
     const isUser = user?.id
@@ -216,6 +219,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           productId: item.productId,
           variantId: item.variantId ?? null,
           quantity: qty,
+          socketId,
         })
         setItems(apiItems)
         writeLocalCart(userKey, apiItems)
@@ -239,7 +243,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       window.dispatchEvent(new Event('gearzone_cart_changed'))
       return next
     })
-  }, [user])
+  }, [user, socketId])
 
   const removeFromCart = useCallback((productId: string, variantId: string | null = null) => {
     const isUser = user?.id
