@@ -22,11 +22,22 @@ interface Product {
   imageUrl: string | null
   categoryId: string | null
   category: { name: string } | null
+  variants?: { stock: number; isActive: boolean }[]
 }
 
 const isDiscontinued = (product: Product) => {
   // TODO: Connect to backend. For now mock based on a fake condition or just assume false for demo
   return false
+}
+
+const hasVariants = (product: Product) => (product.variants?.length ?? 0) > 0
+
+const getInventoryStock = (product: Product) => {
+  if (!hasVariants(product)) return product.stock
+  return (product.variants ?? []).reduce((total, variant) => {
+    if (!variant.isActive) return total
+    return total + variant.stock
+  }, 0)
 }
 
 export default function AdminInventoryPage() {
@@ -116,6 +127,8 @@ export default function AdminInventoryPage() {
 
   const handleStockChange = (id: string, newStock: number) => {
     if (newStock < 0) return
+    const product = products.find((item) => item.id === id)
+    if (product && hasVariants(product)) return
     setStockChanges(prev => ({
       ...prev,
       [id]: newStock
@@ -124,6 +137,10 @@ export default function AdminInventoryPage() {
 
   const handleSaveRow = async (product: Product) => {
     const newStock = stockChanges[product.id]
+    if (hasVariants(product)) {
+      toast.error('Sản phẩm có biến thể: chỉnh tồn kho trong ma trận biến thể.')
+      return
+    }
     if (newStock === undefined || newStock === product.stock) return
 
     setSavingRows(prev => ({ ...prev, [product.id]: true }))
@@ -179,6 +196,7 @@ export default function AdminInventoryPage() {
     async function saveSingleProduct(id: string) {
       const product = productMap.get(id)
       const newStock = stockChanges[id]
+      if (product && hasVariants(product)) return null
       if (!product || newStock === undefined || newStock === product.stock) return null
 
       try {
@@ -257,7 +275,7 @@ export default function AdminInventoryPage() {
       if (selectedCategory !== 'all' && catKey !== selectedCategory) return false
 
       const localStock = stockChanges[p.id]
-      const currentStock = localStock !== undefined ? localStock : p.stock
+      const currentStock = localStock !== undefined && !hasVariants(p) ? localStock : getInventoryStock(p)
 
       if (inventoryStatusFilter === 'in_stock' && currentStock <= 5) return false
       if (inventoryStatusFilter === 'out_of_stock' && currentStock > 0) return false
@@ -270,12 +288,12 @@ export default function AdminInventoryPage() {
   const totalProducts = products.filter(p => !(!showDiscontinued && isDiscontinued(p))).length
   const lowStockCount = products.filter(p => {
     if (!showDiscontinued && isDiscontinued(p)) return false
-    const currentStock = stockChanges[p.id] !== undefined ? stockChanges[p.id] : p.stock
+    const currentStock = stockChanges[p.id] !== undefined && !hasVariants(p) ? stockChanges[p.id] : getInventoryStock(p)
     return currentStock > 0 && currentStock <= 5
   }).length
   const outOfStockCount = products.filter(p => {
     if (!showDiscontinued && isDiscontinued(p)) return false
-    const currentStock = stockChanges[p.id] !== undefined ? stockChanges[p.id] : p.stock
+    const currentStock = stockChanges[p.id] !== undefined && !hasVariants(p) ? stockChanges[p.id] : getInventoryStock(p)
     return currentStock === 0
   }).length
   const unsavedCount = Object.keys(stockChanges).filter(id => {
@@ -444,8 +462,9 @@ export default function AdminInventoryPage() {
                 <tbody className="divide-y divide-white/5 text-sm">
                   {filteredProducts.map(product => {
                     const localStock = stockChanges[product.id]
-                    const currentStock = localStock !== undefined ? localStock : product.stock
-                    const isChanged = localStock !== undefined && localStock !== product.stock
+                    const isVariantProduct = hasVariants(product)
+                    const currentStock = localStock !== undefined && !isVariantProduct ? localStock : getInventoryStock(product)
+                    const isChanged = localStock !== undefined && !isVariantProduct && localStock !== product.stock
                     const isSaving = savingRows[product.id] || false
 
                     let statusBadge = <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ĐỦ HÀNG</span>
@@ -485,16 +504,17 @@ export default function AdminInventoryPage() {
                         <td className="p-4 align-middle text-center">
                           <div className="flex flex-col items-center justify-center gap-2">
                             <div className="flex items-center gap-1.5">
-                              <button type="button" onClick={() => handleStockChange(product.id, currentStock - 1)} className="size-8 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-90 transition-all flex items-center justify-center border border-white/5">
+                              <button type="button" disabled={isVariantProduct} onClick={() => handleStockChange(product.id, currentStock - 1)} className="size-8 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-90 transition-all flex items-center justify-center border border-white/5 disabled:cursor-not-allowed disabled:opacity-40">
                                 <Minus className="size-3.5" />
                               </button>
-                              <input type="number" aria-label="Số lượng tồn kho" min="0" value={currentStock} onChange={e => { const val = parseInt(e.target.value, 10); handleStockChange(product.id, isNaN(val) ? 0 : val) }} className="w-16 h-8 text-center bg-slate-950 border border-white/10 rounded-lg text-sm font-bold font-mono focus:outline-none focus:border-blue-500/50" />
-                              <button type="button" onClick={() => handleStockChange(product.id, currentStock + 1)} className="size-8 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-90 transition-all flex items-center justify-center border border-white/5">
+                              <input type="number" aria-label="S? l??ng t?n kho" min="0" value={currentStock} disabled={isVariantProduct} onChange={e => { const val = parseInt(e.target.value, 10); handleStockChange(product.id, isNaN(val) ? 0 : val) }} className="w-16 h-8 text-center bg-slate-950 border border-white/10 rounded-lg text-sm font-bold font-mono focus:outline-none focus:border-blue-500/50 disabled:cursor-not-allowed disabled:opacity-60" />
+                              <button type="button" disabled={isVariantProduct} onClick={() => handleStockChange(product.id, currentStock + 1)} className="size-8 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-90 transition-all flex items-center justify-center border border-white/5 disabled:cursor-not-allowed disabled:opacity-40">
                                 <Plus className="size-3.5" />
                               </button>
                             </div>
                             <div className="flex items-center gap-2">
                               {statusBadge}
+                              {isVariantProduct && <span className="text-[10px] text-emerald-300 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">T?nh t? bi?n th?</span>}
                               {isChanged && <span className="text-[10px] text-indigo-400 font-bold bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20">Đổi: {product.stock} ➔ {currentStock}</span>}
                             </div>
                           </div>

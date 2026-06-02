@@ -22,6 +22,13 @@ export interface AdminVariantInput {
   isActive?: boolean
 }
 
+export function computeActiveVariantStock(variants: Pick<AdminVariantInput, 'stock' | 'isActive'>[]) {
+  return variants.reduce((total, variant) => {
+    if (variant.isActive === false) return total
+    return total + variant.stock
+  }, 0)
+}
+
 function cleanUrl(value: unknown) {
   const url = String(value || '').trim()
   if (!url) return null

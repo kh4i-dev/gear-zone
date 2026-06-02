@@ -80,6 +80,19 @@ const getInventoryStatus = (stock: number): InventoryStatus => {
   return 'in_stock'
 }
 
+const getActiveVariantStockTotal = (variants: { stock: number; isActive?: boolean }[] | undefined) =>
+  (variants ?? []).reduce((total, variant) => {
+    if (variant.isActive === false) return total
+    return total + variant.stock
+  }, 0)
+
+const getAdminProductStock = (product: Pick<AdminProduct, 'stock' | 'variants'>) => {
+  if (product.variants && product.variants.length > 0) {
+    return getActiveVariantStockTotal(product.variants)
+  }
+  return product.stock
+}
+
 const getSalesStatus = (product: AdminProduct): SalesStatus => {
   if (product.status === 'DISCONTINUED') return 'discontinued'
   if (!product.isVisible) return 'hidden'
@@ -139,7 +152,9 @@ export default function AdminProductsPage() {
     : 'Chua co bien the'
   const previewPrice = previewVariant?.salePrice ?? previewVariant?.price ?? formData.price
   const previewOldPrice = previewVariant?.salePrice ? (previewVariant.price ?? formData.oldPrice) : formData.oldPrice
-  const previewStock = previewVariant?.stock ?? (Number(formData.stock) || 0)
+  const formHasVariants = formData.optionGroups.length > 0 || formData.variants.length > 0
+  const formVariantStockTotal = getActiveVariantStockTotal(formData.variants)
+  const previewStock = formHasVariants ? formVariantStockTotal : Number(formData.stock) || 0
 
   const categoryStats = useMemo(() => {
     return buildCategoryCounts(products, categories)
@@ -223,8 +238,9 @@ export default function AdminProductsPage() {
 
       setHasSubmitted(true)
 
-      const optionGroups = formData.optionGroups.length > 0 ? formData.optionGroups : undefined
-      const variants = formData.variants.length > 0 ? formData.variants : undefined
+      const optionGroups = formData.optionGroups
+      const variants = formData.variants
+      const stock = variants.length > 0 ? getActiveVariantStockTotal(variants) : Number(formData.stock) || 0
 
       const res = await fetch(url, {
         method,
@@ -236,12 +252,12 @@ export default function AdminProductsPage() {
           imageUrl: galleryUrls[0] || '',
           oldPrice: formData.oldPrice ?? null,
           price: formData.price,
-          stock: Number(formData.stock) || 0,
+          stock,
           description: formData.description.trim(),
           galleryImages: galleryUrls,
           specs: validSpecs.length > 0 ? validSpecs : null,
-          ...(optionGroups ? { optionGroups } : {}),
-          ...(variants ? { variants } : {}),
+          optionGroups,
+          variants,
         }),
       })
       const result = await res.json()
@@ -495,7 +511,8 @@ export default function AdminProductsPage() {
         }
 
         const salesStatus = getSalesStatus(product)
-        const inventoryStatus = getInventoryStatus(product.stock)
+        const productStock = getAdminProductStock(product)
+        const inventoryStatus = getInventoryStatus(productStock)
 
         let matchesTab = true
         if (filterTab === 'active') matchesTab = salesStatus === 'active'
@@ -649,16 +666,25 @@ export default function AdminProductsPage() {
                     hint={formData.oldPrice != null && formData.oldPrice > 0 && formData.price > formData.oldPrice ? "Giá bán đang cao hơn giá cũ" : undefined}
                   />
                 </div>
-                <Input
-                  label="Số lượng tồn (Chỉ cấu hình lúc tạo mới)"
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={formData.stock}
-                  onChange={(event) => setFormData({ ...formData, stock: event.target.value })}
-                  placeholder="10"
-                  required
-                />
+                {formHasVariants ? (
+                  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
+                    <p className="text-sm font-bold text-emerald-300">T?n kho ???c t?nh t? t?ng bi?n th?.</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      T?ng kho hi?n t?i: <span className="font-mono font-bold text-white">{formVariantStockTotal}</span>
+                    </p>
+                  </div>
+                ) : (
+                  <Input
+                    label="S? l??ng t?n"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={formData.stock}
+                    onChange={(event) => setFormData({ ...formData, stock: event.target.value })}
+                    placeholder="10"
+                    required
+                  />
+                )}
                 <div className="md:col-span-2">
                   <p className="block text-sm font-medium text-muted-foreground mb-1.5">Mô tả chi tiết</p>
                   <RichTextEditor
@@ -743,7 +769,7 @@ export default function AdminProductsPage() {
                       </div>
 
                       <div className="text-[11px] font-semibold text-slate-500">
-                        Tồn kho: {formData.stock || '0'}
+                        T?n kho: {previewStock}
                       </div>
                     </div>
                   </div>
@@ -935,7 +961,8 @@ export default function AdminProductsPage() {
                   <tbody className="divide-y divide-white/5">
                     {filteredProducts.map((product) => {
                       const salesStatus = getSalesStatus(product)
-                      const invStatus = getInventoryStatus(product.stock)
+                      const productStock = getAdminProductStock(product)
+                      const invStatus = getInventoryStatus(productStock)
                       const isMenuOpen = openActionMenuId === product.id
 
                       return (
@@ -992,8 +1019,8 @@ export default function AdminProductsPage() {
                           </td>
                           <td className="p-4 align-top">
                             <div className="flex flex-col gap-1.5 items-start">
-                              {invStatus === 'in_stock' && <span className="text-slate-300 font-semibold text-xs"><Boxes className="size-3.5 inline mr-1 text-slate-500" />Tồn kho: {product.stock}</span>}
-                              {invStatus === 'low_stock' && <span className="text-amber-400 font-semibold text-xs"><AlertTriangle className="size-3.5 inline mr-1" />Sắp hết: {product.stock}</span>}
+                              {invStatus === 'in_stock' && <span className="text-slate-300 font-semibold text-xs"><Boxes className="size-3.5 inline mr-1 text-slate-500" />Tổng kho: {productStock}</span>}
+                              {invStatus === 'low_stock' && <span className="text-amber-400 font-semibold text-xs"><AlertTriangle className="size-3.5 inline mr-1" />Sắp hết: {productStock}</span>}
                               {invStatus === 'out_of_stock' && <span className="text-red-400 font-bold text-xs"><XCircle className="size-3.5 inline mr-1" />Hết hàng (0)</span>}
                               <span className="text-[11px] text-slate-400 flex items-center gap-1 mt-1">
                                 <TrendingUp className="size-3 text-emerald-500" /> Đã bán: {product.soldCount}
@@ -1081,7 +1108,8 @@ export default function AdminProductsPage() {
               <div className="md:hidden divide-y divide-white/5">
                 {filteredProducts.map((product) => {
                   const salesStatus = getSalesStatus(product)
-                  const invStatus = getInventoryStatus(product.stock)
+                  const productStock = getAdminProductStock(product)
+                  const invStatus = getInventoryStatus(productStock)
                   const isMenuOpen = openActionMenuId === product.id
 
                   return (
@@ -1201,8 +1229,8 @@ export default function AdminProductsPage() {
                       <div className="grid grid-cols-2 gap-2 bg-slate-950/20 p-2.5 rounded-xl border border-white/[0.02] mt-1 text-[11px] leading-snug">
                         <div className="flex flex-col gap-1">
                           <span className="text-slate-500 font-bold uppercase tracking-wider text-[8px]">Tồn kho (Inv)</span>
-                          {invStatus === 'in_stock' && <span className="text-slate-300 font-semibold"><Boxes className="size-3 inline mr-1 text-slate-500" />Còn {product.stock}</span>}
-                          {invStatus === 'low_stock' && <span className="text-amber-400 font-semibold"><AlertTriangle className="size-3 inline mr-1" />Sắp hết {product.stock}</span>}
+                          {invStatus === 'in_stock' && <span className="text-slate-300 font-semibold"><Boxes className="size-3 inline mr-1 text-slate-500" />T?ng kho {productStock}</span>}
+                          {invStatus === 'low_stock' && <span className="text-amber-400 font-semibold"><AlertTriangle className="size-3 inline mr-1" />S?p h?t {productStock}</span>}
                           {invStatus === 'out_of_stock' && <span className="text-red-400 font-bold"><XCircle className="size-3 inline mr-1" />Hết hàng (0)</span>}
                         </div>
 

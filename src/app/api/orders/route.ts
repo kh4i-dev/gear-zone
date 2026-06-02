@@ -37,23 +37,24 @@ async function cancelExpiredOrders() {
 
       const expiredItems = expiredOrders.flatMap((order) => order.items)
       await Promise.all(expiredItems.flatMap((item) => {
-        const stockUpdate = item.variantId
-          ? tx.productVariant.update({
-              where: { id: item.variantId },
-              data: { stock: { increment: item.quantity } },
-            })
-          : tx.product.update({
-              where: { id: item.productId },
-              data: { stock: { increment: item.quantity } },
-            })
-
-        return [
-          stockUpdate,
+        const updates: any[] = [
           tx.product.update({
             where: { id: item.productId },
-            data: { soldCount: { decrement: item.quantity } },
+            data: {
+              stock: { increment: item.quantity },
+              soldCount: { decrement: item.quantity },
+            },
           }),
         ]
+
+        if (item.variantId) {
+          updates.push(tx.productVariant.update({
+            where: { id: item.variantId },
+            data: { stock: { increment: item.quantity } },
+          }))
+        }
+
+        return updates
       }))
     })
   } catch (error) {
@@ -196,23 +197,24 @@ export async function POST(request: NextRequest) {
       }
 
       await Promise.all(Array.from(seen.values()).flatMap((item) => {
-        const stockUpdate = item.variantId
-          ? tx.productVariant.update({
-              where: { id: item.variantId },
-              data: { stock: { decrement: item.quantity } },
-            })
-          : tx.product.update({
-              where: { id: item.productId },
-              data: { stock: { decrement: item.quantity } },
-            })
-
-        return [
-          stockUpdate,
+        const updates: any[] = [
           tx.product.update({
             where: { id: item.productId },
-            data: { soldCount: { increment: item.quantity } },
+            data: {
+              stock: { decrement: item.quantity },
+              soldCount: { increment: item.quantity },
+            },
           }),
         ]
+
+        if (item.variantId) {
+          updates.push(tx.productVariant.update({
+            where: { id: item.variantId },
+            data: { stock: { decrement: item.quantity } },
+          }))
+        }
+
+        return updates
       }))
 
       return newOrder

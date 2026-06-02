@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  computeActiveVariantStock,
   parseOptionGroups,
   parseVariants,
   validateProductRelations,
@@ -81,5 +82,17 @@ describe('admin product purchase option payloads', () => {
     })
 
     expect(validateProductRelations([], optionGroups, variants)).toBeNull()
+  })
+
+  it('computes product stock from active variant rows only', () => {
+    const variants = parseVariants({
+      variants: [
+        { options: { 'Mau sac': 'White' }, sku: 'WHITE', stock: 13, isActive: true },
+        { options: { 'Mau sac': 'Black' }, sku: 'BLACK', stock: 20, isActive: true },
+        { options: { 'Mau sac': 'Pink' }, sku: 'PINK', stock: 99, isActive: false },
+      ],
+    })
+
+    expect(computeActiveVariantStock(variants)).toBe(33)
   })
 })

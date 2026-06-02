@@ -6,6 +6,7 @@ import {
   parseAdminImages,
   parseOptionGroups,
   parseVariants,
+  computeActiveVariantStock,
   productRelationsInclude,
   replaceProductRelations,
   validateProductRelations,
@@ -20,30 +21,43 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   try {
     const [{ id }, body] = await Promise.all([params, request.json()])
-    const existingProduct = await prisma.product.findUnique({ where: { id } })
+    const existingProduct = await prisma.product.findUnique({
+      where: { id },
+      include: { variants: { select: { id: true } } },
+    })
     if (!existingProduct) {
       return NextResponse.json(fail('PRODUCT_NOT_FOUND', 'Product not found', { traceId }), { status: 404 })
     }
 
+    const hasDescriptionPayload = 'description' in body
+    const hasImagePayload = 'imageUrl' in body
+    const hasCategoryPayload = 'categoryName' in body
     const name = String(body.name || '').trim()
-    const description = String(body.description || '').trim()
-    const imageUrl = String(body.imageUrl || '').trim()
-    const categoryName = String(body.categoryName || '').trim()
+    const description = hasDescriptionPayload ? String(body.description || '').trim() : existingProduct.description ?? ''
+    const imageUrl = hasImagePayload ? String(body.imageUrl || '').trim() : existingProduct.imageUrl ?? ''
+    const categoryName = hasCategoryPayload ? String(body.categoryName || '').trim() : ''
     const price = Number(body.price)
     const oldPrice = body.oldPrice === '' || body.oldPrice == null ? null : Number(body.oldPrice)
     const stock = Number(body.stock)
-    const specs = Array.isArray(body.specs) ? body.specs : null
+    const specs = 'specs' in body ? (Array.isArray(body.specs) ? body.specs : null) : existingProduct.specs
     const images = parseAdminImages(body, imageUrl, name)
     const optionGroups = parseOptionGroups(body)
     const variants = parseVariants(body)
-    const relationError = validateProductRelations(images, optionGroups, variants)
+    const hasRelationPayload = 'galleryImages' in body || 'images' in body || 'optionGroups' in body || 'variants' in body
+    const hasVariants = variants.length > 0
+    const existingHasVariants = existingProduct.variants.length > 0
+    const productStock = hasVariants ? computeActiveVariantStock(variants) : stock
+    const relationError = hasRelationPayload ? validateProductRelations(images, optionGroups, variants) : null
 
     if (!name) return NextResponse.json(badRequest('Product name is required', { traceId }), { status: 400 })
     if (!Number.isFinite(price) || price <= 0) return NextResponse.json(badRequest('Sale price must be greater than 0', { traceId }), { status: 400 })
     if (oldPrice !== null && (!Number.isFinite(oldPrice) || oldPrice < price)) {
       return NextResponse.json(badRequest('Old price must be greater than or equal to sale price', { traceId }), { status: 400 })
     }
-    if (!Number.isInteger(stock) || stock < 0) return NextResponse.json(badRequest('Stock must be a non-negative integer', { traceId }), { status: 400 })
+    if (!hasVariants && (!Number.isInteger(stock) || stock < 0)) return NextResponse.json(badRequest('Stock must be a non-negative integer', { traceId }), { status: 400 })
+    if (!hasRelationPayload && existingHasVariants && stock !== existingProduct.stock) {
+      return NextResponse.json(badRequest('Variant product stock is computed from variant rows', { traceId }), { status: 400 })
+    }
     if (relationError) return NextResponse.json(badRequest(relationError, { traceId }), { status: 400 })
 
     const product = await prisma.$transaction(async (tx) => {
@@ -55,9 +69,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           imageUrl: imageUrl || null,
           price,
           oldPrice,
-          stock,
+          stock: productStock,
           specs,
-          ...(categoryName
+          ...(hasCategoryPayload && categoryName
             ? {
                 category: {
                   connectOrCreate: {
@@ -66,11 +80,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
                   },
                 },
               }
-            : { category: { disconnect: true } }),
+            : hasCategoryPayload ? { category: { disconnect: true } } : {}),
         },
       })
 
-      await replaceProductRelations(tx, id, images, optionGroups, variants)
+      if (hasRelationPayload) {
+        await replaceProductRelations(tx, id, images, optionGroups, variants)
+      }
 
       return tx.product.findUniqueOrThrow({
         where: { id },

@@ -6,6 +6,7 @@ import {
   parseAdminImages,
   parseOptionGroups,
   parseVariants,
+  computeActiveVariantStock,
   productRelationsInclude,
   replaceProductRelations,
   validateProductRelations,
@@ -54,6 +55,8 @@ export async function POST(request: NextRequest) {
     const images = parseAdminImages(body, imageUrl, name)
     const optionGroups = parseOptionGroups(body)
     const variants = parseVariants(body)
+    const hasVariants = variants.length > 0
+    const productStock = hasVariants ? computeActiveVariantStock(variants) : stock
     const relationError = validateProductRelations(images, optionGroups, variants)
 
     if (!name) return NextResponse.json(badRequest('Product name is required', { traceId }), { status: 400 })
@@ -61,7 +64,7 @@ export async function POST(request: NextRequest) {
     if (oldPrice !== null && (!Number.isFinite(oldPrice) || oldPrice < price)) {
       return NextResponse.json(badRequest('Old price must be greater than or equal to sale price', { traceId }), { status: 400 })
     }
-    if (!Number.isInteger(stock) || stock < 0) {
+    if (!hasVariants && (!Number.isInteger(stock) || stock < 0)) {
       return NextResponse.json(badRequest('Stock must be a non-negative integer', { traceId }), { status: 400 })
     }
     if (relationError) {
@@ -76,7 +79,7 @@ export async function POST(request: NextRequest) {
           imageUrl: imageUrl || null,
           price,
           oldPrice,
-          stock,
+          stock: productStock,
           specs,
           ...(categoryName
             ? {
