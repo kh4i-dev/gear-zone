@@ -74,7 +74,15 @@ export function FloatingContactWidget() {
   }, [])
 
   const hasAny = settings && (settings.hotline || settings.zalo || settings.facebook)
-  if (!hasAny) return null
+  
+  // Hide completely on admin routes, system control, and dashboard/order pages
+  const isAdminRoute = pathname.startsWith('/admin') || 
+                       pathname.startsWith('/system-control') ||
+                       pathname.includes('dashboard') ||
+                       pathname.includes('inventory') ||
+                       pathname.includes('orders')
+                       
+  if (!hasAny || isAdminRoute) return null
 
   const items = contactItems.filter((item) => settings[item.key])
   const bottomClass = pathname.startsWith('/cart')

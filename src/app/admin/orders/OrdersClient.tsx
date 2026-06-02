@@ -290,28 +290,60 @@ export function OrdersClient() {
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-8">
           <button type="button" className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/5 p-4 flex flex-col justify-between hover:bg-slate-900/60 transition-colors cursor-pointer text-left" onClick={() => setActiveTab('ALL')}>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Tổng đơn</span>
-            <span className="text-2xl font-black">{stats.total}</span>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Tổng đơn</span>
+              <Package className="size-3 text-slate-500" />
+            </div>
+            <div className="flex items-end justify-between">
+              <span className="text-2xl font-black">{stats.total}</span>
+              <span className="text-[10px] text-emerald-400 font-medium">↑ 12%</span>
+            </div>
           </button>
           <button type="button" className={cn("bg-slate-900/40 backdrop-blur-md rounded-2xl border p-4 flex flex-col justify-between hover:bg-slate-900/60 transition-colors cursor-pointer text-left", activeTab === 'PENDING' ? "border-indigo-500/40" : "border-indigo-500/10")} onClick={() => setActiveTab('PENDING')}>
-            <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider mb-2">Cần xử lý</span>
-            <span className="text-2xl font-black text-indigo-400">{stats.pending}</span>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">Cần xử lý</span>
+              <AlertCircle className="size-3 text-indigo-500/50" />
+            </div>
+            <div className="flex items-end justify-between">
+              <span className="text-2xl font-black text-indigo-400">{stats.pending}</span>
+              <span className="text-[10px] text-slate-500 font-medium">+2 hôm nay</span>
+            </div>
           </button>
           <button type="button" className={cn("bg-slate-900/40 backdrop-blur-md rounded-2xl border p-4 flex flex-col justify-between hover:bg-slate-900/60 transition-colors cursor-pointer text-left", activeTab === 'PROCESSING' ? "border-blue-500/40" : "border-blue-500/10")} onClick={() => setActiveTab('PROCESSING')}>
-            <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider mb-2">Đang xử lý</span>
-            <span className="text-2xl font-black text-blue-400">{stats.processing}</span>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Đang xử lý</span>
+              <Clock className="size-3 text-blue-500/50" />
+            </div>
+            <div className="flex items-end justify-between">
+              <span className="text-2xl font-black text-blue-400">{stats.processing}</span>
+            </div>
           </button>
           <button type="button" className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-emerald-500/10 p-4 flex flex-col justify-between hover:bg-slate-900/60 transition-colors cursor-pointer text-left" onClick={() => setActiveTab('COMPLETED')}>
-            <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mb-2">Hoàn tất</span>
-            <span className="text-2xl font-black text-emerald-400">{stats.completed}</span>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Hoàn tất</span>
+              <CheckCircle className="size-3 text-emerald-500/50" />
+            </div>
+            <div className="flex items-end justify-between">
+              <span className="text-2xl font-black text-emerald-400">{stats.completed}</span>
+              <span className="text-[10px] text-emerald-400 font-medium">↑ 5%</span>
+            </div>
           </button>
           <button type="button" className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-500/10 p-4 flex flex-col justify-between hover:bg-slate-900/60 transition-colors cursor-pointer text-left" onClick={() => setActiveTab('CANCELLED')}>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Đã hủy</span>
-            <span className="text-2xl font-black text-slate-400">{stats.cancelled}</span>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Đã hủy</span>
+              <XCircle className="size-3 text-slate-500/50" />
+            </div>
+            <div className="flex items-end justify-between">
+              <span className="text-2xl font-black text-slate-400">{stats.cancelled}</span>
+              <span className="text-[10px] text-rose-400 font-medium">↓ tuần này</span>
+            </div>
           </button>
-          <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/5 p-4 flex flex-col justify-between">
-            <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider mb-2 line-clamp-1">Doanh thu hợp lệ</span>
-            <span className="text-lg md:text-xl font-black text-amber-400 truncate" title={formatPrice(stats.revenue)}>{formatPrice(stats.revenue)}</span>
+          <div className={cn("bg-slate-900/40 backdrop-blur-md rounded-2xl border p-4 flex flex-col justify-between", stats.revenue > 0 ? "border-amber-500/20" : "border-white/5")}>
+            <div className="flex items-center justify-between mb-2">
+              <span className={cn("text-[10px] font-bold uppercase tracking-wider line-clamp-1", stats.revenue > 0 ? "text-amber-400" : "text-slate-500")}>Doanh thu hợp lệ</span>
+              <DollarSign className={cn("size-3", stats.revenue > 0 ? "text-amber-500/50" : "text-slate-600")} />
+            </div>
+            <span className={cn("text-lg md:text-xl font-black truncate", stats.revenue > 0 ? "text-amber-400" : "text-slate-500")} title={formatPrice(stats.revenue)}>{formatPrice(stats.revenue)}</span>
           </div>
         </div>
 
@@ -319,23 +351,23 @@ export function OrdersClient() {
         <div className="flex flex-col lg:flex-row justify-between gap-4 mb-6">
           <div className="flex bg-slate-900/80 p-1 border border-white/5 rounded-xl w-fit overflow-x-auto scrollbar-hide">
             {[
-              { id: 'PENDING', label: 'Cần xử lý' },
-              { id: 'PROCESSING', label: 'Đang xử lý' },
-              { id: 'COMPLETED', label: 'Hoàn tất' },
-              { id: 'ALL', label: 'Tất cả' },
-              { id: 'CANCELLED', label: 'Đã hủy / Lưu trữ' }
+              { id: 'PENDING', label: 'Cần xử lý', count: stats.pending },
+              { id: 'PROCESSING', label: 'Đang xử lý', count: stats.processing },
+              { id: 'COMPLETED', label: 'Hoàn tất', count: stats.completed },
+              { id: 'ALL', label: 'Tất cả', count: stats.total },
+              { id: 'CANCELLED', label: 'Đã hủy', count: stats.cancelled }
             ].map(tab => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id as TabStatus)}
-                className={`px-4 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap ${
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex items-center gap-2 ${
                   activeTab === tab.id
                     ? 'bg-slate-800 text-white shadow-sm'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                {tab.label}
+                {tab.label} <span className={cn("px-1.5 py-0.5 rounded-full text-[10px]", activeTab === tab.id ? "bg-slate-700 text-slate-300" : "bg-slate-800/50 text-slate-500")}>{tab.count}</span>
               </button>
             ))}
           </div>
@@ -409,67 +441,70 @@ export function OrdersClient() {
                     const isCancelled = getOrderCategory(order.status) === 'CANCELLED'
 
                     return (
-                      <tr key={order.id} className={cn("hover:bg-slate-900/60 transition-colors", isCancelled && "opacity-60")}>
+                    return (
+                      <tr key={order.id} className={cn("hover:bg-slate-900/60 transition-colors relative", activeMenu === order.id ? "z-50" : "z-0", isCancelled && "opacity-60")}>
                         <td className="p-4 pl-6 align-top">
-                          <button type="button" onClick={() => openDrawer(order)} className="font-mono text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 px-2 py-1 rounded-lg border border-blue-500/20">
-                            #{order.id.slice(0, 8).toUpperCase()}
+                          <button type="button" onClick={() => openDrawer(order)} className="font-mono text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 px-2.5 py-1.5 rounded-lg border border-blue-500/20 shadow-sm flex items-center gap-1 w-fit">
+                            <span className="text-blue-500/50">#</span>{order.id.slice(0, 8).toUpperCase()}
                           </button>
                         </td>
                         <td className="p-4 align-top">
-                          <p className="font-bold text-white text-sm line-clamp-1" title={order.user.name}>{order.user.name}</p>
-                          <p className="text-xs text-slate-400 mt-0.5 line-clamp-1" title={order.user.email}>{order.user.email}</p>
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="size-6 rounded-full bg-slate-800 flex items-center justify-center shrink-0 border border-white/5">
+                              <User className="size-3 text-slate-400" />
+                            </div>
+                            <p className="font-bold text-white text-sm line-clamp-1" title={order.user.name}>{order.user.name}</p>
+                          </div>
+                          <p className="text-xs text-slate-500 line-clamp-1 pl-8" title={order.user.email}>{order.user.email}</p>
                         </td>
                         <td className="p-4 align-top">
-                          <div className="flex flex-col gap-1 max-w-[200px]">
+                          <div className="flex flex-col gap-1.5 max-w-[200px]">
                             {order.items.slice(0, 2).map((item, idx) => (
-                              <p key={item.id || idx} className="text-xs text-slate-300 line-clamp-1">
-                                <span className="text-slate-500 mr-1">{item.quantity}x</span> {item.product.name}
+                              <p key={item.id || idx} className="text-xs text-slate-300 line-clamp-1 flex items-start gap-1.5">
+                                <span className="text-slate-500 bg-slate-800 px-1 rounded text-[10px] font-mono leading-tight">{item.quantity}x</span> {item.product.name}
                               </p>
                             ))}
                             {order.items.length > 2 && (
-                              <p className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">+ {order.items.length - 2} sản phẩm khác</p>
+                              <p className="text-[10px] text-slate-500 font-bold uppercase mt-0.5 inline-flex items-center bg-slate-800/50 w-fit px-1.5 rounded">+ {order.items.length - 2} sản phẩm khác</p>
                             )}
                           </div>
                         </td>
                         <td className="p-4 align-top">
                           <div className="flex flex-col gap-1.5 items-start">
-                            <span className="inline-flex items-center text-[10px] uppercase font-bold tracking-wider text-slate-300 bg-slate-900 border border-white/10 rounded px-2 py-1 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-300 bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1 whitespace-nowrap shadow-sm">
                               {payIcon} {paymentMethodLabels[order.paymentMethod || 'cod'] || 'COD'}
-                            </span>
-                            <span className="text-[10px] text-slate-500 font-medium italic">
-                              Đã xác nhận
                             </span>
                           </div>
                         </td>
                         <td className="p-4 align-top">
-                          <span className={cn('inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border', statusClass)}>
+                          <span className={cn('inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border shadow-sm', statusClass)}>
                             {statusLabel}
                           </span>
                         </td>
                         <td className="p-4 text-xs text-slate-400 align-top">
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-slate-300">{formatDateTime(order.createdAt).split(' ')[1]}</span>
-                            <span className="text-[10px]">{formatDateTime(order.createdAt).split(' ')[0]}</span>
+                          <div className="flex flex-col gap-1 bg-slate-900/50 rounded-lg p-2 border border-white/5 w-fit">
+                            <span className="text-slate-200 font-medium flex items-center gap-1.5"><Calendar className="size-3 text-slate-500"/> {formatDateTime(order.createdAt).split(' ')[0]}</span>
+                            <span className="text-[10px] text-slate-500 flex items-center gap-1.5 pl-4">{formatDateTime(order.createdAt).split(' ')[1]}</span>
                           </div>
                         </td>
-                        <td className="p-4 pr-6 text-right font-mono font-bold text-white align-top">
+                        <td className="p-4 pr-6 text-right font-mono font-bold text-amber-400 align-top">
                           {formatPrice(order.totalAmount)}
                         </td>
-                        <td className="p-4 pr-6 align-top text-right">
+                        <td className="p-4 pr-6 align-top text-right relative">
                           <div className="relative inline-block text-left">
                             <button
                               type="button"
                               onClick={() => setActiveMenu(activeMenu === order.id ? null : order.id)}
                               aria-label="More options"
                               className={cn(
-                                "p-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/50",
-                                activeMenu === order.id ? "bg-slate-800 text-white" : "bg-slate-900/50 text-slate-400 hover:bg-slate-800 hover:text-white"
+                                "p-1.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50 relative z-10",
+                                activeMenu === order.id ? "bg-slate-700 text-white shadow-inner" : "bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-white border border-white/5"
                               )}
                             >
                               <MoreVertical className="size-4" />
                             </button>
                             {activeMenu === order.id && (
-                              <div className="absolute right-0 mt-2 w-48 rounded-xl shadow-lg bg-slate-800 border border-white/10 ring-1 ring-black ring-opacity-5 focus:outline-none z-50 overflow-hidden text-left">
+                              <div className="absolute right-0 mt-2 w-48 rounded-xl shadow-2xl bg-slate-800 border border-white/10 ring-1 ring-black ring-opacity-5 focus:outline-none z-[100] overflow-hidden text-left origin-top-right animate-in zoom-in-95 duration-100">
                                 <div className="py-1">
                                   <button type="button" onClick={() => { openDrawer(order); setActiveMenu(null) }} className="flex w-full items-center px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700">
                                     <Eye className="size-3.5 mr-2" /> Xem chi tiết
