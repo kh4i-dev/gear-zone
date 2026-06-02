@@ -123,7 +123,7 @@ export function OrderDetailDrawer({ order, isOpen, onClose, onUpdateStatus, onCo
                     Nhận xử lý
                   </button>
                 )}
-                {!['CANCELLED', 'REFUNDED', 'COMPLETED', 'DELIVERED'].includes(order.status) && (
+                {['PENDING', 'PROCESSING'].includes(order.status) && (
                   <button type="button" disabled={isActionLoading} onClick={() => onConfirmAction({ type: 'CANCEL', orderId: order.id })} className="px-3 py-1.5 bg-slate-800 hover:bg-red-500/20 hover:text-red-400 text-white/80 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                     Hủy đơn
                   </button>

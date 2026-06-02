@@ -530,21 +530,15 @@ export function OrdersClient() {
                                     </button>
                                   )}
                                   
-                                  {['PROCESSING', 'DELIVERING'].includes(order.status) && (
+                                  {order.status === 'PROCESSING' && (
                                     <button type="button" disabled={isActionLoading} onClick={() => handleUpdateStatus(order.id, 'COMPLETED')} className="flex w-full items-center px-4 py-2 text-xs font-semibold text-emerald-400 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
                                       <CheckCircle className="size-3.5 mr-2" /> Hoàn tất đơn
                                     </button>
                                   )}
                                   
-                                  {!['CANCELLED', 'REFUNDED', 'DELIVERED', 'COMPLETED'].includes(order.status) && (
+                                  {['PENDING', 'PROCESSING'].includes(order.status) && (
                                     <button type="button" disabled={isActionLoading} onClick={() => setConfirmAction({ type: 'CANCEL', orderId: order.id })} className="flex w-full items-center px-4 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
                                       <XCircle className="size-3.5 mr-2" /> Hủy đơn
-                                    </button>
-                                  )}
-                                  
-                                  {(order.status === 'CANCELLED' || order.status === 'DELIVERED' || order.status === 'COMPLETED') && (
-                                    <button type="button" disabled={isActionLoading} onClick={() => setConfirmAction({ type: 'REFUND', orderId: order.id })} className="flex w-full items-center px-4 py-2 text-xs font-semibold text-amber-400 hover:bg-amber-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
-                                      <DollarSign className="size-3.5 mr-2" /> Hoàn tiền (Refund)
                                     </button>
                                   )}
                                 </div>
