@@ -22,7 +22,7 @@ GearZone is a robust, direct-to-consumer (B2C) e-commerce platform specifically 
 
 The architecture is built for speed, safety, and extendability, making it suitable for modern production deployments.
 
-![GearZone Component Architecture](images/so_do_thanh_phan_v2.svg)
+![GearZone Component Architecture](images/storefront_home.png)
 
 ---
 
@@ -33,6 +33,8 @@ The architecture is built for speed, safety, and extendability, making it suitab
 - **Smart Filtering:** Dynamic filters based on technical specifications.
 - **High Performance:** Server-Side Rendering (SSR) via Next.js App Router.
 - **Cart Management:** Persistent shopping cart and checkout flows.
+
+![Products Listing](images/storefront_products.png)
 
 ### Admin Dashboard
 - **Product Matrix:** Manage hundreds of variants via an intuitive matrix UI.
