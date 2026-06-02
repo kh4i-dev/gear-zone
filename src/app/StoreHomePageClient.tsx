@@ -9,8 +9,6 @@ import { ProductCard, type StoreProduct } from '@/components/domain/ProductCard'
 import { HomeCategorySection } from '@/components/domain/HomeCategorySection'
 import { ProductRowCarousel } from '@/components/domain/ProductRowCarousel'
 import { useCart } from '@/components/providers/CartProvider'
-import { useSocialProofContext } from '@/components/providers/SocialProofProvider'
-import { LiveFeedTicker } from '@/components/domain/LiveFeedTicker'
 import { toast } from 'sonner'
 import { formatPrice } from '@/lib/utils'
 import { isPublicProduct } from '@/lib/products/publicProductHelper'
@@ -124,7 +122,6 @@ export default function StoreHomePageClient({
 }: HomeData) {
   const [isSubscribing, setIsSubscribing] = useState(false)
   const [email, setEmail] = useState('')
-  const { recentEvents } = useSocialProofContext()
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -200,20 +197,6 @@ export default function StoreHomePageClient({
           .hero-glow { animation: none !important; }
         }
       `}</style>
-      {/* Ticker Section - Lucide icons, premium scrolling, no hover pause */}
-      <div className={`${accent.ticker} border-b overflow-hidden py-2 relative`}>
-        <div 
-          className="whitespace-nowrap inline-flex gap-12 px-4 animate-ticker"
-          style={{ animationDuration: settings.tickerSpeed }}
-        >
-          {tickerItems.map((item) => (
-            <span key={item.id} className={`${accent.tickerText} text-xs font-extrabold tracking-wider uppercase flex items-center gap-2 flex-shrink-0 select-none`}>
-              <item.icon className="size-4 shrink-0" strokeWidth={2.5} />
-              {item.text}
-            </span>
-          ))}
-        </div>
-      </div>
 
       <StoreNavbar />
 
@@ -243,7 +226,7 @@ export default function StoreHomePageClient({
 
           <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none z-10" />
           
-          <div className="relative z-20 mt-auto pb-12 px-4 md:px-8 text-center shrink-0 flex flex-col items-center justify-center">
+          <div className="relative z-20 mt-auto pb-16 px-4 md:px-8 text-center shrink-0 flex flex-col items-center justify-center">
             <motion.h3
               initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 32, scale: 0.96 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -263,15 +246,23 @@ export default function StoreHomePageClient({
               {settings.introText}
             </motion.p>
             
-            {recentEvents.length > 0 && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-6 py-2.5 shadow-xl flex items-center justify-center min-w-[300px]"
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full max-w-3xl overflow-hidden bg-black/40 backdrop-blur-md border border-white/10 rounded-full py-2.5 shadow-xl relative"
+            >
+              <div 
+                className="whitespace-nowrap inline-flex gap-8 px-4 animate-ticker hover:[animation-play-state:paused]"
+                style={{ animationDuration: settings.tickerSpeed }}
               >
-                <LiveFeedTicker events={recentEvents} accent={accent} />
-              </motion.div>
-            )}
+                {[...tickerItems, ...tickerItems].map((item, idx) => (
+                  <span key={`${item.id}-${idx}`} className="text-white/90 text-sm font-semibold tracking-wider flex items-center gap-2 flex-shrink-0 select-none">
+                    <item.icon className="size-4 shrink-0 opacity-80" strokeWidth={2.5} />
+                    {item.text}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
           </div>
           
           <div className={`absolute -bottom-10 left-1/4 right-1/4 h-20 ${accent.glow} blur-[80px] rounded-full pointer-events-none`} />
