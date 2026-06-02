@@ -32,6 +32,10 @@ interface AdminOrder {
   paymentStatus?: string
   refundStatus?: string
   internalNote?: string
+  shippingPhone?: string | null
+  shippingAddress?: string | null
+  shippingName?: string | null
+  shippingCccd?: string | null
 }
 
 type TabStatus = 'ALL' | 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED'

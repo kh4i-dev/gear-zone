@@ -19,6 +19,10 @@ interface AdminOrder {
   paymentStatus?: string
   refundStatus?: string
   internalNote?: string
+  shippingPhone?: string | null
+  shippingAddress?: string | null
+  shippingName?: string | null
+  shippingCccd?: string | null
 }
 
 interface OrderDetailDrawerProps {
@@ -144,11 +148,19 @@ export function OrderDetailDrawer({ order, isOpen, onClose, onUpdateStatus, onCo
                 <div className="mt-4 pt-4 border-t border-white/5 grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Số điện thoại</p>
-                    <p className="text-xs text-slate-500 font-medium italic">Chưa có dữ liệu</p>
+                    {order.shippingPhone ? (
+                      <p className="text-xs text-slate-200 font-medium">{order.shippingPhone}</p>
+                    ) : (
+                      <p className="text-xs text-slate-500 font-medium italic">Chưa có dữ liệu</p>
+                    )}
                   </div>
                   <div>
                     <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Địa chỉ giao</p>
-                    <p className="text-xs text-slate-500 font-medium italic">Chưa có dữ liệu</p>
+                    {order.shippingAddress ? (
+                      <p className="text-xs text-slate-200 font-medium">{order.shippingAddress}</p>
+                    ) : (
+                      <p className="text-xs text-slate-500 font-medium italic">Chưa có dữ liệu</p>
+                    )}
                   </div>
                 </div>
               </div>
