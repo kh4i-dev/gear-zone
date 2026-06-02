@@ -18,7 +18,7 @@ function readEnvValue(key) {
 
 const ADMIN_PREFIX = readEnvValue('NEXT_PUBLIC_ADMIN_PANEL_PREFIX') || 'system-control'
 const ADMIN_LOGIN = readEnvValue('NEXT_PUBLIC_ADMIN_LOGIN_PATH') || 'auth-login'
-const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || readEnvValue('ADMIN_PASSWORD') || '123'
+const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || readEnvValue('ADMIN_PASSWORD')
 
 fs.mkdirSync(OUT_DIR, { recursive: true })
 
@@ -80,7 +80,7 @@ async function registerAndLogin(page) {
   const username = `showcase${suffix}`
   const phone = `09${suffix.slice(0, 8)}`
   const email = `${username}@example.com`
-  const password = 'Showcase123'
+  const password = `showcase-${suffix}-${Math.random().toString(36).slice(2, 10)}`
 
   await page.request.post(`${BASE_URL}/api/auth/register`, {
     data: {
@@ -113,10 +113,14 @@ async function registerAndLogin(page) {
   const meResponse = await page.request.get(`${BASE_URL}/api/auth/me`)
   const me = await meResponse.json()
 
-  return { username, password, user: me.data }
+  return { username, user: me.data }
 }
 
 async function loginAdmin(page) {
+  if (!ADMIN_PASSWORD) {
+    throw new Error('Set TEST_ADMIN_PASSWORD or ADMIN_PASSWORD before capturing admin screenshots')
+  }
+
   await page.goto(`${BASE_URL}/${ADMIN_PREFIX}/${ADMIN_LOGIN}`)
   await waitForSettled(page)
   await page.locator('input[name="username"], input[type="email"], input[type="text"]').first().fill('admin')
