@@ -44,38 +44,22 @@ export function ProductImageFrame({
   const hasMultipleImages = galleryImages && galleryImages.length >= 2
 
   if (hasMultipleImages) {
+    const activeSrc = getSafeImageSrc(galleryImages[activeIndex] ?? galleryImages[0])
+
     return (
       <div className={`relative ${aspectRatio} w-full overflow-hidden bg-white rounded-xl border border-white/[0.06] shadow-[0_4px_16px_rgba(0,0,0,0.3)] ${className}`}>
-        {/* Premium white stage background */}
         <div className="absolute inset-0 bg-[#ffffff]" />
 
-        {/* Sliding flex container */}
-        <div 
-          className="absolute inset-0 flex transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
-          style={{ 
-            transform: `translateX(-${activeIndex * (100 / galleryImages.length)}%)`, 
-            width: `${galleryImages.length * 100}%` 
-          }}
-        >
-          {galleryImages.map((imgSrc, idx) => {
-            const safeImg = getSafeImageSrc(imgSrc)
-            return (
-              <div 
-                key={`${imgSrc}-${idx}`} 
-                style={{ width: `${100 / galleryImages.length}%` }} 
-                className="relative h-full flex shrink-0 items-center justify-center p-3 sm:p-4 z-0"
-              >
-                <Image
-                  src={safeImg}
-                  alt={`${alt} image ${idx + 1}`}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  priority={priority && idx === 0}
-                  className={`object-contain transition-transform duration-500 ease-out-expo ${innerClassName}`}
-                />
-              </div>
-            )
-          })}
+        <div className="absolute inset-3 sm:inset-4 flex items-center justify-center z-0">
+          <Image
+            src={activeSrc}
+            alt={alt}
+            fill
+            sizes="(max-width: 640px) calc(100vw - 32px), (max-width: 1024px) 50vw, 25vw"
+            priority={priority}
+            className={`object-contain transition-transform duration-500 ease-out-expo ${innerClassName}`}
+            onError={() => setFailedSrc(activeSrc)}
+          />
         </div>
       </div>
     )
@@ -92,7 +76,7 @@ export function ProductImageFrame({
           src={safeSrc}
           alt={alt}
           fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          sizes="(max-width: 640px) calc(100vw - 32px), (max-width: 1024px) 50vw, 25vw"
           priority={priority}
           className={`object-contain transition-transform duration-500 ease-out-expo ${innerClassName}`}
           onError={() => setFailedSrc(safeSrc)}

@@ -1,7 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { motion, useReducedMotion } from 'motion/react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { 
   ArrowRight, 
@@ -192,7 +191,18 @@ export default function StoreHomePageClient({
   const settings = homeSettings ?? DEFAULT_HOME_SETTINGS
   const accent = accentStyles[settings.themeAccent as keyof typeof accentStyles] ?? accentStyles.indigo
   const bannerCtaLink = settings.bannerCtaLink || DEFAULT_HOME_SETTINGS.bannerCtaLink
-  const shouldReduce = useReducedMotion()
+  const [shouldRenderHeroVideo, setShouldRenderHeroVideo] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const saveData = 'connection' in navigator
+      && Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData)
+
+    const sync = () => setShouldRenderHeroVideo(mq.matches && !saveData)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
   
   const tickerItems = useMemo(() => {
     // Custom infinite ticker item list with proper Lucide icons (Emoji-free)
@@ -245,20 +255,25 @@ export default function StoreHomePageClient({
           <div className="absolute inset-0 rounded-[2rem] border border-white/10 pointer-events-none z-10" />
           
           <div className="absolute inset-0 rounded-[2rem] overflow-hidden bg-slate-950">
-            {settings.videoUrl ? (
+            {settings.videoUrl && shouldRenderHeroVideo ? (
               <video 
                 src={settings.videoUrl} 
                 autoPlay 
                 muted 
                 loop 
                 playsInline
+                preload="metadata"
                 aria-label="Video giới thiệu sản phẩm trang chủ"
                 className="size-full object-cover opacity-85"
               />
             ) : (
-              <div className="size-full flex flex-col items-center justify-center text-slate-400 gap-4">
-                <ImageIcon className="size-16 opacity-20" />
-                <p className="max-w-md text-sm">Vui lòng đăng nhập Admin &gt; Cài đặt để thêm video URL hoặc upload video từ máy tính của bạn.</p>
+              <div className="size-full flex flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_30%,rgba(79,70,229,0.22),transparent_46%),linear-gradient(180deg,#080d1f,#020617)] text-slate-400 gap-4">
+                {!settings.videoUrl && (
+                  <>
+                    <ImageIcon className="size-16 opacity-20" />
+                    <p className="max-w-md text-sm">Vui lòng đăng nhập Admin &gt; Cài đặt để thêm video URL hoặc upload video từ máy tính của bạn.</p>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -267,7 +282,7 @@ export default function StoreHomePageClient({
           
           <div className="relative z-20 mt-auto pb-16 px-4 md:px-8 text-center shrink-0 flex flex-col items-center justify-center">
             <h3
-              className={`text-2xl md:text-3xl font-semibold text-white mb-2 tracking-tight drop-shadow-lg ${!shouldReduce ? 'hero-glow' : ''}`}
+              className="text-2xl md:text-3xl font-semibold text-white mb-2 tracking-tight drop-shadow-lg hero-glow"
             >
               {settings.introTitle}
             </h3>
@@ -308,7 +323,7 @@ export default function StoreHomePageClient({
               {settings.shopTagline}
             </div>
             <h1
-              className={`max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl ${!shouldReduce ? 'hero-glow' : ''}`}
+              className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl hero-glow"
             >
               {settings.bannerTitle}
             </h1>
@@ -401,7 +416,7 @@ export default function StoreHomePageClient({
           <ProductRowCarousel autoSlideInterval={4000}>
             {featuredProducts.map((product, idx) => (
               <div key={product.id} className="w-full">
-                <ProductCard product={product} accent={accent} showBadge={true} badgeText="BÁN CHẠY" priority={idx < 4} />
+                <ProductCard product={product} accent={accent} showBadge={true} badgeText="BÁN CHẠY" priority={idx === 0} />
               </div>
             ))}
           </ProductRowCarousel>
