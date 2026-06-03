@@ -63,16 +63,19 @@ export function ProductImageFrame({
               <div 
                 key={`${imgSrc}-${idx}`} 
                 style={{ width: `${100 / galleryImages.length}%` }} 
-                className="relative h-full flex shrink-0 items-center justify-center p-3 sm:p-4 z-0"
+                className="relative h-full flex shrink-0 items-center justify-center z-0"
               >
-                <Image
-                  src={safeImg}
-                  alt={`${alt} image ${idx + 1}`}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  priority={priority && idx === 0}
-                  className={`object-contain transition-transform duration-500 ease-out-expo ${innerClassName}`}
-                />
+                {/* Safe breathing room wrapper to prevent Next.js fill from ignoring padding */}
+                <div className="absolute inset-5 sm:inset-6 flex items-center justify-center z-0">
+                  <Image
+                    src={safeImg}
+                    alt={`${alt} image ${idx + 1}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    priority={priority && idx === 0}
+                    className={`object-contain transition-transform duration-500 ease-out-expo ${innerClassName}`}
+                  />
+                </div>
               </div>
             )
           })}
@@ -87,7 +90,7 @@ export function ProductImageFrame({
       <div className="absolute inset-0 bg-[#ffffff]" />
 
       {/* Main Image Container with 12.5% safe breathing room padding to equalize visual weight */}
-      <div className="absolute inset-3 sm:inset-4 flex items-center justify-center z-0">
+      <div className="absolute inset-5 sm:inset-6 flex items-center justify-center z-0">
         <Image
           src={safeSrc}
           alt={alt}
