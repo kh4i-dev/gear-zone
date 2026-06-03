@@ -45,7 +45,10 @@ export function ProductImageFrame({
 
   if (hasMultipleImages) {
     return (
-      <div className={`relative ${aspectRatio} w-full overflow-hidden bg-[#060606] rounded-xl border border-white/[0.04] shadow-[0_4px_16px_rgba(0,0,0,0.3)] ${className}`}>
+      <div className={`relative ${aspectRatio} w-full overflow-hidden bg-white rounded-xl border border-white/[0.06] shadow-[0_4px_16px_rgba(0,0,0,0.3)] ${className}`}>
+        {/* Premium white stage background */}
+        <div className="absolute inset-0 bg-[#ffffff]" />
+
         {/* Sliding flex container */}
         <div 
           className="absolute inset-0 flex transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
@@ -60,19 +63,16 @@ export function ProductImageFrame({
               <div 
                 key={`${imgSrc}-${idx}`} 
                 style={{ width: `${100 / galleryImages.length}%` }} 
-                className="relative h-full flex shrink-0 items-center justify-center z-0"
+                className="relative h-full flex shrink-0 items-center justify-center p-3 sm:p-4 z-0"
               >
-                {/* Safe breathing room wrapper to prevent Next.js fill from ignoring padding */}
-                <div className="absolute inset-5 sm:inset-6 flex items-center justify-center z-0">
-                  <Image
-                    src={safeImg}
-                    alt={`${alt} image ${idx + 1}`}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    priority={priority && idx === 0}
-                    className={`object-contain transition-transform duration-500 ease-out-expo ${innerClassName}`}
-                  />
-                </div>
+                <Image
+                  src={safeImg}
+                  alt={`${alt} image ${idx + 1}`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  priority={priority && idx === 0}
+                  className={`object-contain transition-transform duration-500 ease-out-expo ${innerClassName}`}
+                />
               </div>
             )
           })}
@@ -82,9 +82,12 @@ export function ProductImageFrame({
   }
 
   return (
-    <div className={`relative ${aspectRatio} w-full overflow-hidden bg-[#060606] rounded-xl border border-white/[0.04] shadow-[0_4px_16px_rgba(0,0,0,0.3)] ${className}`}>
+    <div className={`relative ${aspectRatio} w-full overflow-hidden bg-white rounded-xl border border-white/[0.06] shadow-[0_4px_16px_rgba(0,0,0,0.3)] ${className}`}>
+      {/* Premium white stage background (Method 1) */}
+      <div className="absolute inset-0 bg-[#ffffff]" />
+
       {/* Main Image Container with 12.5% safe breathing room padding to equalize visual weight */}
-      <div className="absolute inset-5 sm:inset-6 flex items-center justify-center z-0">
+      <div className="absolute inset-3 sm:inset-4 flex items-center justify-center z-0">
         <Image
           src={safeSrc}
           alt={alt}
