@@ -1,20 +1,30 @@
 import nodemailer from 'nodemailer';
 
 async function test() {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = Number(process.env.SMTP_PORT) || 587;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (!user || !pass) {
+    console.error('Error: SMTP_USER and SMTP_PASS environment variables must be set.');
+    process.exit(1);
+  }
+
   const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // true for 465, false for other ports
+    host,
+    port,
+    secure: port === 465,
     auth: {
-      user: 'vankhaixz2@gmail.com',
-      pass: 'pgcl szzo gqaq vnom',
+      user,
+      pass,
     },
   });
 
   try {
     const info = await transporter.sendMail({
-      from: 'vankhaixz2@gmail.com',
-      to: 'vankhaixz2@gmail.com',
+      from: user,
+      to: user,
       subject: 'Test email from GearZone',
       text: 'This is a test email.',
     });
