@@ -2,78 +2,212 @@ import { prisma } from '@/lib/db'
 import { enqueueEmail } from '../queue/EmailQueue'
 
 // Default email templates to fallback on if not configured in Settings
+// Default email templates to fallback on if not configured in Settings
 const DEFAULT_TEMPLATES = {
   welcome_subject: 'Chào mừng bạn đến với GearZone! 🚀',
   welcome_body: `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px;">
-      <h2 style="color: #4f46e5; margin-bottom: 20px;">Chào mừng {{customer_name}} đến với GearZone!</h2>
-      <p>Cảm ơn bạn đã đăng ký nhận bản tin từ GearZone.</p>
-      <p>Từ bây giờ, bạn sẽ là một trong những người đầu tiên nhận thông tin về:</p>
-      <ul>
-        <li>Các ưu đãi và mã giảm giá độc quyền</li>
-        <li>Deal gaming gear giá tốt nhất thị trường</li>
-        <li>Thông báo khi có sản phẩm hot mới về</li>
-      </ul>
-      <p>Đặc biệt, tặng bạn mã giảm giá <b>WELCOME10</b> giảm ngay 10% cho đơn hàng đầu tiên!</p>
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="{{shop_url}}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ghé Thăm Cửa Hàng →</a>
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0f19; color: #f1f5f9; padding: 40px 20px; max-width: 600px; margin: 0 auto; border-radius: 24px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
+      <!-- Header -->
+      <div style="text-align: center; margin-bottom: 30px;">
+        <span style="font-size: 32px;">🎮</span>
+        <h1 style="color: #ffffff; font-size: 24px; font-weight: 800; margin: 10px 0 2px 0; letter-spacing: -0.5px;">GearZone</h1>
+        <p style="color: #6366f1; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin: 0;">Gaming Gear Store</p>
       </div>
-      <p style="color: #64748b; font-size: 12px;">Nếu bạn không đăng ký bản tin này, vui lòng bỏ qua email hoặc <a href="{{unsubscribe_url}}">hủy đăng ký</a>.</p>
+
+      <!-- Hero -->
+      <div style="text-align: center; margin-bottom: 32px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%); border: 1px solid rgba(99, 102, 241, 0.2); padding: 24px; border-radius: 20px;">
+        <h2 style="color: #ffffff; font-size: 20px; font-weight: 800; margin: 0 0 8px 0; display: inline-flex; align-items: center; gap: 8px;">🔥 Chào mừng đến với GearZone</h2>
+        <p style="color: #94a3b8; font-size: 14px; margin: 0; line-height: 1.5;">Chào {{customer_name}}, cảm ơn bạn đã đồng hành cùng cộng đồng game thủ lớn nhất tại GearZone!</p>
+      </div>
+
+      <!-- Coupon Card -->
+      <div style="background-color: #111827; border: 1px dashed #6366f1; border-radius: 20px; padding: 24px; text-align: center; margin-bottom: 32px;">
+        <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #818cf8; margin-bottom: 8px;">Mã giảm giá thành viên mới</div>
+        <div style="font-size: 28px; font-weight: 900; color: #ffffff; background-color: #1e1b4b; display: inline-block; padding: 8px 24px; border-radius: 12px; border: 1px solid rgba(99,102,241,0.3); margin-bottom: 12px; letter-spacing: 1px;">WELCOME10</div>
+        <div style="font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">Giảm ngay 10% tổng đơn hàng</div>
+        <div style="font-size: 12px; color: #64748b;">Áp dụng cho đơn hàng từ 500.000đ trở lên</div>
+      </div>
+
+      <!-- DB Products Section -->
+      <div style="margin-bottom: 32px;">
+        <h3 style="color: #ffffff; font-size: 16px; font-weight: 800; margin: 0 0 16px 0; border-left: 4px solid #6366f1; padding-left: 10px;">🔥 Top Gaming Gear tuần này</h3>
+        <div style="background-color: #111827; border-radius: 20px; padding: 8px 20px; border: 1px solid rgba(255,255,255,0.04);">
+          {{products}}
+        </div>
+      </div>
+
+      <!-- Social Proof / Trust Badges -->
+      <div style="grid-template-columns: 1fr 1fr; display: table; width: 100%; border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 20px 0; margin-bottom: 32px;">
+        <div style="display: table-row;">
+          <div style="display: table-cell; width: 50%; padding-bottom: 10px; font-size: 13px; color: #94a3b8; font-weight: 600;">⭐ <strong style="color:#ffffff;">4.9/5</strong> đánh giá thực tế</div>
+          <div style="display: table-cell; width: 50%; padding-bottom: 10px; font-size: 13px; color: #94a3b8; font-weight: 600;">👥 <strong style="color:#ffffff;">500+</strong> game thủ đã mua</div>
+        </div>
+        <div style="display: table-row;">
+          <div style="display: table-cell; width: 50%; font-size: 13px; color: #94a3b8; font-weight: 600;">🚚 Giao hàng toàn quốc</div>
+          <div style="display: table-cell; width: 50%; font-size: 13px; color: #94a3b8; font-weight: 600;">🛡️ Bảo hành chính hãng</div>
+        </div>
+      </div>
+
+      <!-- Main CTA -->
+      <div style="text-align: center; margin-bottom: 36px;">
+        <a href="{{shop_url}}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 16px; font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);">Khám Phá Cửa Hàng ngay</a>
+      </div>
+
+      <!-- Footer / Contact Info -->
+      <div style="text-align: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 24px; font-size: 12px; color: #64748b; line-height: 1.8;">
+        <p style="margin: 0 0 8px 0; font-weight: 700; color: #94a3b8;">🎮 Cửa Hàng Gaming Gear GearZone</p>
+        <p style="margin: 0 0 16px 0;">Hotline: 090 123 4567 | Email: support@gearzone.kh4idev.id.vn</p>
+        <div style="margin-bottom: 16px;">
+          <a href="{{shop_url}}" style="color: #6366f1; text-decoration: none; font-weight: 700; margin: 0 8px;">Website</a> | 
+          <a href="https://facebook.com" style="color: #6366f1; text-decoration: none; font-weight: 700; margin: 0 8px;">Facebook</a> | 
+          <a href="https://zalo.me" style="color: #6366f1; text-decoration: none; font-weight: 700; margin: 0 8px;">Zalo</a>
+        </div>
+        <p style="margin: 0; font-size: 11px;">Bạn nhận được email này vì đã đăng ký bản tin của GearZone. Nếu không muốn nhận nữa, bạn có thể <a href="{{unsubscribe_url}}" style="color: #94a3b8; text-decoration: underline;">Hủy đăng ký</a> bất cứ lúc nào.</p>
+      </div>
     </div>
   `,
   order_subject: 'Xác nhận đơn hàng #{{order_id}} tại GearZone 📦',
   order_body: `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px;">
-      <h2 style="color: #10b981; margin-bottom: 20px;">Cảm ơn bạn đã mua hàng tại GearZone!</h2>
-      <p>Xin chào {{customer_name}}, đơn hàng <b>#{{order_id}}</b> của bạn đã được nhận và đang được xử lý.</p>
-      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-      <h3>Chi tiết đơn hàng:</h3>
-      {{products}}
-      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-      <p><b>Tổng cộng:</b> {{total_amount}}</p>
-      <p>Chúng tôi sẽ thông báo cho bạn khi đơn hàng bắt đầu được giao.</p>
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="{{shop_url}}/orders/{{order_id}}" style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Xem Chi Tiết Đơn Hàng</a>
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0f19; color: #f1f5f9; padding: 40px 20px; max-width: 600px; margin: 0 auto; border-radius: 24px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
+      <!-- Header -->
+      <div style="text-align: center; margin-bottom: 30px;">
+        <span style="font-size: 32px;">🎮</span>
+        <h1 style="color: #ffffff; font-size: 24px; font-weight: 800; margin: 10px 0 2px 0; letter-spacing: -0.5px;">GearZone</h1>
+        <p style="color: #10b981; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin: 0;">Đơn Hàng Thành Công</p>
+      </div>
+
+      <!-- Hero -->
+      <div style="text-align: center; margin-bottom: 32px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(52, 211, 153, 0.1) 100%); border: 1px solid rgba(16, 185, 129, 0.2); padding: 24px; border-radius: 20px;">
+        <h2 style="color: #ffffff; font-size: 20px; font-weight: 800; margin: 0 0 8px 0;">🎉 Cảm ơn bạn đã mua hàng!</h2>
+        <p style="color: #94a3b8; font-size: 14px; margin: 0; line-height: 1.5;">Xin chào {{customer_name}}, đơn hàng <b>#{{order_id}}</b> của bạn đã được tiếp nhận và đang được xử lý.</p>
+      </div>
+
+      <!-- Order Details -->
+      <div style="margin-bottom: 32px;">
+        <h3 style="color: #ffffff; font-size: 16px; font-weight: 800; margin: 0 0 16px 0; border-left: 4px solid #10b981; padding-left: 10px;">Chi tiết đơn hàng:</h3>
+        <div style="background-color: #111827; border-radius: 20px; padding: 8px 20px; border: 1px solid rgba(255,255,255,0.04);">
+          {{products}}
+        </div>
+        <div style="margin-top: 16px; text-align: right; font-size: 15px; font-weight: 700; color: #ffffff;">
+          Tổng thanh toán: <span style="font-size: 18px; color: #10b981;">{{total_amount}}</span>
+        </div>
+      </div>
+
+      <!-- Main CTA -->
+      <div style="text-align: center; margin-bottom: 36px;">
+        <a href="{{shop_url}}/orders/{{order_id}}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 16px; font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);">Xem Chi Tiết Đơn Hàng</a>
+      </div>
+
+      <!-- Footer -->
+      <div style="text-align: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 24px; font-size: 12px; color: #64748b; line-height: 1.8;">
+        <p style="margin: 0 0 8px 0; font-weight: 700; color: #94a3b8;">🎮 Cửa Hàng Gaming Gear GearZone</p>
+        <p style="margin: 0;">Hotline: 090 123 4567 | Website: <a href="{{shop_url}}" style="color: #6366f1; text-decoration: none;">gearzone.kh4idev.id.vn</a></p>
       </div>
     </div>
   `,
   abandoned_cart_subject: 'Bạn quên sản phẩm trong giỏ hàng GearZone? 🛒',
   abandoned_cart_body: `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px;">
-      <h2 style="color: #eab308; margin-bottom: 20px;">Giỏ hàng của bạn đang đợi!</h2>
-      <p>Xin chào {{customer_name}}, chúng tôi nhận thấy bạn đã để lại một số sản phẩm tuyệt vời trong giỏ hàng:</p>
-      <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
-        {{products}}
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0f19; color: #f1f5f9; padding: 40px 20px; max-width: 600px; margin: 0 auto; border-radius: 24px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
+      <!-- Header -->
+      <div style="text-align: center; margin-bottom: 30px;">
+        <span style="font-size: 32px;">🛒</span>
+        <h1 style="color: #ffffff; font-size: 24px; font-weight: 800; margin: 10px 0 2px 0; letter-spacing: -0.5px;">GearZone</h1>
+        <p style="color: #f59e0b; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin: 0;">Giỏ Hàng Đang Chờ</p>
       </div>
-      <p>Đừng để lỡ! Sản phẩm vẫn đang chờ bạn và số lượng có hạn.</p>
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="{{shop_url}}/cart" style="background-color: #eab308; color: #000; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Quay Lại Giỏ Hàng Ngay →</a>
+
+      <!-- Hero -->
+      <div style="text-align: center; margin-bottom: 32px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%); border: 1px solid rgba(245, 158, 11, 0.2); padding: 24px; border-radius: 20px;">
+        <h2 style="color: #ffffff; font-size: 20px; font-weight: 800; margin: 0 0 8px 0;">🛒 Giỏ hàng của bạn đang đợi!</h2>
+        <p style="color: #94a3b8; font-size: 14px; margin: 0; line-height: 1.5;">Xin chào {{customer_name}}, chúng tôi nhận thấy bạn đã để lại một số sản phẩm gaming gear tuyệt vời trong giỏ hàng:</p>
+      </div>
+
+      <!-- Products -->
+      <div style="margin-bottom: 32px;">
+        <div style="background-color: #111827; border-radius: 20px; padding: 8px 20px; border: 1px solid rgba(255,255,255,0.04);">
+          {{products}}
+        </div>
+        <p style="font-size: 13px; color: #94a3b8; margin-top: 16px; text-align: center;">Đừng bỏ lỡ! Số lượng sản phẩm khuyến mãi có hạn, hãy hoàn tất thanh toán ngay nhé.</p>
+      </div>
+
+      <!-- Main CTA -->
+      <div style="text-align: center; margin-bottom: 36px;">
+        <a href="{{shop_url}}/cart" style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #000000; text-decoration: none; padding: 14px 32px; border-radius: 16px; font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3);">Quay Lại Giỏ Hàng Ngay →</a>
+      </div>
+
+      <!-- Footer -->
+      <div style="text-align: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 24px; font-size: 12px; color: #64748b; line-height: 1.8;">
+        <p style="margin: 0 0 8px 0; font-weight: 700; color: #94a3b8;">🎮 Cửa Hàng Gaming Gear GearZone</p>
+        <p style="margin: 0;">Hotline: 090 123 4567 | Website: <a href="{{shop_url}}" style="color: #6366f1; text-decoration: none;">gearzone.kh4idev.id.vn</a></p>
       </div>
     </div>
   `,
   review_reminder_subject: 'Chia sẻ cảm nhận về sản phẩm từ GearZone ⭐',
   review_reminder_body: `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px;">
-      <h2 style="color: #4f46e5; margin-bottom: 20px;">Đánh giá sản phẩm của bạn!</h2>
-      <p>Xin chào {{customer_name}}, đơn hàng của bạn đã giao thành công được 7 ngày. Hãy chia sẻ trải nghiệm để giúp GearZone cải thiện dịch vụ nhé!</p>
-      <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
-        {{products}}
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0f19; color: #f1f5f9; padding: 40px 20px; max-width: 600px; margin: 0 auto; border-radius: 24px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
+      <!-- Header -->
+      <div style="text-align: center; margin-bottom: 30px;">
+        <span style="font-size: 32px;">⭐</span>
+        <h1 style="color: #ffffff; font-size: 24px; font-weight: 800; margin: 10px 0 2px 0; letter-spacing: -0.5px;">GearZone</h1>
+        <p style="color: #6366f1; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin: 0;">Chia Sẻ Trải Nghiệm</p>
       </div>
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="{{shop_url}}/orders/{{order_id}}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Viết Đánh Giá Ngay</a>
+
+      <!-- Hero -->
+      <div style="text-align: center; margin-bottom: 32px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%); border: 1px solid rgba(99, 102, 241, 0.2); padding: 24px; border-radius: 20px;">
+        <h2 style="color: #ffffff; font-size: 20px; font-weight: 800; margin: 0 0 8px 0;">⭐ Đánh giá sản phẩm của bạn!</h2>
+        <p style="color: #94a3b8; font-size: 14px; margin: 0; line-height: 1.5;">Xin chào {{customer_name}}, đơn hàng của bạn đã được giao thành công được 7 ngày. Hãy chia sẻ cảm nhận để nhận thêm điểm thưởng nhé!</p>
+      </div>
+
+      <!-- Products -->
+      <div style="margin-bottom: 32px;">
+        <div style="background-color: #111827; border-radius: 20px; padding: 8px 20px; border: 1px solid rgba(255,255,255,0.04);">
+          {{products}}
+        </div>
+      </div>
+
+      <!-- Main CTA -->
+      <div style="text-align: center; margin-bottom: 36px;">
+        <a href="{{shop_url}}/orders/{{order_id}}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 16px; font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);">Viết Đánh Giá ngay</a>
+      </div>
+
+      <!-- Footer -->
+      <div style="text-align: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 24px; font-size: 12px; color: #64748b; line-height: 1.8;">
+        <p style="margin: 0 0 8px 0; font-weight: 700; color: #94a3b8;">🎮 Cửa Hàng Gaming Gear GearZone</p>
+        <p style="margin: 0;">Hotline: 090 123 4567 | Website: <a href="{{shop_url}}" style="color: #6366f1; text-decoration: none;">gearzone.kh4idev.id.vn</a></p>
       </div>
     </div>
   `,
   recommendation_subject: 'Gợi ý sản phẩm dành riêng cho bạn tại GearZone 🎁',
   recommendation_body: `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px;">
-      <h2 style="color: #ec4899; margin-bottom: 20px;">Gợi ý hot dành riêng cho bạn!</h2>
-      <p>Chào {{customer_name}}, dựa trên các sản phẩm bạn đã mua, GearZone xin giới thiệu các phụ kiện có thể bạn sẽ thích:</p>
-      <div style="margin: 25px 0;">
-        {{products}}
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0f19; color: #f1f5f9; padding: 40px 20px; max-width: 600px; margin: 0 auto; border-radius: 24px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
+      <!-- Header -->
+      <div style="text-align: center; margin-bottom: 30px;">
+        <span style="font-size: 32px;">🎁</span>
+        <h1 style="color: #ffffff; font-size: 24px; font-weight: 800; margin: 10px 0 2px 0; letter-spacing: -0.5px;">GearZone</h1>
+        <p style="color: #ec4899; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin: 0;">Gợi ý độc quyền</p>
       </div>
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="{{shop_url}}" style="background-color: #ec4899; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Khám Phá Thêm</a>
+
+      <!-- Hero -->
+      <div style="text-align: center; margin-bottom: 32px; background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(219, 39, 119, 0.1) 100%); border: 1px solid rgba(236, 72, 153, 0.2); padding: 24px; border-radius: 20px;">
+        <h2 style="color: #ffffff; font-size: 20px; font-weight: 800; margin: 0 0 8px 0;">🎁 Deal xịn cho riêng bạn!</h2>
+        <p style="color: #94a3b8; font-size: 14px; margin: 0; line-height: 1.5;">Chào {{customer_name}}, dựa trên các sản phẩm bạn đã mua, GearZone xin giới thiệu các phụ kiện có thể bạn sẽ thích:</p>
+      </div>
+
+      <!-- Products -->
+      <div style="margin-bottom: 32px;">
+        <div style="background-color: #111827; border-radius: 20px; padding: 8px 20px; border: 1px solid rgba(255,255,255,0.04);">
+          {{products}}
+        </div>
+      </div>
+
+      <!-- Main CTA -->
+      <div style="text-align: center; margin-bottom: 36px;">
+        <a href="{{shop_url}}" style="display: inline-block; background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 16px; font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 10px 15px -3px rgba(236, 72, 153, 0.3);">Khám Phá Cửa Hàng ngay</a>
+      </div>
+
+      <!-- Footer -->
+      <div style="text-align: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 24px; font-size: 12px; color: #64748b; line-height: 1.8;">
+        <p style="margin: 0 0 8px 0; font-weight: 700; color: #94a3b8;">🎮 Cửa Hàng Gaming Gear GearZone</p>
+        <p style="margin: 0;">Hotline: 090 123 4567 | Website: <a href="{{shop_url}}" style="color: #6366f1; text-decoration: none;">gearzone.kh4idev.id.vn</a></p>
       </div>
     </div>
   `,
@@ -186,29 +320,42 @@ export class MarketingService {
   }
 
   // Format product list helper for emails
-  public formatProductsHtml(products: Array<{ name: string; price: number; oldPrice?: number | null; imageUrl?: string | null }>): string {
+  public formatProductsHtml(products: Array<{ id?: string; name: string; price: number; oldPrice?: number | null; imageUrl?: string | null }>): string {
+    const shopUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gearzone.kh4idev.id.vn'
     return products
       .map(
-        (p) => `
-      <div style="display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; padding: 10px 0;">
-        ${
-          p.imageUrl
-            ? `<img src="${p.imageUrl}" alt="${p.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; margin-right: 15px;" />`
-            : ''
-        }
-        <div style="flex: 1;">
-          <h4 style="margin: 0; font-size: 14px; color: #1e293b;">${p.name}</h4>
-          <span style="font-size: 13px; font-weight: bold; color: #4f46e5;">${p.price.toLocaleString('vi-VN')}đ</span>
+        (p) => {
+          const productLink = p.id ? `${shopUrl}/products/${p.id}` : shopUrl
+          let imageSrc = p.imageUrl || ''
+          if (imageSrc && imageSrc.startsWith('/')) {
+            imageSrc = `${shopUrl}${imageSrc}`
+          }
+          return `
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 12px 0;">
+        <div style="display: flex; align-items: center; flex: 1; min-width: 0;">
           ${
-            p.oldPrice
-              ? `<span style="font-size: 11px; text-decoration: line-through; color: #94748b; margin-left: 8px;">${p.oldPrice.toLocaleString(
-                  'vi-VN'
-                )}đ</span>`
+            imageSrc
+              ? `<div style="width: 50px; height: 50px; background-color: #1f2937; border-radius: 8px; overflow: hidden; margin-right: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.08);">
+                  <img src="${imageSrc}" alt="${p.name}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+                </div>`
               : ''
           }
+          <div style="flex: 1; min-width: 0;">
+            <h4 style="margin: 0 0 2px 0; font-size: 13px; font-weight: 700; color: #ffffff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${p.name}</h4>
+            <span style="font-size: 12px; font-weight: 800; color: #818cf8;">${p.price.toLocaleString('vi-VN')}đ</span>
+            ${
+              p.oldPrice
+                ? `<span style="font-size: 10px; text-decoration: line-through; color: #64748b; margin-left: 6px;">${p.oldPrice.toLocaleString(
+                    'vi-VN'
+                  )}đ</span>`
+                : ''
+            }
+          </div>
         </div>
+        <a href="${productLink}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color: #ffffff; font-size: 10px; font-weight: 800; text-decoration: none; padding: 6px 12px; border-radius: 6px; margin-left: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Xem ngay</a>
       </div>
     `
+        }
       )
       .join('')
   }

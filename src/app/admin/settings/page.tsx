@@ -114,6 +114,8 @@ type SettingsPageState = {
   emailTemplateAbandonedCartBody: string
   emailTemplateRecommendationSubject: string
   emailTemplateRecommendationBody: string
+  emailTemplateReviewReminderSubject: string
+  emailTemplateReviewReminderBody: string
 }
  
 const initialSettingsPageState: SettingsPageState = {
@@ -178,6 +180,8 @@ const initialSettingsPageState: SettingsPageState = {
   emailTemplateAbandonedCartBody: '',
   emailTemplateRecommendationSubject: '',
   emailTemplateRecommendationBody: '',
+  emailTemplateReviewReminderSubject: '',
+  emailTemplateReviewReminderBody: '',
 }
  
 const menuSections = [
@@ -352,6 +356,8 @@ export default function AdminSettingsPage() {
     emailTemplateAbandonedCartBody,
     emailTemplateRecommendationSubject,
     emailTemplateRecommendationBody,
+    emailTemplateReviewReminderSubject,
+    emailTemplateReviewReminderBody,
   } = pageState
   const setVideoUrl = (videoUrl: string) => updatePageState({ videoUrl })
   const setThemeAccent = (themeAccent: string) => updatePageState({ themeAccent })
@@ -369,6 +375,8 @@ export default function AdminSettingsPage() {
   const setEmailTemplateAbandonedCartBody = (emailTemplateAbandonedCartBody: string) => updatePageState({ emailTemplateAbandonedCartBody })
   const setEmailTemplateRecommendationSubject = (emailTemplateRecommendationSubject: string) => updatePageState({ emailTemplateRecommendationSubject })
   const setEmailTemplateRecommendationBody = (emailTemplateRecommendationBody: string) => updatePageState({ emailTemplateRecommendationBody })
+  const setEmailTemplateReviewReminderSubject = (emailTemplateReviewReminderSubject: string) => updatePageState({ emailTemplateReviewReminderSubject })
+  const setEmailTemplateReviewReminderBody = (emailTemplateReviewReminderBody: string) => updatePageState({ emailTemplateReviewReminderBody })
   const setBannerTitle = (bannerTitle: string) => updatePageState({ bannerTitle })
   const setBannerSubtitle = (bannerSubtitle: string) => updatePageState({ bannerSubtitle })
   const setBannerCtaText = (bannerCtaText: string) => updatePageState({ bannerCtaText })
@@ -516,6 +524,8 @@ export default function AdminSettingsPage() {
         setEmailTemplateAbandonedCartBody(result.data.email_template_abandoned_cart_body || '')
         setEmailTemplateRecommendationSubject(result.data.email_template_recommendation_subject || '')
         setEmailTemplateRecommendationBody(result.data.email_template_recommendation_body || '')
+        setEmailTemplateReviewReminderSubject(result.data.email_template_review_reminder_subject || '')
+        setEmailTemplateReviewReminderBody(result.data.email_template_review_reminder_body || '')
         
         const defaultMegaMenuJson = JSON.stringify(
           categoryMegaMenu.map(cat => ({
@@ -629,6 +639,8 @@ export default function AdminSettingsPage() {
             email_template_abandoned_cart_body: emailTemplateAbandonedCartBody,
             email_template_recommendation_subject: emailTemplateRecommendationSubject,
             email_template_recommendation_body: emailTemplateRecommendationBody,
+            email_template_review_reminder_subject: emailTemplateReviewReminderSubject,
+            email_template_review_reminder_body: emailTemplateReviewReminderBody,
           }
         })
       })
@@ -1555,6 +1567,7 @@ export default function AdminSettingsPage() {
                           <option value="order">Mẫu đơn hàng (Order Confirmation)</option>
                           <option value="abandoned_cart">Mẫu bỏ quên giỏ hàng (Abandoned Cart)</option>
                           <option value="recommendation">Mẫu gợi ý sản phẩm (Recommendation)</option>
+                          <option value="review_reminder">Mẫu nhắc nhở đánh giá (Review Reminder)</option>
                         </select>
                       </div>
 
@@ -1567,13 +1580,15 @@ export default function AdminSettingsPage() {
                               editingTemplateType === 'welcome' ? emailTemplateWelcomeSubject :
                               editingTemplateType === 'order' ? emailTemplateOrderSubject :
                               editingTemplateType === 'abandoned_cart' ? emailTemplateAbandonedCartSubject :
-                              emailTemplateRecommendationSubject
+                              editingTemplateType === 'recommendation' ? emailTemplateRecommendationSubject :
+                              emailTemplateReviewReminderSubject
                             }
                             onChange={(e) => {
                               if (editingTemplateType === 'welcome') setEmailTemplateWelcomeSubject(e.target.value)
                               else if (editingTemplateType === 'order') setEmailTemplateOrderSubject(e.target.value)
                               else if (editingTemplateType === 'abandoned_cart') setEmailTemplateAbandonedCartSubject(e.target.value)
-                              else setEmailTemplateRecommendationSubject(e.target.value)
+                              else if (editingTemplateType === 'recommendation') setEmailTemplateRecommendationSubject(e.target.value)
+                              else setEmailTemplateReviewReminderSubject(e.target.value)
                             }}
                             className="bg-black/20 border-white/10 text-white focus:border-indigo-500/50"
                           />
@@ -1587,13 +1602,15 @@ export default function AdminSettingsPage() {
                               editingTemplateType === 'welcome' ? emailTemplateWelcomeBody :
                               editingTemplateType === 'order' ? emailTemplateOrderBody :
                               editingTemplateType === 'abandoned_cart' ? emailTemplateAbandonedCartBody :
-                              emailTemplateRecommendationBody
+                              editingTemplateType === 'recommendation' ? emailTemplateRecommendationBody :
+                              emailTemplateReviewReminderBody
                             }
                             onChange={(e) => {
                               if (editingTemplateType === 'welcome') setEmailTemplateWelcomeBody(e.target.value)
                               else if (editingTemplateType === 'order') setEmailTemplateOrderBody(e.target.value)
                               else if (editingTemplateType === 'abandoned_cart') setEmailTemplateAbandonedCartBody(e.target.value)
-                              else setEmailTemplateRecommendationBody(e.target.value)
+                              else if (editingTemplateType === 'recommendation') setEmailTemplateRecommendationBody(e.target.value)
+                              else setEmailTemplateReviewReminderBody(e.target.value)
                             }}
                             className="w-full font-mono text-xs rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-emerald-400 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 resize-y"
                           />

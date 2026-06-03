@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db'
 import { EmailProvider } from './EmailProvider'
 import { TelegramProvider } from './TelegramProvider'
+import { marketingService } from '@/lib/services/MarketingService'
 
 type NotificationSettings = {
   telegramBotToken?: string
@@ -62,37 +63,69 @@ export class NotificationService {
     const settings = await this.getSettings()
     if (!settings.newsletterWelcomeEnabled) return false
 
-    const emailConfig = {
-      host: settings.smtpHost,
-      port: settings.smtpPort,
-      user: settings.smtpUser,
-      pass: settings.smtpPass,
-    }
+    try {
+      const template = await marketingService.getTemplate('welcome')
+      const shopUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://gearzone.kh4idev.id.vn'
+      const customerName = email.split('@')[0]
 
-    if (!this.emailProvider.isConfigured(emailConfig)) {
-      console.warn('Cannot send Newsletter Welcome. SMTP is not configured.')
+      // Fetch 3 active products to display in the email
+      let products = await prisma.product.findMany({
+        where: { status: 'ACTIVE', isVisible: true },
+        take: 3,
+        orderBy: { soldCount: 'desc' },
+      })
+
+      // Fallback to mock products if database is empty
+      if (products.length === 0) {
+        products = [
+          {
+            id: 'mock-1',
+            name: 'Akko 5075B Plus Blue on White',
+            price: 2490000,
+            oldPrice: 2890000,
+            imageUrl: '/images/products/akko-5075b.png',
+          },
+          {
+            id: 'mock-2',
+            name: 'Logitech G Pro X Superlight 2',
+            price: 3590000,
+            oldPrice: 3890000,
+            imageUrl: '/images/products/gpro-superlight.png',
+          },
+          {
+            id: 'mock-3',
+            name: 'HyperX Cloud III Wireless',
+            price: 2990000,
+            oldPrice: 3490000,
+            imageUrl: '/images/products/cloud3.png',
+          },
+        ] as any
+      }
+
+      const productsHtml = marketingService.formatProductsHtml(products)
+      const emailBody = marketingService.parseTemplate(template.body, {
+        customer_name: customerName,
+        products: productsHtml,
+        shop_url: shopUrl,
+        unsubscribe_url: `${shopUrl}/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}`,
+      })
+
+      // Create ScheduledEmail immediately to be sent via queue
+      await prisma.scheduledEmail.create({
+        data: {
+          email,
+          type: 'WELCOME',
+          subject: template.subject,
+          body: emailBody,
+          scheduledAt: new Date(),
+          status: 'PENDING',
+        },
+      })
+      return true
+    } catch (error) {
+      console.error('Failed to queue newsletter welcome email:', error)
       return false
     }
-
-    const subject = 'Chào mừng bạn đến với Newsletter của GearZone!'
-    const html = `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #2563eb;">Chào mừng bạn đến với GearZone!</h2>
-        <p>Cảm ơn bạn đã đăng ký nhận bản tin từ GearZone.</p>
-        <p>Từ bây giờ, bạn sẽ là một trong những người đầu tiên nhận thông báo về:</p>
-        <ul>
-          <li>Các ưu đãi và mã giảm giá độc quyền</li>
-          <li>Deal gaming gear giá tốt nhất</li>
-          <li>Thông báo khi có sản phẩm hot mới về</li>
-        </ul>
-        <p>GearZone cam kết mang đến những thiết bị chơi game chất lượng nhất cho bạn.</p>
-        <br/>
-        <p>Trân trọng,</p>
-        <p><strong>Đội ngũ GearZone</strong></p>
-      </div>
-    `
-
-    return await this.emailProvider.sendEmail(email, subject, html, emailConfig)
   }
 
   public async notifyAdminNewSubscriber(email: string, source: string = 'unknown'): Promise<boolean> {
@@ -113,6 +146,77 @@ export class NotificationService {
     const message = `Bản tin mới từ GearZone\nEmail: ${email}\nThời gian: ${time}\nNguồn: ${source}`
 
     return await this.telegramProvider.sendMessage(message, telegramConfig)
+  }
+
+  public async notifyAdminNewOrder(orderId: string): Promise<boolean> {
+    const settings = await this.getSettings()
+    
+    const telegramConfig = {
+      botToken: settings.telegramBotToken,
+      chatId: settings.telegramChatId,
+    }
+
+    if (!this.telegramProvider.isConfigured(telegramConfig)) {
+      console.warn('Cannot notify Admin of new order. Telegram is not configured.')
+      return false
+    }
+
+    try {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          user: true,
+          items: {
+            include: {
+              product: true,
+              variant: {
+                include: {
+                  optionValues: {
+                    include: {
+                      optionValue: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      })
+
+      if (!order) {
+        console.warn(`Order ${orderId} not found for Telegram notification.`)
+        return false
+      }
+
+      const formattedTotal = order.totalAmount.toLocaleString('vi-VN') + 'đ'
+      const paymentText = order.paymentMethod === 'bank' ? 'Chuyển khoản (Bank)' : 'Thanh toán COD'
+      const time = order.createdAt.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
+
+      let itemsText = ''
+      order.items.forEach((item, index) => {
+        let variantName = ''
+        if (item.variant) {
+          variantName = ' (' + item.variant.optionValues.map(ov => ov.optionValue.label).join(', ') + ')'
+        }
+        itemsText += `${index + 1}. ${item.product.name}${variantName} x ${item.quantity} (${item.price.toLocaleString('vi-VN')}đ)\n`
+      })
+
+      const message = `🔔 ĐƠN HÀNG MỚI TỪ GEARZONE!\n\n` +
+        `• Mã đơn hàng: #${order.id}\n` +
+        `• Thời gian: ${time}\n` +
+        `• Khách hàng: ${order.shippingName || order.user.name}\n` +
+        `• Điện thoại: ${order.shippingPhone || order.user.phone || 'N/A'}\n` +
+        `• Địa chỉ: ${order.shippingAddress || 'N/A'}\n` +
+        `• Thanh toán: ${paymentText}\n` +
+        `• Trạng thái: PENDING\n\n` +
+        `📦 Sản phẩm đặt mua:\n${itemsText}\n` +
+        `💰 Tổng tiền thanh toán: ${formattedTotal}`
+
+      return await this.telegramProvider.sendMessage(message, telegramConfig)
+    } catch (error) {
+      console.error('Failed to notify Admin of new order via Telegram:', error)
+      return false
+    }
   }
 }
 

@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { badRequest, createTraceId, fail, logServerError, success } from '@/lib/api'
 import { createActivityEvent, createManyActivityEvents } from '@/lib/activity'
+import { notificationService } from '@/lib/notifications/NotificationService'
+import { marketingService } from '@/lib/services/MarketingService'
 
 export const dynamic = 'force-dynamic'
 
@@ -118,7 +120,7 @@ export async function POST(request: NextRequest) {
     await cancelExpiredOrders()
 
     const body = await request.json()
-    const { totalAmount, paymentMethod, shippingName, shippingPhone, shippingAddress, shippingCccd } = body
+    const { paymentMethod, shippingName, shippingPhone, shippingAddress, shippingCccd, discountCode } = body
     const items = Array.isArray(body.items) ? body.items as CheckoutItem[] : []
 
     if (items.length === 0) {
@@ -141,6 +143,22 @@ export async function POST(request: NextRequest) {
     if (activeOrdersCount >= 3) {
       return NextResponse.json(badRequest('You already have 3 pending or awaiting-payment orders', { traceId }), { status: 400 })
     }
+
+    // Secure subtotal & discount calculation
+    const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    let discountAmount = 0
+    if (discountCode) {
+      if (discountCode === 'WELCOME10') {
+        if (subtotal >= 500000) {
+          discountAmount = Math.round(subtotal * 0.1)
+        } else {
+          return NextResponse.json(badRequest('Mã WELCOME10 yêu cầu đơn hàng từ 500.000đ trở lên', { traceId }), { status: 400 })
+        }
+      } else {
+        return NextResponse.json(badRequest('Mã giảm giá không hợp lệ', { traceId }), { status: 400 })
+      }
+    }
+    const finalTotalAmount = subtotal - discountAmount
 
     const order = await prisma.$transaction(async (tx) => {
       const isAutomatedBank = Boolean(process.env.NEXT_PUBLIC_SEPAY_API_KEY || process.env.PAYOS_API_KEY)
@@ -174,7 +192,8 @@ export async function POST(request: NextRequest) {
       const newOrder = await tx.order.create({
         data: {
           userId: user.id,
-          totalAmount,
+          totalAmount: finalTotalAmount,
+          discountAmount,
           status: initialStatus,
           paymentMethod,
           shippingName,
@@ -240,6 +259,14 @@ export async function POST(request: NextRequest) {
     }).filter((e): e is NonNullable<typeof e> => e !== null)
 
     createManyActivityEvents(activityEvents)
+
+    // Trigger Telegram alerts & Schedule post-purchase emails in background
+    notificationService.notifyAdminNewOrder(order.id).catch(err => {
+      console.error('Failed to send Telegram alert for order:', err)
+    })
+    marketingService.schedulePostPurchaseEmails(order.id).catch(err => {
+      console.error('Failed to schedule post-purchase emails for order:', err)
+    })
 
     return NextResponse.json(success(order, { traceId }), { status: 201 })
   } catch (error) {

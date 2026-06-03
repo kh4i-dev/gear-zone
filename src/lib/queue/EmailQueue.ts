@@ -120,10 +120,12 @@ async function processEmailJob(data: any) {
 
 // Initialize Queue and Worker
 export async function initEmailQueue() {
+  // Always start the scheduled email scanner loop
+  startFallbackScheduler()
+
   const redisUrl = process.env.REDIS_URL
   if (!redisUrl) {
-    console.log('No REDIS_URL found. Using database fallback for email queueing.')
-    startFallbackScheduler()
+    console.log('No REDIS_URL found. Email queueing using database fallback.')
     return
   }
 
@@ -135,10 +137,6 @@ export async function initEmailQueue() {
 
     redisConfig.on('error', (err) => {
       console.warn('Redis connection error in EmailQueue:', err.message)
-      if (!useBullMQ) {
-        console.log('Falling back to database scheduler.')
-        startFallbackScheduler()
-      }
     })
 
     redisConfig.on('connect', () => {
@@ -157,17 +155,10 @@ export async function initEmailQueue() {
         emailWorker.on('failed', (job, err) => {
           console.error(`BullMQ job ${job?.id} failed:`, err)
         })
-
-        // Stop fallback scheduler if it was running
-        if (fallbackInterval) {
-          clearInterval(fallbackInterval)
-          fallbackInterval = null
-        }
       }
     })
   } catch (err: any) {
-    console.warn('Failed to connect to Redis. Email queue using database fallback. Error:', err.message)
-    startFallbackScheduler()
+    console.warn('Failed to connect to Redis. Email queue using database/in-memory fallback. Error:', err.message)
   }
 }
 
@@ -203,7 +194,7 @@ export async function enqueueEmail(data: {
 function startFallbackScheduler() {
   if (fallbackInterval) return
 
-  console.log('Database/In-memory email scheduler loop started (runs every 30s).')
+  console.log('Scheduled email database scanner loop started (runs every 30s).')
   fallbackInterval = setInterval(async () => {
     try {
       const now = new Date()
@@ -218,7 +209,7 @@ function startFallbackScheduler() {
 
       if (pendingEmails.length === 0) return
 
-      console.log(`Fallback scheduler: processing ${pendingEmails.length} pending emails.`)
+      console.log(`Email scheduler: processing ${pendingEmails.length} pending emails.`)
 
       for (const email of pendingEmails) {
         // Mark as SENDING to prevent double processing

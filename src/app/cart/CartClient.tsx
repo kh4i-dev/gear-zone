@@ -38,6 +38,47 @@ export default function CartClient({ shopName = 'GearZone' }: { shopName?: strin
     return 'cart'
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [couponInput, setCouponInput] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null)
+  const [couponError, setCouponError] = useState<string | null>(null)
+
+  const discountAmount = appliedCoupon === 'WELCOME10' && totalPrice >= 500000 
+    ? Math.round(totalPrice * 0.1) 
+    : 0
+  const finalPrice = totalPrice - discountAmount
+
+  const handleApplyCoupon = (e: React.FormEvent) => {
+    e.preventDefault()
+    setCouponError(null)
+    const code = couponInput.trim().toUpperCase()
+
+    if (!code) {
+      setCouponError('Vui lòng nhập mã giảm giá')
+      return
+    }
+
+    if (code !== 'WELCOME10') {
+      setCouponError('Mã giảm giá không chính xác')
+      setAppliedCoupon(null)
+      return
+    }
+
+    if (totalPrice < 500000) {
+      setCouponError('Mã WELCOME10 chỉ áp dụng cho đơn từ 500.000đ')
+      setAppliedCoupon(null)
+      return
+    }
+
+    setAppliedCoupon(code)
+    toast.success('Áp dụng mã WELCOME10 giảm 10% thành công!')
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponInput('')
+    setCouponError(null)
+    toast.info('Đã hủy áp dụng mã giảm giá')
+  }
  
   // Shipping Form State
   const [shippingForm, setShippingForm] = useState({
@@ -108,7 +149,8 @@ export default function CartClient({ shopName = 'GearZone' }: { shopName?: strin
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          totalAmount: totalPrice,
+          totalAmount: finalPrice,
+          discountCode: appliedCoupon,
           paymentMethod: shippingForm.paymentMethod,
           shippingName: shippingForm.shippingName,
           shippingPhone: shippingForm.shippingPhone,
@@ -466,7 +508,40 @@ export default function CartClient({ shopName = 'GearZone' }: { shopName?: strin
                 </div>
               </div>
             )}
- 
+
+            {step === 'checkout' && (
+              <div className="border-b border-white/5 pb-4 space-y-3">
+                <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Mã giảm giá</p>
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-indigo-600/10 border border-indigo-500/20">
+                    <div>
+                      <span className="text-xs font-extrabold text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded border border-indigo-500/20">{appliedCoupon}</span>
+                      <p className="text-[10px] text-indigo-300 mt-1">Đã áp dụng giảm 10%</p>
+                    </div>
+                    <button type="button" onClick={handleRemoveCoupon} className="text-xs font-bold text-rose-400 hover:text-rose-300 transition">
+                      Gỡ bỏ
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Mã WELCOME10..."
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value)}
+                      className="h-10 flex-1 rounded-xl border border-white/10 bg-slate-950 px-3 text-xs font-medium text-white outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                    />
+                    <button type="submit" className="h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white transition active:scale-95">
+                      Áp dụng
+                    </button>
+                  </form>
+                )}
+                {couponError && (
+                  <p className="text-[10px] font-semibold text-rose-400 mt-1">{couponError}</p>
+                )}
+              </div>
+            )}
+
             <div className="space-y-4">
               <div className="flex justify-between items-center text-sm font-medium">
                 <span className="text-slate-400">Tạm tính ({totalCount} món)</span>
@@ -478,14 +553,21 @@ export default function CartClient({ shopName = 'GearZone' }: { shopName?: strin
                 <span className="text-emerald-400 font-semibold">Miễn phí</span>
               </div>
  
-              <div className="flex justify-between items-center text-sm font-medium border-t border-white/5 pt-4">
-                <span className="text-slate-400">Mã giảm giá</span>
-                <span className="text-slate-500 italic text-xs">Tính ở bước thanh toán</span>
-              </div>
+              {appliedCoupon ? (
+                <div className="flex justify-between items-center text-sm font-medium border-t border-white/5 pt-4">
+                  <span className="text-slate-400">Giảm giá ({appliedCoupon})</span>
+                  <span className="text-rose-400 font-semibold">-{formatVND(discountAmount)}</span>
+                </div>
+              ) : (
+                <div className="flex justify-between items-center text-sm font-medium border-t border-white/5 pt-4">
+                  <span className="text-slate-400">Mã giảm giá</span>
+                  <span className="text-slate-500 italic text-xs">Tính ở bước thanh toán</span>
+                </div>
+              )}
  
               <div className="flex justify-between items-end border-t border-white/5 pt-4">
                 <span className="text-sm text-slate-300 font-bold">Tổng cộng</span>
-                <span className="text-xl font-extrabold text-indigo-400">{formatVND(totalPrice)}</span>
+                <span className="text-xl font-extrabold text-indigo-400">{formatVND(finalPrice)}</span>
               </div>
             </div>
  
