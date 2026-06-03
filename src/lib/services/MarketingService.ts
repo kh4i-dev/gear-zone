@@ -327,6 +327,9 @@ export class MarketingService {
         (p) => {
           const productLink = p.id ? `${shopUrl}/products/${p.id}` : shopUrl
           let imageSrc = p.imageUrl || ''
+          if (imageSrc.includes('|')) {
+            imageSrc = imageSrc.split('|')[0].trim()
+          }
           if (imageSrc && imageSrc.startsWith('/')) {
             imageSrc = `${shopUrl}${imageSrc}`
           }

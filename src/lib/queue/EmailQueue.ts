@@ -40,6 +40,17 @@ export async function getDynamicSmtpConfig() {
 
 // Nodemailer sender logic
 async function sendRawEmail(to: string, subject: string, html: string) {
+  const emailLower = to.toLowerCase()
+  if (
+    emailLower.endsWith('@example.com') ||
+    emailLower.endsWith('@test.com') ||
+    emailLower.endsWith('@localhost') ||
+    emailLower.endsWith('@mock.com')
+  ) {
+    console.log(`[SMTP Sandbox] Skipping sending email to mock address: ${to}`)
+    return
+  }
+
   const smtp = await getDynamicSmtpConfig()
   if (!smtp.host || !smtp.user || !smtp.pass) {
     throw new Error('SMTP credentials are not configured in settings.')
