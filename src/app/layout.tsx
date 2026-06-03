@@ -4,6 +4,7 @@ import { AuthProvider } from '@/components/providers/AuthProvider'
 import { CartProvider } from '@/components/providers/CartProvider'
 import { Footer } from '@/components/domain/Footer'
 import { AuthModal } from '@/components/domain/AuthModal'
+import { FloatingContactWidget } from '@/components/domain/FloatingContactWidget'
 import { SocialProofToast } from '@/components/domain/SocialProofToast'
 import { Toaster } from 'sonner'
 import './globals.css'
@@ -46,6 +47,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <Suspense fallback={null}>
                 <AuthModal shopName={settings.shopName} />
               </Suspense>
+              <FloatingContactWidget />
             </CartProvider>
           </SocialProofProvider>
         </AuthProvider>

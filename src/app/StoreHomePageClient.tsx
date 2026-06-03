@@ -399,6 +399,8 @@ export default function StoreHomePageClient({
         </div>
       </section>
 
+
+
       {/* HOT DEALS SECTION */}
       {hotDeals && hotDeals.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 py-12">
@@ -417,7 +419,6 @@ export default function StoreHomePageClient({
           <div className={`grid gap-6 ${hotDeals.length === 1 ? 'max-w-md mx-auto grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
             {hotDeals.map((product) => (
               <div key={product.id} className="relative rounded-[1.25rem] overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-amber-500 opacity-20 group-hover:opacity-40 transition-opacity duration-300 blur-xl pointer-events-none" />
                 <ProductCard product={product} accent={accent} showBadge={true} badgeText="GIẢM SÂU" />
               </div>
             ))}
