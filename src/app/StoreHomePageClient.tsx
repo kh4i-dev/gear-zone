@@ -76,7 +76,6 @@ type HomeData = {
   categoryProducts: StoreProduct[]
   settings?: typeof DEFAULT_HOME_SETTINGS
   storeFeatures?: StoreFeature[]
-  hotDeals?: StoreProduct[]
 }
 
 const accentStyles = {
@@ -159,7 +158,6 @@ export default function StoreHomePageClient({
   categoryProducts,
   settings: homeSettings,
   storeFeatures,
-  hotDeals,
 }: HomeData) {
   const [isSubscribing, setIsSubscribing] = useState(false)
   const [email, setEmail] = useState('')
@@ -268,28 +266,18 @@ export default function StoreHomePageClient({
           <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none z-10" />
           
           <div className="relative z-20 mt-auto pb-16 px-4 md:px-8 text-center shrink-0 flex flex-col items-center justify-center">
-            <motion.h3
-              initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 32, scale: 0.96 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: true }}
-              transition={shouldReduce ? { duration: 0.4, ease: 'easeOut', delay: 0.1 } : { type: 'spring', stiffness: 80, damping: 18, mass: 0.8, delay: 0.1 }}
+            <h3
               className={`text-2xl md:text-3xl font-semibold text-white mb-2 tracking-tight drop-shadow-lg ${!shouldReduce ? 'hero-glow' : ''}`}
             >
               {settings.introTitle}
-            </motion.h3>
-            <motion.p
-              initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 32, scale: 0.96 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: true }}
-              transition={shouldReduce ? { duration: 0.4, ease: 'easeOut', delay: 0.3 } : { type: 'spring', stiffness: 80, damping: 18, mass: 0.8, delay: 0.3 }}
+            </h3>
+            <p
               className="text-slate-300 max-w-3xl mx-auto text-sm md:text-base leading-relaxed mb-6 drop-shadow-md"
             >
               {settings.introText}
-            </motion.p>
+            </p>
             
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+            <div 
               className="w-full max-w-3xl overflow-hidden bg-black/40 backdrop-blur-md border border-white/10 rounded-full py-2.5 shadow-xl relative"
             >
               <div 
@@ -303,7 +291,7 @@ export default function StoreHomePageClient({
                   </span>
                 ))}
               </div>
-            </motion.div>
+            </div>
           </div>
           
           <div className={`absolute -bottom-10 left-1/4 right-1/4 h-20 ${accent.glow} blur-[80px] rounded-full pointer-events-none`} />
@@ -314,33 +302,21 @@ export default function StoreHomePageClient({
       <section className="mx-auto max-w-7xl px-4 pb-8">
         <div className="grid gap-6 rounded-3xl bg-slate-900 border border-white/5 p-6 text-white shadow-xl md:grid-cols-[1.2fr_0.8fr] md:p-8">
           <div className="flex flex-col justify-center py-4">
-            <motion.div
-              initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 32, scale: 0.96 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: true }}
-              transition={shouldReduce ? { duration: 0.4, ease: 'easeOut', delay: 0.05 } : { type: 'spring', stiffness: 80, damping: 18, mass: 0.8, delay: 0.05 }}
+            <div
               className={`mb-4 inline-flex w-fit items-center gap-2 rounded-full ${accent.soft} px-3 py-1 text-sm font-bold`}
             >
               {settings.shopTagline}
-            </motion.div>
-            <motion.h1
-              initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 32, scale: 0.96 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: true }}
-              transition={shouldReduce ? { duration: 0.4, ease: 'easeOut', delay: 0.1 } : { type: 'spring', stiffness: 80, damping: 18, mass: 0.8, delay: 0.1 }}
+            </div>
+            <h1
               className={`max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl ${!shouldReduce ? 'hero-glow' : ''}`}
             >
               {settings.bannerTitle}
-            </motion.h1>
-            <motion.p
-              initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 32, scale: 0.96 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: true }}
-              transition={shouldReduce ? { duration: 0.4, ease: 'easeOut', delay: 0.3 } : { type: 'spring', stiffness: 80, damping: 18, mass: 0.8, delay: 0.3 }}
+            </h1>
+            <p
               className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 md:text-base"
             >
               {settings.bannerSubtitle}
-            </motion.p>
+            </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href={bannerCtaLink} className={`inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-extrabold shadow-lg ${accent.primary}`}>
                 {settings.bannerCtaText}
@@ -401,30 +377,7 @@ export default function StoreHomePageClient({
 
 
 
-      {/* HOT DEALS SECTION */}
-      {hotDeals && hotDeals.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 py-12">
-          <div className="mb-8 flex items-end justify-between border-b border-white/5 pb-6">
-            <div>
-              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-rose-500/10 border border-rose-500/20 px-3 py-1 text-xs font-bold text-rose-400 uppercase tracking-wider">
-                ⚡ SIÊU KHUYẾN MÃI
-              </div>
-              <h2 className="text-3xl font-bold tracking-tight text-white">
-                Cơ hội sở hữu giá hời
-              </h2>
-              <p className="mt-1 text-sm text-slate-400">Những món đồ gaming gear chất lượng với mức giá giảm sâu nhất.</p>
-            </div>
-          </div>
 
-          <div className={`grid gap-6 ${hotDeals.length === 1 ? 'max-w-md mx-auto grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
-            {hotDeals.map((product) => (
-              <div key={product.id} className="relative rounded-[1.25rem] overflow-hidden group">
-                <ProductCard product={product} accent={accent} showBadge={true} badgeText="GIẢM SÂU" />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* SECTION 1: Featured Products Section (Premium Look) */}
       <section className="mx-auto max-w-7xl px-4 py-12">

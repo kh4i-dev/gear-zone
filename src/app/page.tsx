@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export const dynamic = 'force-dynamic'
 
 export default async function StoreHomePage() {
-  const [featuredPool, categoryProducts, settings, storeFeatures, discountPool] = await Promise.all([
+  const [featuredPool, categoryProducts, settings, storeFeatures] = await Promise.all([
     prisma.product.findMany({
       where: publicInStockProductWhere,
       include: homeProductInclude,
@@ -44,26 +44,9 @@ export default async function StoreHomePage() {
       where: { isActive: true },
       orderBy: { sortOrder: 'asc' },
     }),
-    prisma.product.findMany({
-      where: {
-        ...publicInStockProductWhere,
-        oldPrice: { not: null },
-      },
-      include: homeProductInclude,
-    }),
   ])
 
   const featuredProducts = selectHomepageFeaturedProducts(featuredPool).map(toStoreProduct)
-
-  const hotDeals = discountPool
-    .filter((p) => p.oldPrice && p.oldPrice > p.price)
-    .sort((a, b) => {
-      const discountA = (a.oldPrice! - a.price) / a.oldPrice!
-      const discountB = (b.oldPrice! - b.price) / b.oldPrice!
-      return discountB - discountA
-    })
-    .slice(0, 2)
-    .map(toStoreProduct)
 
   return (
     <StoreHomePageClient
@@ -71,7 +54,6 @@ export default async function StoreHomePage() {
       categoryProducts={categoryProducts.map(toStoreProduct)}
       settings={buildHomeSettings(settings)}
       storeFeatures={storeFeatures}
-      hotDeals={hotDeals}
     />
   )
 }
