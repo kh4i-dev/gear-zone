@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export const dynamic = 'force-dynamic'
 
 export default async function StoreHomePage() {
-  const [featuredPool, categoryProducts, settings, storeFeatures] = await Promise.all([
+  const [featuredPool, categoryProducts, settings, storeFeatures, discountPool] = await Promise.all([
     prisma.product.findMany({
       where: publicInStockProductWhere,
       include: homeProductInclude,
@@ -44,18 +44,16 @@ export default async function StoreHomePage() {
       where: { isActive: true },
       orderBy: { sortOrder: 'asc' },
     }),
+    prisma.product.findMany({
+      where: {
+        ...publicInStockProductWhere,
+        oldPrice: { not: null },
+      },
+      include: homeProductInclude,
+    }),
   ])
 
   const featuredProducts = selectHomepageFeaturedProducts(featuredPool).map(toStoreProduct)
-
-  // Fetch up to 100 in-stock products to find the highest percentage discount
-  const discountPool = await prisma.product.findMany({
-    where: {
-      ...publicInStockProductWhere,
-      oldPrice: { not: null },
-    },
-    include: homeProductInclude,
-  })
 
   const hotDeals = discountPool
     .filter((p) => p.oldPrice && p.oldPrice > p.price)

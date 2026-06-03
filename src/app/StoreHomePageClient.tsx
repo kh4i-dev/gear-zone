@@ -3,10 +3,40 @@
 import { useMemo, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import Link from 'next/link'
-import * as LucideIcons from 'lucide-react'
-import { ArrowRight, Award, Globe, Headset, Loader2, Mail, Package, ShieldCheck, Truck, Zap, ShoppingCart, Star, ImageIcon, Tag, RotateCcw, Cpu, Gamepad2 } from 'lucide-react'
+import { 
+  ArrowRight, 
+  Award, 
+  Globe, 
+  Headset, 
+  Loader2, 
+  Mail, 
+  Package, 
+  ShieldCheck, 
+  Truck, 
+  Zap, 
+  ShoppingCart, 
+  Star, 
+  ImageIcon, 
+  Tag, 
+  RotateCcw, 
+  Cpu, 
+  Gamepad2 
+} from 'lucide-react'
 import { StoreNavbar } from '@/components/domain/StoreNavbar'
 import { ProductCard, type StoreProduct } from '@/components/domain/ProductCard'
+
+// Static mapping to avoid bundling the entire lucide-react library
+const IconMap: Record<string, React.ComponentType<any>> = {
+  Award,
+  Zap,
+  Headset,
+  Globe,
+  ShieldCheck,
+  Truck,
+  RotateCcw,
+  Cpu,
+  Gamepad2,
+}
 import { HomeCategorySection } from '@/components/domain/HomeCategorySection'
 import { ProductRowCarousel } from '@/components/domain/ProductRowCarousel'
 import { useCart } from '@/components/providers/CartProvider'
@@ -355,7 +385,7 @@ export default function StoreHomePageClient({
             { icon: 'Headset', title: 'Hỗ trợ 24/7', description: 'Đội ngũ kỹ thuật viên luôn sẵn sàng giải đáp mọi thắc mắc của bạn.' },
             { icon: 'Globe', title: 'Cộng đồng lớn mạnh', description: `Tham gia các giải đấu và event độc quyền dành cho member ${settings.shopName}.` },
           ]).map((feature) => {
-            const Icon = (LucideIcons as any)[feature.icon] || Award;
+            const Icon = IconMap[feature.icon] || Award;
             return (
               <div key={feature.title} className="bg-slate-900/50 border border-white/5 p-6 rounded-2xl hover:bg-slate-900 transition-colors group">
                 <div className="size-12 bg-indigo-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
