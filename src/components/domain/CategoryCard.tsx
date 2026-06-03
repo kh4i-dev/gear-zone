@@ -32,9 +32,9 @@ export function CategoryCard({ category }: CategoryCardProps) {
       <div className="relative h-full w-full rounded-[12.5px] bg-[#070b17] overflow-hidden flex flex-col">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.15),transparent_58%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-10" />
 
-        <div className="relative h-[60px] sm:h-[68px] bg-[#050812]/50 border-b border-white/[0.02]">
+        <div className="relative w-full aspect-[1335/925] bg-[#050812]/50 border-b border-white/[0.02]">
           {imageUrl ? (
-            <div className="absolute inset-0 flex items-center justify-center p-2">
+            <div className="absolute inset-2 flex items-center justify-center z-0">
               <Image
                 src={imageUrl}
                 alt={name}
