@@ -17,8 +17,10 @@
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "bcryptjs": "^2.4.3",
+    "bullmq": "^5.78.0",
     "clsx": "^2.1.1",
     "geist": "^1.7.1",
+    "ioredis": "^5.11.0",
     "jose": "^5.9.6",
     "lucide-react": "^0.460.0",
     "motion": "^12.40.0",

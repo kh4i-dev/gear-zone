@@ -1,6 +1,6 @@
 'use client'
  
-import { useEffect, useReducer } from 'react'
+import { useEffect, useReducer, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { categoryMegaMenu } from '@/config/categoryMegaMenu'
 import { 
@@ -102,6 +102,18 @@ type SettingsPageState = {
   smtpPass: string
   newsletterWelcomeEnabled: boolean
   adminNotifyNewsletterEnabled: boolean
+  smtpSenderName: string
+  smtpSenderEmail: string
+  emailTemplateWelcomeSubject: string
+  emailTemplateWelcomeBody: string
+  emailTemplateOrderSubject: string
+  emailTemplateOrderBody: string
+  emailTemplateFlashSaleSubject: string
+  emailTemplateFlashSaleBody: string
+  emailTemplateAbandonedCartSubject: string
+  emailTemplateAbandonedCartBody: string
+  emailTemplateRecommendationSubject: string
+  emailTemplateRecommendationBody: string
 }
  
 const initialSettingsPageState: SettingsPageState = {
@@ -154,6 +166,18 @@ const initialSettingsPageState: SettingsPageState = {
   smtpPass: '',
   newsletterWelcomeEnabled: true,
   adminNotifyNewsletterEnabled: true,
+  smtpSenderName: 'GearZone',
+  smtpSenderEmail: '',
+  emailTemplateWelcomeSubject: '',
+  emailTemplateWelcomeBody: '',
+  emailTemplateOrderSubject: '',
+  emailTemplateOrderBody: '',
+  emailTemplateFlashSaleSubject: '',
+  emailTemplateFlashSaleBody: '',
+  emailTemplateAbandonedCartSubject: '',
+  emailTemplateAbandonedCartBody: '',
+  emailTemplateRecommendationSubject: '',
+  emailTemplateRecommendationBody: '',
 }
  
 const menuSections = [
@@ -164,6 +188,7 @@ const menuSections = [
   { id: 'menu', label: 'Cấu hình Menu', icon: Settings },
   { id: 'contact', label: 'Thông tin liên hệ', icon: Globe },
   { id: 'notifications', label: 'Cấu hình cảnh báo', icon: Bell },
+  { id: 'marketing', label: 'Marketing & Email', icon: Mail },
   { id: 'policy', label: 'Chính sách & HD', icon: BookOpen },
   { id: 'seo', label: 'Cấu hình SEO', icon: Search },
   { id: 'category', label: 'Quản lý danh mục', icon: Tag },
@@ -193,6 +218,68 @@ export default function AdminSettingsPage() {
     }
   )
   const { isLoading, isSaving, isUploading, isCatLoading, isChangingPass } = status
+
+  // Marketing states
+  const [marketingProducts, setMarketingProducts] = useState<any[]>([])
+  const [marketingSubscribers, setMarketingSubscribers] = useState<any[]>([])
+  const [marketingCampaigns, setMarketingCampaigns] = useState<any[]>([])
+  const [marketingStats, setMarketingStats] = useState<any>({ totalSubscribers: 0, totalSent: 0, totalOpened: 0, totalClicked: 0 })
+  const [marketingLogs, setMarketingLogs] = useState<any[]>([])
+  const [marketingTab, setMarketingTab] = useState<'templates' | 'campaigns' | 'subscribers' | 'history'>('templates')
+
+  // Campaign Form State
+  const [campName, setCampName] = useState('')
+  const [campSubject, setCampSubject] = useState('')
+  const [campContent, setCampContent] = useState('')
+  const [campTarget, setCampTarget] = useState('ALL')
+  const [campSelectedProducts, setCampSelectedProducts] = useState<string[]>([])
+  const [isSendingCamp, setIsSendingCamp] = useState<string | null>(null)
+  
+  // Subscriber Form State
+  const [newSubEmail, setNewSubEmail] = useState('')
+  const [isAddingSub, setIsAddingSub] = useState(false)
+  const [subFilterEmail, setSubFilterEmail] = useState('')
+
+  // Selected Email Template type to edit
+  const [editingTemplateType, setEditingTemplateType] = useState<string>('welcome')
+
+  const fetchMarketingData = async () => {
+    try {
+      // 1. Fetch campaigns and stats
+      const resCamp = await fetch('/api/admin/marketing')
+      const jsonCamp = await resCamp.json()
+      if (resCamp.ok && jsonCamp.data) {
+        setMarketingCampaigns(jsonCamp.data.campaigns)
+        setMarketingStats(jsonCamp.data.stats)
+      }
+
+      // 2. Fetch subscribers
+      const resSub = await fetch(`/api/admin/subscribers?email=${encodeURIComponent(subFilterEmail)}`)
+      const jsonSub = await resSub.json()
+      if (resSub.ok && jsonSub.data) {
+        setMarketingSubscribers(jsonSub.data)
+      }
+
+      // 3. Fetch logs
+      const resLogs = await fetch('/api/admin/marketing/logs')
+      const jsonLogs = await resLogs.json()
+      if (resLogs.ok && jsonLogs.data) {
+        setMarketingLogs(jsonLogs.data)
+      }
+
+      // 4. Fetch products to select
+      const resProd = await fetch('/api/products')
+      const jsonProd = await resProd.json()
+      if (resProd.ok && jsonProd.data) {
+        // Handle variations in api returns
+        const prods = jsonProd.data.products || jsonProd.data
+        setMarketingProducts(prods || [])
+      }
+    } catch (err) {
+      console.error('Error fetching marketing data:', err)
+      toast.error('Lỗi khi tải dữ liệu marketing')
+    }
+  }
   const setIsLoading = (isLoading: boolean) => setStatus({ isLoading })
   const setIsSaving = (isSaving: boolean) => setStatus({ isSaving })
   const setIsUploading = (isUploading: boolean) => setStatus({ isUploading })
@@ -253,11 +340,35 @@ export default function AdminSettingsPage() {
     smtpPass,
     newsletterWelcomeEnabled,
     adminNotifyNewsletterEnabled,
+    smtpSenderName,
+    smtpSenderEmail,
+    emailTemplateWelcomeSubject,
+    emailTemplateWelcomeBody,
+    emailTemplateOrderSubject,
+    emailTemplateOrderBody,
+    emailTemplateFlashSaleSubject,
+    emailTemplateFlashSaleBody,
+    emailTemplateAbandonedCartSubject,
+    emailTemplateAbandonedCartBody,
+    emailTemplateRecommendationSubject,
+    emailTemplateRecommendationBody,
   } = pageState
   const setVideoUrl = (videoUrl: string) => updatePageState({ videoUrl })
   const setThemeAccent = (themeAccent: string) => updatePageState({ themeAccent })
   const setIntroTitle = (introTitle: string) => updatePageState({ introTitle })
   const setIntroText = (introText: string) => updatePageState({ introText })
+  const setSmtpSenderName = (smtpSenderName: string) => updatePageState({ smtpSenderName })
+  const setSmtpSenderEmail = (smtpSenderEmail: string) => updatePageState({ smtpSenderEmail })
+  const setEmailTemplateWelcomeSubject = (emailTemplateWelcomeSubject: string) => updatePageState({ emailTemplateWelcomeSubject })
+  const setEmailTemplateWelcomeBody = (emailTemplateWelcomeBody: string) => updatePageState({ emailTemplateWelcomeBody })
+  const setEmailTemplateOrderSubject = (emailTemplateOrderSubject: string) => updatePageState({ emailTemplateOrderSubject })
+  const setEmailTemplateOrderBody = (emailTemplateOrderBody: string) => updatePageState({ emailTemplateOrderBody })
+  const setEmailTemplateFlashSaleSubject = (emailTemplateFlashSaleSubject: string) => updatePageState({ emailTemplateFlashSaleSubject })
+  const setEmailTemplateFlashSaleBody = (emailTemplateFlashSaleBody: string) => updatePageState({ emailTemplateFlashSaleBody })
+  const setEmailTemplateAbandonedCartSubject = (emailTemplateAbandonedCartSubject: string) => updatePageState({ emailTemplateAbandonedCartSubject })
+  const setEmailTemplateAbandonedCartBody = (emailTemplateAbandonedCartBody: string) => updatePageState({ emailTemplateAbandonedCartBody })
+  const setEmailTemplateRecommendationSubject = (emailTemplateRecommendationSubject: string) => updatePageState({ emailTemplateRecommendationSubject })
+  const setEmailTemplateRecommendationBody = (emailTemplateRecommendationBody: string) => updatePageState({ emailTemplateRecommendationBody })
   const setBannerTitle = (bannerTitle: string) => updatePageState({ bannerTitle })
   const setBannerSubtitle = (bannerSubtitle: string) => updatePageState({ bannerSubtitle })
   const setBannerCtaText = (bannerCtaText: string) => updatePageState({ bannerCtaText })
@@ -317,6 +428,12 @@ export default function AdminSettingsPage() {
       fetchFeatures()
     }
   }, [user])
+
+  useEffect(() => {
+    if (user?.role === 'ADMIN' && activeSection === 'marketing') {
+      fetchMarketingData()
+    }
+  }, [user, activeSection, subFilterEmail])
 
   const fetchFeatures = async () => {
     try {
@@ -387,6 +504,18 @@ export default function AdminSettingsPage() {
         setSmtpPass(result.data.smtp_pass || '')
         setNewsletterWelcomeEnabled(result.data.newsletter_welcome_enabled !== 'false')
         setAdminNotifyNewsletterEnabled(result.data.admin_notify_newsletter_enabled !== 'false')
+        setSmtpSenderName(result.data.smtp_sender_name || 'GearZone')
+        setSmtpSenderEmail(result.data.smtp_sender_email || '')
+        setEmailTemplateWelcomeSubject(result.data.email_template_welcome_subject || '')
+        setEmailTemplateWelcomeBody(result.data.email_template_welcome_body || '')
+        setEmailTemplateOrderSubject(result.data.email_template_order_subject || '')
+        setEmailTemplateOrderBody(result.data.email_template_order_body || '')
+        setEmailTemplateFlashSaleSubject(result.data.email_template_flash_sale_subject || '')
+        setEmailTemplateFlashSaleBody(result.data.email_template_flash_sale_body || '')
+        setEmailTemplateAbandonedCartSubject(result.data.email_template_abandoned_cart_subject || '')
+        setEmailTemplateAbandonedCartBody(result.data.email_template_abandoned_cart_body || '')
+        setEmailTemplateRecommendationSubject(result.data.email_template_recommendation_subject || '')
+        setEmailTemplateRecommendationBody(result.data.email_template_recommendation_body || '')
         
         const defaultMegaMenuJson = JSON.stringify(
           categoryMegaMenu.map(cat => ({
@@ -488,6 +617,18 @@ export default function AdminSettingsPage() {
             smtp_pass: smtpPass,
             newsletter_welcome_enabled: newsletterWelcomeEnabled ? 'true' : 'false',
             admin_notify_newsletter_enabled: adminNotifyNewsletterEnabled ? 'true' : 'false',
+            smtp_sender_name: smtpSenderName,
+            smtp_sender_email: smtpSenderEmail,
+            email_template_welcome_subject: emailTemplateWelcomeSubject,
+            email_template_welcome_body: emailTemplateWelcomeBody,
+            email_template_order_subject: emailTemplateOrderSubject,
+            email_template_order_body: emailTemplateOrderBody,
+            email_template_flash_sale_subject: emailTemplateFlashSaleSubject,
+            email_template_flash_sale_body: emailTemplateFlashSaleBody,
+            email_template_abandoned_cart_subject: emailTemplateAbandonedCartSubject,
+            email_template_abandoned_cart_body: emailTemplateAbandonedCartBody,
+            email_template_recommendation_subject: emailTemplateRecommendationSubject,
+            email_template_recommendation_body: emailTemplateRecommendationBody,
           }
         })
       })
@@ -1339,6 +1480,546 @@ export default function AdminSettingsPage() {
                     {isSaving ? <span className="flex items-center gap-2"><RefreshCw className="size-4 animate-spin" /> Đang lưu...</span> : 'Lưu cấu hình cảnh báo'}
                   </Button>
                 </div>
+              </div>
+            )}
+
+            {/* Section: Marketing & Email */}
+            {activeSection === 'marketing' && (
+              <div className="bg-slate-900/40 border border-white/5 p-6 rounded-3xl backdrop-blur-md shadow-xl animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 text-xl font-bold mb-6 border-b border-white/5 pb-4 text-slate-200">
+                  <Mail className="size-5 text-indigo-400" />
+                  Quản lý Marketing & Email
+                </div>
+
+                {/* Tabs */}
+                <div className="flex border-b border-white/5 mb-6 gap-2 overflow-x-auto pb-px">
+                  {[
+                    { id: 'templates', label: 'Cấu hình & Templates' },
+                    { id: 'campaigns', label: 'Chiến dịch gửi sản phẩm' },
+                    { id: 'subscribers', label: 'Danh sách Subscriber' },
+                    { id: 'history', label: 'Lịch sử gửi & logs' }
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setMarketingTab(tab.id as any)}
+                      className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 whitespace-nowrap active:scale-95 ${
+                        marketingTab === tab.id
+                          ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 shadow-lg'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Tab Contents */}
+                {/* 1. Templates Tab */}
+                {marketingTab === 'templates' && (
+                  <div className="space-y-6">
+                    <div className="bg-slate-950/50 p-6 rounded-2xl border border-white/5 space-y-4">
+                      <h3 className="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-2">Thông tin người gửi (Sender)</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-slate-300 mb-1.5 block">Tên người gửi (Sender Name)</label>
+                          <Input
+                            placeholder="GearZone"
+                            value={smtpSenderName}
+                            onChange={(e) => setSmtpSenderName(e.target.value)}
+                            className="bg-black/20 border-white/10 text-white placeholder:text-slate-600 focus:border-indigo-500/50"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-300 mb-1.5 block">Email người gửi (Sender Email)</label>
+                          <Input
+                            placeholder="support@gearzone.vn"
+                            value={smtpSenderEmail}
+                            onChange={(e) => setSmtpSenderEmail(e.target.value)}
+                            className="bg-black/20 border-white/10 text-white placeholder:text-slate-600 focus:border-indigo-500/50"
+                          />
+                          <p className="text-xs text-slate-500 mt-1">Để trống sẽ dùng Email của SMTP user.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-950/50 p-6 rounded-2xl border border-white/5 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-2">
+                        <h3 className="text-sm font-semibold text-indigo-400 uppercase tracking-wider">Soạn thảo mẫu Email (Templates)</h3>
+                        <select
+                          value={editingTemplateType}
+                          onChange={(e) => setEditingTemplateType(e.target.value)}
+                          className="h-10 rounded-xl border border-white/10 bg-slate-900 px-3 text-xs font-bold text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                        >
+                          <option value="welcome">Mẫu chào mừng (Welcome Email)</option>
+                          <option value="order">Mẫu đơn hàng (Order Confirmation)</option>
+                          <option value="abandoned_cart">Mẫu bỏ quên giỏ hàng (Abandoned Cart)</option>
+                          <option value="recommendation">Mẫu gợi ý sản phẩm (Recommendation)</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium text-slate-300 mb-1.5 block">Tiêu đề Email (Subject)</label>
+                          <Input
+                            placeholder="Nhập tiêu đề..."
+                            value={
+                              editingTemplateType === 'welcome' ? emailTemplateWelcomeSubject :
+                              editingTemplateType === 'order' ? emailTemplateOrderSubject :
+                              editingTemplateType === 'abandoned_cart' ? emailTemplateAbandonedCartSubject :
+                              emailTemplateRecommendationSubject
+                            }
+                            onChange={(e) => {
+                              if (editingTemplateType === 'welcome') setEmailTemplateWelcomeSubject(e.target.value)
+                              else if (editingTemplateType === 'order') setEmailTemplateOrderSubject(e.target.value)
+                              else if (editingTemplateType === 'abandoned_cart') setEmailTemplateAbandonedCartSubject(e.target.value)
+                              else setEmailTemplateRecommendationSubject(e.target.value)
+                            }}
+                            className="bg-black/20 border-white/10 text-white focus:border-indigo-500/50"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-300 mb-1.5 block">Nội dung HTML (Email Body)</label>
+                          <textarea
+                            rows={12}
+                            placeholder="HTML body templates..."
+                            value={
+                              editingTemplateType === 'welcome' ? emailTemplateWelcomeBody :
+                              editingTemplateType === 'order' ? emailTemplateOrderBody :
+                              editingTemplateType === 'abandoned_cart' ? emailTemplateAbandonedCartBody :
+                              emailTemplateRecommendationBody
+                            }
+                            onChange={(e) => {
+                              if (editingTemplateType === 'welcome') setEmailTemplateWelcomeBody(e.target.value)
+                              else if (editingTemplateType === 'order') setEmailTemplateOrderBody(e.target.value)
+                              else if (editingTemplateType === 'abandoned_cart') setEmailTemplateAbandonedCartBody(e.target.value)
+                              else setEmailTemplateRecommendationBody(e.target.value)
+                            }}
+                            className="w-full font-mono text-xs rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-emerald-400 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 resize-y"
+                          />
+                          <div className="text-xs text-slate-400 mt-2 space-y-1">
+                            <p>💡 Các placeholder được hỗ trợ:</p>
+                            <ul className="list-disc pl-4 space-y-1">
+                              <li><code>{"{{customer_name}}"}</code>: Tên của khách hàng</li>
+                              <li><code>{"{{shop_url}}"}</code>: URL cửa hàng của bạn</li>
+                              <li><code>{"{{products}}"}</code>: Danh sách sản phẩm nổi bật / giỏ hàng / đơn hàng</li>
+                              {editingTemplateType === 'order' && <li><code>{"{{order_id}}"}</code>, <code>{"{{total_amount}}"}</code>: ID đơn hàng và Tổng tiền</li>}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end pt-4">
+                      <Button
+                        onClick={() => handleSave('Marketing Email Templates')}
+                        disabled={isSaving}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white min-w-[140px]"
+                      >
+                        {isSaving ? <span className="flex items-center gap-2"><RefreshCw className="size-4 animate-spin" /> Đang lưu...</span> : 'Lưu cấu hình & Templates'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Campaigns Tab */}
+                {marketingTab === 'campaigns' && (
+                  <div className="space-y-6">
+                    {/* Stats widgets */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {[
+                        { label: 'Subscribers', value: marketingStats.totalSubscribers, color: 'text-indigo-400' },
+                        { label: 'Đã gửi (Sent)', value: marketingStats.totalSent, color: 'text-blue-400' },
+                        { label: 'Mở Mail (Opened)', value: marketingStats.totalOpened, pct: marketingStats.totalSent ? Math.round(marketingStats.totalOpened / marketingStats.totalSent * 100) : 0, color: 'text-emerald-400' },
+                        { label: 'Click Link (Clicked)', value: marketingStats.totalClicked, pct: marketingStats.totalOpened ? Math.round(marketingStats.totalClicked / marketingStats.totalOpened * 100) : 0, color: 'text-rose-400' }
+                      ].map((stat, i) => (
+                        <div key={i} className="bg-slate-950/50 p-4 border border-white/5 rounded-2xl flex flex-col justify-center shadow-lg">
+                          <span className="text-xs text-slate-400 font-medium">{stat.label}</span>
+                          <span className={`text-2xl font-black mt-1 ${stat.color}`}>{stat.value.toLocaleString()}</span>
+                          {stat.pct !== undefined && (
+                            <span className="text-xs text-slate-500 mt-0.5">Tỷ lệ: {stat.pct}%</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Create Campaign Card */}
+                    <div className="bg-slate-950/50 p-6 rounded-2xl border border-white/5 space-y-4">
+                      <h3 className="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-2">Tạo Chiến Dịch Newsletter Mới</h3>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium text-slate-300 mb-1.5 block">Tên chiến dịch (Nội bộ)</label>
+                            <Input
+                              placeholder="Flash Sale Tháng 6"
+                              value={campName}
+                              onChange={(e) => setCampName(e.target.value)}
+                              className="bg-black/20 border-white/10 text-white focus:border-indigo-500/50"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-slate-300 mb-1.5 block font-bold">Nhóm đối tượng nhận tin</label>
+                            <select
+                              value={campTarget}
+                              onChange={(e) => setCampTarget(e.target.value)}
+                              className="h-11 w-full rounded-xl border border-white/10 bg-slate-900 px-3 text-sm font-bold text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                            >
+                              <option value="ALL">Gửi toàn bộ subscriber</option>
+                              <option value="KEYBOARD">Chỉ gửi nhóm mua BÀN PHÍM (Keyboard)</option>
+                              <option value="MOUSE">Chỉ gửi nhóm mua CHUỘT (Mouse)</option>
+                              <option value="HEADSET">Chỉ gửi nhóm mua TAI NGHE / LOA (Audio)</option>
+                              <option value="VIP">Chỉ gửi nhóm VIP (chi tiêu từ 5 triệu trở lên)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-slate-300 mb-1.5 block">Tiêu đề Email gửi khách</label>
+                          <Input
+                            placeholder="🔥 Deal hôm nay tại GearZone"
+                            value={campSubject}
+                            onChange={(e) => setCampSubject(e.target.value)}
+                            className="bg-black/20 border-white/10 text-white focus:border-indigo-500/50"
+                          />
+                        </div>
+
+                        {/* Showcase Products Selection */}
+                        <div>
+                          <label className="text-sm font-medium text-slate-300 mb-1.5 block">Sản phẩm đính kèm trong Email</label>
+                          <div className="max-h-48 overflow-y-auto border border-white/10 rounded-xl bg-black/20 p-3 space-y-2">
+                            {marketingProducts.map((p) => {
+                              const isChecked = campSelectedProducts.includes(p.id)
+                              return (
+                                <label key={p.id} className="flex items-center gap-3 p-1.5 hover:bg-white/5 rounded-lg cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setCampSelectedProducts([...campSelectedProducts, p.id])
+                                      } else {
+                                        setCampSelectedProducts(campSelectedProducts.filter(id => id !== p.id))
+                                      }
+                                    }}
+                                    className="size-4 rounded border-white/10 bg-black/20 text-indigo-500 focus:ring-indigo-500/30"
+                                  />
+                                  {p.imageUrl && <img src={p.imageUrl} alt={p.name} className="size-8 object-cover rounded" />}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-bold text-slate-200 truncate">{p.name}</p>
+                                    <p className="text-[10px] text-slate-400">{p.price.toLocaleString('vi-VN')}đ</p>
+                                  </div>
+                                </label>
+                              )
+                            })}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-slate-300 mb-1.5 block">Nội dung Email (HTML body)</label>
+                          <textarea
+                            rows={8}
+                            placeholder="<h2>Deal Hời Hôm Nay!</h2><p>Giảm giá cực khủng...</p>{{products}}"
+                            value={campContent}
+                            onChange={(e) => setCampContent(e.target.value)}
+                            className="w-full font-mono text-xs rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-emerald-400 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 resize-y"
+                          />
+                          <p className="text-[11px] text-slate-500 mt-1">Dùng placeholder <code>{"{{products}}"}</code> để chèn các sản phẩm đã chọn bên trên.</p>
+                        </div>
+
+                        <div className="flex justify-end pt-2">
+                          <Button
+                            onClick={async () => {
+                              if (!campName || !campSubject || !campContent) {
+                                toast.error('Vui lòng điền đủ Tên, Tiêu đề và Nội dung chiến dịch!')
+                                return
+                              }
+                              try {
+                                const res = await fetch('/api/admin/marketing', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    name: campName,
+                                    subject: campSubject,
+                                    content: campContent,
+                                    targetGroup: campTarget,
+                                    productIds: campSelectedProducts
+                                  })
+                                })
+                                const result = await res.json()
+                                if (res.ok) {
+                                  toast.success('Tạo chiến dịch marketing thành công!')
+                                  setCampName('')
+                                  setCampSubject('')
+                                  setCampContent('')
+                                  setCampSelectedProducts([])
+                                  fetchMarketingData()
+                                } else {
+                                  toast.error(result.error?.message || 'Lỗi khi tạo chiến dịch')
+                                }
+                              } catch {
+                                toast.error('Lỗi kết nối khi tạo chiến dịch')
+                              }
+                            }}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl px-6"
+                          >
+                            Tạo Chiến Dịch
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Active / Past Campaigns list */}
+                    <div className="bg-slate-950/50 p-6 rounded-2xl border border-white/5 space-y-4">
+                      <h3 className="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-2">Lịch Sử Chiến Dịch ({marketingCampaigns.length})</h3>
+                      {marketingCampaigns.length > 0 ? (
+                        <div className="space-y-4">
+                          {marketingCampaigns.map((camp) => (
+                            <div key={camp.id} className="bg-slate-900/60 p-5 rounded-2xl border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-md">
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-bold text-white truncate">{camp.name}</span>
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                    camp.status === 'SENT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                    camp.status === 'SENDING' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
+                                    'bg-slate-500/10 text-slate-400 border border-white/10'
+                                  }`}>{camp.status}</span>
+                                </div>
+                                <p className="text-xs text-slate-400 mt-1 italic">Tiêu đề: {camp.subject}</p>
+                                <p className="text-[10px] text-slate-500 mt-0.5">Đối tượng: {camp.targetGroup} | Ngày tạo: {new Date(camp.createdAt).toLocaleString('vi-VN')}</p>
+                              </div>
+
+                              <div className="flex items-center gap-6 shrink-0 text-xs">
+                                <div className="flex flex-col items-center">
+                                  <span className="text-slate-400 font-medium">Đã gửi</span>
+                                  <span className="font-bold text-white mt-0.5">{camp.sentCount}</span>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                  <span className="text-slate-400 font-medium">Mở mail</span>
+                                  <span className="font-bold text-emerald-400 mt-0.5">{camp.openCount}</span>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                  <span className="text-slate-400 font-medium">Click link</span>
+                                  <span className="font-bold text-rose-400 mt-0.5">{camp.clickCount}</span>
+                                </div>
+                                <div className="flex items-center gap-2 pl-4 border-l border-white/5">
+                                  {camp.status !== 'SENT' && camp.status !== 'SENDING' && (
+                                    <Button
+                                      onClick={async () => {
+                                        setIsSendingCamp(camp.id)
+                                        try {
+                                          const res = await fetch(`/api/admin/marketing/${camp.id}`, { method: 'POST' })
+                                          if (res.ok) {
+                                            toast.success('Đã kích hoạt gửi chiến dịch thành công!')
+                                            fetchMarketingData()
+                                          } else {
+                                            toast.error('Lỗi khi gửi chiến dịch')
+                                          }
+                                        } catch {
+                                          toast.error('Lỗi kết nối')
+                                        } finally {
+                                          setIsSendingCamp(null)
+                                        }
+                                      }}
+                                      disabled={isSendingCamp === camp.id}
+                                      className="bg-emerald-600 hover:bg-emerald-700 size-8 p-0 rounded-lg flex items-center justify-center"
+                                      title="Gửi chiến dịch"
+                                    >
+                                      {isSendingCamp === camp.id ? <RefreshCw className="size-4 animate-spin text-white" /> : <Save className="size-4 text-white" />}
+                                    </Button>
+                                  )}
+                                  <Button
+                                    onClick={async () => {
+                                      if (!window.confirm('Bạn có chắc chắn muốn xóa chiến dịch này không?')) return
+                                      try {
+                                        const res = await fetch(`/api/admin/marketing/${camp.id}`, { method: 'DELETE' })
+                                        if (res.ok) {
+                                          toast.success('Đã xóa chiến dịch thành công')
+                                          fetchMarketingData()
+                                        }
+                                      } catch {
+                                        toast.error('Lỗi kết nối')
+                                      }
+                                    }}
+                                    className="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white size-8 p-0 rounded-lg flex items-center justify-center border border-rose-500/20"
+                                    title="Xóa chiến dịch"
+                                  >
+                                    <X className="size-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-500 italic text-center py-4">Chưa có chiến dịch marketing nào được tạo.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Subscribers Tab */}
+                {marketingTab === 'subscribers' && (
+                  <div className="space-y-6">
+                    <div className="bg-slate-950/50 p-6 rounded-2xl border border-white/5 space-y-4">
+                      <h3 className="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-2">Thêm Subscriber Thủ Công</h3>
+                      <div className="flex gap-4">
+                        <Input
+                          placeholder="email_khach_hang@gmail.com"
+                          value={newSubEmail}
+                          onChange={(e) => setNewSubEmail(e.target.value)}
+                          className="flex-1 bg-black/20 border-white/10 text-white placeholder:text-slate-600"
+                        />
+                        <Button
+                          onClick={async () => {
+                            if (!newSubEmail || !newSubEmail.includes('@')) {
+                              toast.error('Email không hợp lệ!')
+                              return
+                            }
+                            setIsAddingSub(true)
+                            try {
+                              const res = await fetch('/api/admin/subscribers', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ email: newSubEmail })
+                              })
+                              if (res.ok) {
+                                toast.success(`Đã thêm thành công email ${newSubEmail}`)
+                                setNewSubEmail('')
+                                fetchMarketingData()
+                              } else {
+                                toast.error('Lỗi khi thêm email')
+                              }
+                            } catch {
+                              toast.error('Lỗi kết nối')
+                            } finally {
+                              setIsAddingSub(false)
+                            }
+                          }}
+                          disabled={isAddingSub}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl px-6"
+                        >
+                          {isAddingSub ? 'Đang thêm...' : 'Thêm email'}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-950/50 p-6 rounded-2xl border border-white/5 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+                        <h3 className="text-sm font-semibold text-indigo-400 uppercase tracking-wider">Danh Sách Người Đăng Ký ({marketingSubscribers.length})</h3>
+                        <Input
+                          placeholder="Tìm email..."
+                          value={subFilterEmail}
+                          onChange={(e) => setSubFilterEmail(e.target.value)}
+                          className="max-w-xs h-9 text-xs bg-black/20 border-white/10 text-white placeholder:text-slate-600"
+                        />
+                      </div>
+
+                      {marketingSubscribers.length > 0 ? (
+                        <div className="overflow-x-auto border border-white/5 rounded-xl">
+                          <table className="w-full text-left border-collapse">
+                            <thead>
+                              <tr className="bg-slate-900 text-[11px] font-extrabold uppercase text-slate-400 border-b border-white/5">
+                                <th className="p-4">Email</th>
+                                <th className="p-4">Nguồn đăng ký (Source)</th>
+                                <th className="p-4">Trạng thái (Status)</th>
+                                <th className="p-4">Ngày đăng ký</th>
+                                <th className="p-4 text-right">Thao tác</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5 text-xs text-slate-300">
+                              {marketingSubscribers.map((sub) => (
+                                <tr key={sub.id} className="hover:bg-white/5">
+                                  <td className="p-4 font-bold text-white">{sub.email}</td>
+                                  <td className="p-4">{sub.source || 'homepage_footer'}</td>
+                                  <td className="p-4">
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                      sub.isActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                    }`}>
+                                      {sub.isActive ? 'Active' : 'Unsubscribed'}
+                                    </span>
+                                  </td>
+                                  <td className="p-4">{new Date(sub.createdAt).toLocaleDateString('vi-VN')}</td>
+                                  <td className="p-4 text-right">
+                                    <Button
+                                      onClick={async () => {
+                                        if (!window.confirm(`Bạn có chắc chắn muốn xóa email ${sub.email} khỏi danh sách không?`)) return
+                                        try {
+                                          const res = await fetch(`/api/admin/subscribers?id=${sub.id}`, { method: 'DELETE' })
+                                          if (res.ok) {
+                                            toast.success('Đã xóa thành công subscriber')
+                                            fetchMarketingData()
+                                          }
+                                        } catch {
+                                          toast.error('Lỗi kết nối')
+                                        }
+                                      }}
+                                      className="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white px-3 py-1 rounded-lg text-[10px] font-bold border border-rose-500/20"
+                                    >
+                                      Xóa
+                                    </Button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-500 italic text-center py-4">Không tìm thấy người đăng ký nào.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. History Logs Tab */}
+                {marketingTab === 'history' && (
+                  <div className="bg-slate-950/50 p-6 rounded-2xl border border-white/5 space-y-4">
+                    <h3 className="text-sm font-semibold text-indigo-400 uppercase tracking-wider">Nhật Ký Gửi Thư Mới Nhất (Tối đa 150)</h3>
+                    
+                    {marketingLogs.length > 0 ? (
+                      <div className="overflow-x-auto border border-white/5 rounded-xl">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="bg-slate-900 text-[11px] font-extrabold uppercase text-slate-400 border-b border-white/5">
+                              <th className="p-4">Thời gian</th>
+                              <th className="p-4">Người nhận</th>
+                              <th className="p-4">Loại email / Chiến dịch</th>
+                              <th className="p-4">Trạng thái (Status)</th>
+                              <th className="p-4">Chi tiết lỗi (nếu có)</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-white/5 text-xs text-slate-300">
+                            {marketingLogs.map((log) => (
+                              <tr key={log.id} className="hover:bg-white/5">
+                                <td className="p-4 text-[11px] text-slate-400 whitespace-nowrap">
+                                  {new Date(log.date).toLocaleString('vi-VN')}
+                                </td>
+                                <td className="p-4 font-bold text-white">{log.recipient}</td>
+                                <td className="p-4 font-semibold text-slate-200">
+                                  <span>{log.subject}</span>
+                                  <span className="text-[10px] text-slate-500 ml-2">({log.type})</span>
+                                </td>
+                                <td className="p-4">
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                    log.status === 'SENT' || log.status === 'OPENED' || log.status === 'CLICKED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                    log.status === 'PENDING' || log.status === 'SENDING' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
+                                    'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                  }`}>
+                                    {log.status}
+                                  </span>
+                                </td>
+                                <td className="p-4 text-xs text-rose-400 truncate max-w-xs" title={log.error}>
+                                  {log.error || '-'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-500 italic text-center py-4">Chưa có nhật ký gửi thư nào.</p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 

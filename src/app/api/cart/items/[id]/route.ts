@@ -73,6 +73,10 @@ export async function PATCH(
       where: { id },
       data: { quantity: Math.min(quantity, maxStock) },
     })
+    await prisma.cart.update({
+      where: { id: cartItem.cartId },
+      data: { updatedAt: new Date(), abandonedEmailSent: false }
+    })
 
     const items = await getCart(user.id)
     return NextResponse.json(success(items ?? [], { traceId }))
@@ -105,6 +109,10 @@ export async function DELETE(
     }
 
     await prisma.cartItem.delete({ where: { id } })
+    await prisma.cart.update({
+      where: { id: cartItem.cartId },
+      data: { updatedAt: new Date(), abandonedEmailSent: false }
+    })
 
     const items = await getCart(user.id)
     return NextResponse.json(success(items ?? [], { traceId }))

@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     const cart = await prisma.cart.upsert({
       where: { userId: user.id },
       create: { userId: user.id },
-      update: {},
+      update: { updatedAt: new Date(), abandonedEmailSent: false },
     })
 
     const existing = await prisma.cartItem.findFirst({
