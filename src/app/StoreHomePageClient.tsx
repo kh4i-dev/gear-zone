@@ -38,10 +38,10 @@ const IconMap: Record<string, React.ComponentType<any>> = {
 }
 import { HomeCategorySection } from '@/components/domain/HomeCategorySection'
 import { ProductRowCarousel } from '@/components/domain/ProductRowCarousel'
+import type { CategoryData } from '@/components/domain/CategoryCard'
 import { useCart } from '@/components/providers/CartProvider'
 import { toast } from 'sonner'
 import { formatPrice } from '@/lib/utils'
-import { isPublicProduct } from '@/lib/products/publicProductHelper'
 
 export const DEFAULT_HOME_SETTINGS = {
   videoUrl: null as string | null,
@@ -72,7 +72,7 @@ type StoreFeature = {
 
 type HomeData = {
   featuredProducts: StoreProduct[]
-  categoryProducts: StoreProduct[]
+  categoryProducts: CategoryData[]
   settings?: typeof DEFAULT_HOME_SETTINGS
   storeFeatures?: StoreFeature[]
 }
@@ -229,11 +229,6 @@ export default function StoreHomePageClient({
       ...item
     }))
   }, [settings.tickerMessages])
-
-  const publicCategoryProducts = useMemo(
-    () => categoryProducts.filter(isPublicProduct),
-    [categoryProducts]
-  )
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50">
@@ -430,7 +425,7 @@ export default function StoreHomePageClient({
       </section>
 
       {/* Home Category Section */}
-      <HomeCategorySection products={publicCategoryProducts} />
+      <HomeCategorySection categories={categoryProducts} />
 
       {/* Email newsletter signup section (Premium layout) */}
       <section className="mx-auto max-w-7xl px-4 py-16 relative">

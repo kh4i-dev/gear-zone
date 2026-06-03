@@ -1,41 +1,11 @@
-'use client'
-
-import { useMemo } from 'react'
 import { LayoutGrid } from 'lucide-react'
 import { CategoryCard, type CategoryData } from './CategoryCard'
-import type { StoreProduct } from './ProductCard'
-import { getCategoryImage, getCategorySlug } from '@/lib/products/categoryImages'
 
 interface HomeCategorySectionProps {
-  products: StoreProduct[]
+  categories: CategoryData[]
 }
 
-export function HomeCategorySection({ products }: HomeCategorySectionProps) {
-  const categories = useMemo(() => {
-    if (!products) return []
-    const groups: Record<string, { count: number; image: string; id: string }> = {}
-    
-    products.forEach(p => {
-      const catName = p.category?.name || 'Phụ kiện / Khác'
-      const catId = getCategorySlug(catName)
-      if (!groups[catName]) {
-        groups[catName] = { 
-          count: 0, 
-          image: getCategoryImage(catName) || '',
-          id: catId 
-        }
-      }
-      groups[catName].count++
-    })
-    
-    return Object.entries(groups).map(([name, data]) => ({
-      id: data.id,
-      name,
-      count: data.count,
-      imageUrl: data.image,
-    }))
-  }, [products])
-
+export function HomeCategorySection({ categories }: HomeCategorySectionProps) {
   if (categories.length === 0) return null
 
   return (

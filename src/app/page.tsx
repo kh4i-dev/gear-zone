@@ -4,6 +4,8 @@ import { prisma } from '@/lib/db'
 import { toStoreProduct } from '@/lib/products/mapper'
 import { publicInStockProductWhere, publicProductWhere } from '@/lib/products/publicProductHelper'
 import { selectHomepageFeaturedProducts } from '@/lib/products/publicProductSections'
+import { getCategoryImage, getCategorySlug } from '@/lib/products/categoryImages'
+import type { CategoryData } from '@/components/domain/CategoryCard'
 
 import { getSiteSettings } from '@/lib/settings'
 
@@ -20,50 +22,96 @@ export async function generateMetadata(): Promise<Metadata> {
 export const dynamic = 'force-dynamic'
 
 export default async function StoreHomePage() {
-  const [featuredPool, categoryProducts, settings, storeFeatures] = await Promise.all([
+  const [featuredPool, settings, storeFeatures, categoryCounts] = await Promise.all([
     prisma.product.findMany({
       where: publicInStockProductWhere,
-      include: homeProductInclude,
+      select: homeProductSelect,
       orderBy: [
         { soldCount: 'desc' },
         { updatedAt: 'desc' },
       ],
       take: 36,
     }),
-    prisma.product.findMany({
-      where: publicProductWhere,
-      include: homeProductInclude,
-      orderBy: [
-        { soldCount: 'desc' },
-        { updatedAt: 'desc' },
-      ],
-      take: 100,
-    }),
     prisma.setting.findMany(),
     prisma.storeFeature.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: 'asc' },
     }),
+    prisma.product.groupBy({
+      by: ['categoryId'],
+      where: publicProductWhere,
+      _count: { _all: true },
+    }),
   ])
 
+  const categoryIds = categoryCounts
+    .map((item) => item.categoryId)
+    .filter((id): id is string => Boolean(id))
+
+  const categories = categoryIds.length > 0
+    ? await prisma.category.findMany({
+      where: { id: { in: categoryIds } },
+      select: { id: true, name: true },
+    })
+    : []
+
   const featuredProducts = selectHomepageFeaturedProducts(featuredPool).map(toStoreProduct)
+  const categoryProducts = buildHomeCategories(categoryCounts, categories)
 
   return (
     <StoreHomePageClient
       featuredProducts={featuredProducts}
-      categoryProducts={categoryProducts.map(toStoreProduct)}
+      categoryProducts={categoryProducts}
       settings={buildHomeSettings(settings)}
       storeFeatures={storeFeatures}
     />
   )
 }
 
-const homeProductInclude = {
+const homeProductSelect = {
+  id: true,
+  name: true,
+  description: true,
+  imageUrl: true,
+  price: true,
+  oldPrice: true,
+  stock: true,
+  soldCount: true,
+  isVisible: true,
+  status: true,
+  updatedAt: true,
+  createdAt: true,
+  specs: true,
   category: { select: { name: true } },
   images: {
     orderBy: { sortOrder: 'asc' as const },
     select: { url: true, sortOrder: true, isPrimary: true },
   },
+}
+
+function buildHomeCategories(
+  counts: { categoryId: string | null; _count: { _all: number } }[],
+  categories: { id: string; name: string }[],
+): CategoryData[] {
+  const categoryNameById = new Map(categories.map((category) => [category.id, category.name]))
+
+  return counts
+    .map((item) => {
+      const name = item.categoryId
+        ? categoryNameById.get(item.categoryId)
+        : 'Phụ kiện / Khác'
+
+      if (!name) return null
+
+      return {
+        id: getCategorySlug(name),
+        name,
+        count: item._count._all,
+        imageUrl: getCategoryImage(name) || '',
+      }
+    })
+    .filter((category): category is CategoryData => Boolean(category))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
 }
 
 function buildHomeSettings(settings: { key: string; value: string }[]) {
