@@ -59,6 +59,11 @@ export async function POST(req: Request) {
       message: 'Subscribed successfully. Please check your email.',
       subscriptionId: subscription.id,
       reactivated: wasReactivated,
+      debug: {
+        welcomeEmailSent: welcomeEmail.status === 'fulfilled' ? welcomeEmail.value : false,
+        adminTelegramSent: adminTelegram.status === 'fulfilled' ? adminTelegram.value : false,
+        emailError: welcomeEmail.status === 'rejected' ? welcomeEmail.reason?.message || 'SMTP Error' : null,
+      }
     }, {
       notifications: {
         welcomeEmail: welcomeEmail.status === 'fulfilled' ? welcomeEmail.value : false,
