@@ -45,10 +45,7 @@ export function ProductImageFrame({
 
   if (hasMultipleImages) {
     return (
-      <div className={`relative ${aspectRatio} w-full overflow-hidden bg-white rounded-xl border border-white/[0.06] shadow-[0_4px_16px_rgba(0,0,0,0.3)] ${className}`}>
-        {/* Premium white stage background */}
-        <div className="absolute inset-0 bg-[#ffffff]" />
-
+      <div className={`relative ${aspectRatio} w-full overflow-hidden bg-[#060606] rounded-xl border border-white/[0.04] shadow-[0_4px_16px_rgba(0,0,0,0.3)] ${className}`}>
         {/* Sliding flex container */}
         <div 
           className="absolute inset-0 flex transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
@@ -85,10 +82,7 @@ export function ProductImageFrame({
   }
 
   return (
-    <div className={`relative ${aspectRatio} w-full overflow-hidden bg-white rounded-xl border border-white/[0.06] shadow-[0_4px_16px_rgba(0,0,0,0.3)] ${className}`}>
-      {/* Premium white stage background (Method 1) */}
-      <div className="absolute inset-0 bg-[#ffffff]" />
-
+    <div className={`relative ${aspectRatio} w-full overflow-hidden bg-[#060606] rounded-xl border border-white/[0.04] shadow-[0_4px_16px_rgba(0,0,0,0.3)] ${className}`}>
       {/* Main Image Container with 12.5% safe breathing room padding to equalize visual weight */}
       <div className="absolute inset-5 sm:inset-6 flex items-center justify-center z-0">
         <Image
