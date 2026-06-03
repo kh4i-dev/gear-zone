@@ -48,12 +48,32 @@ export default async function StoreHomePage() {
 
   const featuredProducts = selectHomepageFeaturedProducts(featuredPool).map(toStoreProduct)
 
+  // Fetch up to 100 in-stock products to find the highest percentage discount
+  const discountPool = await prisma.product.findMany({
+    where: {
+      ...publicInStockProductWhere,
+      oldPrice: { not: null },
+    },
+    include: homeProductInclude,
+  })
+
+  const hotDeals = discountPool
+    .filter((p) => p.oldPrice && p.oldPrice > p.price)
+    .sort((a, b) => {
+      const discountA = (a.oldPrice! - a.price) / a.oldPrice!
+      const discountB = (b.oldPrice! - b.price) / b.oldPrice!
+      return discountB - discountA
+    })
+    .slice(0, 2)
+    .map(toStoreProduct)
+
   return (
     <StoreHomePageClient
       featuredProducts={featuredProducts}
       categoryProducts={categoryProducts.map(toStoreProduct)}
       settings={buildHomeSettings(settings)}
       storeFeatures={storeFeatures}
+      hotDeals={hotDeals}
     />
   )
 }

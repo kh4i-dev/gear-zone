@@ -74,21 +74,21 @@ export class NotificationService {
       return false
     }
 
-    const subject = 'Chao mung ban den voi Newsletter cua GearZone!'
+    const subject = 'Chào mừng bạn đến với Newsletter của GearZone!'
     const html = `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #2563eb;">Chao mung ban den voi GearZone!</h2>
-        <p>Cam on ban da dang ky nhan ban tin tu GearZone.</p>
-        <p>Tu bay gio, ban se la mot trong nhung nguoi dau tien nhan thong bao ve:</p>
+        <h2 style="color: #2563eb;">Chào mừng bạn đến với GearZone!</h2>
+        <p>Cảm ơn bạn đã đăng ký nhận bản tin từ GearZone.</p>
+        <p>Từ bây giờ, bạn sẽ là một trong những người đầu tiên nhận thông báo về:</p>
         <ul>
-          <li>Cac uu dai va ma giam gia doc quyen</li>
-          <li>Deal gaming gear gia tot nhat</li>
-          <li>Thong bao khi co san pham hot moi ve</li>
+          <li>Các ưu đãi và mã giảm giá độc quyền</li>
+          <li>Deal gaming gear giá tốt nhất</li>
+          <li>Thông báo khi có sản phẩm hot mới về</li>
         </ul>
-        <p>GearZone cam ket mang den nhung thiet bi choi game chat luong nhat cho ban.</p>
+        <p>GearZone cam kết mang đến những thiết bị chơi game chất lượng nhất cho bạn.</p>
         <br/>
-        <p>Tran trong,</p>
-        <p><strong>Doi ngu GearZone</strong></p>
+        <p>Trân trọng,</p>
+        <p><strong>Đội ngũ GearZone</strong></p>
       </div>
     `
 
@@ -110,7 +110,7 @@ export class NotificationService {
     }
 
     const time = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
-    const message = `Newsletter moi tu GearZone\nEmail: ${email}\nTime: ${time}\nSource: ${source}`
+    const message = `Bản tin mới từ GearZone\nEmail: ${email}\nThời gian: ${time}\nNguồn: ${source}`
 
     return await this.telegramProvider.sendMessage(message, telegramConfig)
   }

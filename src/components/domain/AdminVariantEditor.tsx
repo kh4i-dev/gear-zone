@@ -27,11 +27,11 @@ interface AdminVariantEditorProps {
 }
 
 const PRESET_GROUPS: AdminOptionGroup[] = [
-  { name: 'Mau sac', values: ['Den', 'Trang', 'Xanh', 'Do'] },
-  { name: 'Phien ban', values: ['Mini', 'Mini Plus', 'Pro'] },
-  { name: 'Ket noi', values: ['Bluetooth', 'USB-C', 'Wireless'] },
+  { name: 'Màu sắc', values: ['Đen', 'Trắng', 'Xanh', 'Đỏ'] },
+  { name: 'Phiên bản', values: ['Mini', 'Mini Plus', 'Pro'] },
+  { name: 'Kết nối', values: ['Bluetooth', 'USB-C', 'Wireless'] },
   { name: 'Switch', values: ['Linear', 'Tactile', 'Clicky'] },
-  { name: 'Dung luong', values: ['128GB', '256GB', '512GB'] },
+  { name: 'Dung lượng', values: ['128GB', '256GB', '512GB'] },
 ]
 
 function parseValues(raw: string) {
@@ -60,7 +60,7 @@ function getVariantName(variant: AdminVariant, optionGroups: AdminOptionGroup[])
     .map((group) => variant.options[group.name])
     .filter(Boolean)
 
-  return labels.length > 0 ? labels.join(' / ') : 'Bien the'
+  return labels.length > 0 ? labels.join(' / ') : 'Biến thể'
 }
 
 function toSkuToken(value: string) {
@@ -264,15 +264,15 @@ export function AdminVariantEditor({
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <Package className="size-4 text-emerald-400" />
-            <p className="text-sm font-semibold text-slate-100">Phan loai va bien the</p>
+            <p className="text-sm font-semibold text-slate-100">Phân loại và biến thể</p>
             {variants.length > 0 && (
               <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-400 ring-1 ring-emerald-500/20">
-                {variants.length} bien the
+                {variants.length} biến thể
               </span>
             )}
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            Tao nhom, them gia tri bang dau phay, sau do cap nhat ma tran ban hang.
+            Tạo nhóm, thêm giá trị bằng dấu phẩy, sau đó cập nhật ma trận bán hàng.
           </p>
         </div>
 
@@ -296,10 +296,10 @@ export function AdminVariantEditor({
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">1. Nhom bien the</p>
-              <p className="mt-0.5 text-[11px] text-slate-500">Vi du: Mau sac, Phien ban, Ket noi.</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">1. Nhóm biến thể</p>
+              <p className="mt-0.5 text-[11px] text-slate-500">Ví dụ: Màu sắc, Phiên bản, Kết nối.</p>
             </div>
-            <span className="text-[11px] font-semibold text-slate-500">{optionGroups.length} nhom</span>
+            <span className="text-[11px] font-semibold text-slate-500">{optionGroups.length} nhóm</span>
           </div>
 
           <div className="flex gap-2">
@@ -312,7 +312,7 @@ export function AdminVariantEditor({
                   addGroup()
                 }
               }}
-              placeholder="Ten nhom"
+              placeholder="Tên nhóm"
               disabled={disabled}
               className="h-9 min-w-0 flex-1 rounded-lg border border-white/[0.06] bg-slate-950/60 px-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500/40"
             />
@@ -323,15 +323,15 @@ export function AdminVariantEditor({
               className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-xs font-bold text-white transition-colors hover:bg-blue-500 disabled:opacity-40"
             >
               <Plus className="size-3.5" />
-              Them
+              Thêm
             </button>
           </div>
 
           {!hasGroups && (
             <div className="mt-3 rounded-lg border border-dashed border-white/[0.08] p-4 text-center">
               <Sparkles className="mx-auto mb-2 size-5 text-slate-600" />
-              <p className="text-xs font-semibold text-slate-400">Chua co nhom bien the</p>
-              <p className="mt-1 text-[11px] text-slate-600">Them nhanh bang preset hoac nhap ten nhom rieng.</p>
+              <p className="text-xs font-semibold text-slate-400">Chưa có nhóm biến thể</p>
+              <p className="mt-1 text-[11px] text-slate-600">Thêm nhanh bằng mẫu sẵn hoặc nhập tên nhóm riêng.</p>
             </div>
           )}
 
@@ -356,7 +356,7 @@ export function AdminVariantEditor({
                     onClick={() => removeGroup(groupIndex)}
                     disabled={disabled}
                     className="grid size-8 place-items-center rounded-md text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
-                    title="Xoa nhom"
+                    title="Xóa nhóm"
                   >
                     <Trash2 className="size-3.5" />
                   </button>
@@ -370,7 +370,7 @@ export function AdminVariantEditor({
                       onClick={() => removeValue(groupIndex, value)}
                       disabled={disabled}
                       className="inline-flex h-7 items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 text-[11px] font-semibold text-emerald-300 transition-colors hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-40"
-                      title="Xoa gia tri"
+                      title="Xóa giá trị"
                     >
                       {value}
                       <X className="size-3" />
@@ -390,7 +390,7 @@ export function AdminVariantEditor({
                         addValues(groupIndex)
                       }
                     }}
-                    placeholder="Trang, Den, Xanh, Do"
+                    placeholder="Trắng, Đen, Xanh, Đỏ"
                     disabled={disabled}
                     className="h-8 min-w-0 flex-1 rounded-md border border-white/[0.06] bg-slate-950/60 px-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500/40"
                   />
@@ -400,7 +400,7 @@ export function AdminVariantEditor({
                     disabled={disabled || !(valueDrafts[groupIndex] ?? '').trim()}
                     className="h-8 rounded-md bg-emerald-600/20 px-2.5 text-[11px] font-bold text-emerald-300 ring-1 ring-emerald-500/20 hover:bg-emerald-600/30 disabled:opacity-40"
                   >
-                    Them gia tri
+                    Thêm giá trị
                   </button>
                 </div>
               </div>
@@ -412,11 +412,11 @@ export function AdminVariantEditor({
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">2. Ma tran bien the</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">2. Ma trận biến thể</p>
                 <p className="mt-0.5 text-[11px] text-slate-500">
                   {hasCompleteGroups
-                    ? `${matrixCount} dong se duoc tao tu cac nhom hien tai.`
-                    : 'Moi nhom can it nhat mot gia tri de tao ma tran.'}
+                    ? `${matrixCount} dòng sẽ được tạo từ các nhóm hiện tại.`
+                    : 'Mỗi nhóm cần ít nhất một giá trị để tạo ma trận.'}
                 </p>
               </div>
               <button
@@ -426,13 +426,13 @@ export function AdminVariantEditor({
                 className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white transition-colors hover:bg-emerald-500 disabled:opacity-40"
               >
                 <CheckCircle2 className="size-3.5" />
-                Tao / dong bo ma tran
+                Tạo / đồng bộ ma trận
               </button>
             </div>
 
             {matrixNeedsSync && (
               <p className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
-                Nhom bien the da thay doi. Bam dong bo de cap nhat bang bien the truoc khi luu.
+                Nhóm biến thể đã thay đổi. Bấm đồng bộ để cập nhật bảng biến thể trước khi lưu.
               </p>
             )}
           </div>
@@ -442,8 +442,8 @@ export function AdminVariantEditor({
               <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Thao tac nhanh</p>
-                    <p className="mt-0.5 text-[11px] text-slate-500">Ap dung gia tri cho toan bo bang.</p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Thao tác nhanh</p>
+                    <p className="mt-0.5 text-[11px] text-slate-500">Áp dụng giá trị cho toàn bộ bảng.</p>
                   </div>
                   <button
                     type="button"
@@ -469,7 +469,7 @@ export function AdminVariantEditor({
                       type="number"
                       value={bulkPrice}
                       onChange={(event) => setBulkPrice(event.target.value)}
-                      placeholder="Gia"
+                      placeholder="Giá"
                       disabled={disabled}
                       className="h-8 min-w-0 flex-1 rounded-md border border-white/[0.06] bg-slate-950/60 px-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500/40"
                     />
@@ -479,7 +479,7 @@ export function AdminVariantEditor({
                       disabled={disabled || !bulkPrice.trim()}
                       className="h-8 rounded-md bg-blue-600/20 px-2 text-[11px] font-bold text-blue-300 hover:bg-blue-600/30 disabled:opacity-40"
                     >
-                      Ap dung
+                      Áp dụng
                     </button>
                   </div>
                   <div className="flex gap-1.5">
@@ -487,7 +487,7 @@ export function AdminVariantEditor({
                       type="number"
                       value={bulkSalePrice}
                       onChange={(event) => setBulkSalePrice(event.target.value)}
-                      placeholder="Gia KM"
+                      placeholder="Giá KM"
                       disabled={disabled}
                       className="h-8 min-w-0 flex-1 rounded-md border border-white/[0.06] bg-slate-950/60 px-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500/40"
                     />
@@ -497,7 +497,7 @@ export function AdminVariantEditor({
                       disabled={disabled}
                       className="h-8 rounded-md bg-blue-600/20 px-2 text-[11px] font-bold text-blue-300 hover:bg-blue-600/30 disabled:opacity-40"
                     >
-                      Ap dung
+                      Áp dụng
                     </button>
                   </div>
                   <div className="flex gap-1.5">
@@ -505,7 +505,7 @@ export function AdminVariantEditor({
                       type="number"
                       value={bulkStock}
                       onChange={(event) => setBulkStock(event.target.value)}
-                      placeholder="Ton"
+                      placeholder="Tồn"
                       disabled={disabled}
                       className="h-8 min-w-0 flex-1 rounded-md border border-white/[0.06] bg-slate-950/60 px-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500/40"
                     />
@@ -515,7 +515,7 @@ export function AdminVariantEditor({
                       disabled={disabled || !bulkStock.trim()}
                       className="h-8 rounded-md bg-blue-600/20 px-2 text-[11px] font-bold text-blue-300 hover:bg-blue-600/30 disabled:opacity-40"
                     >
-                      Ap dung
+                      Áp dụng
                     </button>
                   </div>
                   <div className="flex gap-1.5">
@@ -575,7 +575,7 @@ export function AdminVariantEditor({
                             onChange={(event) =>
                               handleVariantChange(variantIndex, 'price', event.target.value ? Number(event.target.value) : null)
                             }
-                            placeholder="Mac dinh"
+                            placeholder="Mặc định"
                             disabled={disabled}
                             className="h-8 min-w-[105px] rounded-md border border-white/[0.06] bg-transparent px-2 text-xs text-white placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500/40"
                           />
@@ -587,7 +587,7 @@ export function AdminVariantEditor({
                             onChange={(event) =>
                               handleVariantChange(variantIndex, 'salePrice', event.target.value ? Number(event.target.value) : null)
                             }
-                            placeholder="Khong co"
+                            placeholder="Không có"
                             disabled={disabled}
                             className="h-8 min-w-[105px] rounded-md border border-white/[0.06] bg-transparent px-2 text-xs text-white placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500/40"
                           />

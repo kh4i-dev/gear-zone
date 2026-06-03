@@ -46,6 +46,7 @@ type HomeData = {
   categoryProducts: StoreProduct[]
   settings?: typeof DEFAULT_HOME_SETTINGS
   storeFeatures?: StoreFeature[]
+  hotDeals?: StoreProduct[]
 }
 
 const accentStyles = {
@@ -128,6 +129,7 @@ export default function StoreHomePageClient({
   categoryProducts,
   settings: homeSettings,
   storeFeatures,
+  hotDeals,
 }: HomeData) {
   const [isSubscribing, setIsSubscribing] = useState(false)
   const [email, setEmail] = useState('')
@@ -366,6 +368,32 @@ export default function StoreHomePageClient({
           })}
         </div>
       </section>
+
+      {/* HOT DEALS SECTION */}
+      {hotDeals && hotDeals.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-12">
+          <div className="mb-8 flex items-end justify-between border-b border-white/5 pb-6">
+            <div>
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-rose-500/10 border border-rose-500/20 px-3 py-1 text-xs font-bold text-rose-400 uppercase tracking-wider">
+                ⚡ SIÊU KHUYẾN MÃI
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight text-white">
+                Cơ hội sở hữu giá hời
+              </h2>
+              <p className="mt-1 text-sm text-slate-400">Những món đồ gaming gear chất lượng với mức giá giảm sâu nhất.</p>
+            </div>
+          </div>
+
+          <div className={`grid gap-6 ${hotDeals.length === 1 ? 'max-w-md mx-auto grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+            {hotDeals.map((product) => (
+              <div key={product.id} className="relative rounded-[1.25rem] overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-amber-500 opacity-20 group-hover:opacity-40 transition-opacity duration-300 blur-xl pointer-events-none" />
+                <ProductCard product={product} accent={accent} showBadge={true} badgeText="GIẢM SÂU" />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* SECTION 1: Featured Products Section (Premium Look) */}
       <section className="mx-auto max-w-7xl px-4 py-12">

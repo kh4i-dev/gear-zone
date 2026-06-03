@@ -288,7 +288,11 @@ export default function AdminProductsPage() {
           .sort((a, b) => a.sortOrder - b.sortOrder)
           .map((img) => img.url)
           .join('\n')
-      : product.imageUrl || ''
+      : (product.imageUrl || '')
+          .split(/[\r\n|]+/)
+          .map((url) => url.trim())
+          .filter(Boolean)
+          .join('\n')
 
     const parsedSpecs: { name: string; value: string }[] = []
     if (Array.isArray(product.specs) && product.specs.length > 0) {
@@ -301,20 +305,39 @@ export default function AdminProductsPage() {
           .trim()
           .split('\n')
           .forEach((line) => {
-            const colonIdx = line.indexOf(':')
-            if (colonIdx > 0) {
-              parsedSpecs.push({
-                name: line.slice(0, colonIdx).trim(),
-                value: line.slice(colonIdx + 1).trim(),
-              })
+            const trimmed = line.trim()
+            if (!trimmed) return
+
+            // Split by :, tab, |, = or double/multiple spaces
+            const match = trimmed.match(/^([^:\t|=]+?)[:\t|=](.+)$/) || trimmed.match(/^(.+?)\s{2,}(.+)$/)
+            let name = ''
+            let value = ''
+
+            if (match) {
+              name = match[1]?.trim() || ''
+              value = match[2]?.trim() || ''
+            } else {
+              const colonIdx = trimmed.indexOf(':')
+              if (colonIdx > 0) {
+                name = trimmed.slice(0, colonIdx).trim()
+                value = trimmed.slice(colonIdx + 1).trim()
+              }
+            }
+
+            // Exclude header rows
+            const lowerName = name.toLowerCase()
+            const isHeader = lowerName === 'thông số' || lowerName === 'thông số kỹ thuật' || lowerName === 'chi tiết' || lowerName === 'thành phần' || lowerName === 'model' && value.toLowerCase() === 'chi tiết'
+
+            if (name && value && !isHeader) {
+              parsedSpecs.push({ name, value })
             }
           })
       }
     }
 
-    const description = Array.isArray(product.specs)
-      ? (product.description || '').replace(/\n\n?\$\$\$SPECS\$\$\$[\s\S]*/, '').trim()
-      : product.description || ''
+    const description = (product.description || '')
+      .replace(/\n\n?\$\$\$SPECS\$\$\$[\s\S]*/, '')
+      .trim()
 
     const loadedOptionGroups: AdminOptionGroup[] =
       product.options?.map((o) => ({
